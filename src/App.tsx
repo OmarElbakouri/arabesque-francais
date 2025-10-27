@@ -16,6 +16,11 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSales from "./pages/admin/AdminSales";
+import AdminCourses from "./pages/admin/AdminCourses";
 
 const queryClient = new QueryClient();
 
@@ -25,22 +30,32 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Navbar />
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/courses" element={<Courses />} />
-          <Route path="/course/:id" element={<CourseDetail />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/faq" element={<FAQ />} />
+          {/* Public routes with Navbar and Footer */}
+          <Route path="/" element={<><Navbar /><Index /><Footer /></>} />
+          <Route path="/login" element={<><Navbar /><Login /><Footer /></>} />
+          <Route path="/register" element={<><Navbar /><Register /><Footer /></>} />
+          <Route path="/dashboard" element={<><Navbar /><Dashboard /><Footer /></>} />
+          <Route path="/courses" element={<><Navbar /><Courses /><Footer /></>} />
+          <Route path="/course/:id" element={<><Navbar /><CourseDetail /><Footer /></>} />
+          <Route path="/profile" element={<><Navbar /><Profile /><Footer /></>} />
+          <Route path="/blog" element={<><Navbar /><Blog /><Footer /></>} />
+          <Route path="/contact" element={<><Navbar /><Contact /><Footer /></>} />
+          <Route path="/faq" element={<><Navbar /><FAQ /><Footer /></>} />
+          
+          {/* Admin routes with separate layout */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="sales" element={<AdminSales />} />
+            <Route path="courses" element={<AdminCourses />} />
+            <Route path="documents" element={<AdminCourses />} />
+            <Route path="payments" element={<AdminUsers />} />
+          </Route>
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <Footer />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

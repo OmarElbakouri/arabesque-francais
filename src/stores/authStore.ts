@@ -33,17 +33,17 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       login: async (email: string, password: string) => {
-        // Mock login
+        // Mock login - Admin user for testing
         const mockUser: User = {
           id: '1',
-          nom: 'المستخدم',
-          prenom: 'تجريبي',
+          nom: 'المسؤول',
+          prenom: 'مدير',
           email,
           telephone: '+212600000000',
-          role: 'PREMIUM',
+          role: 'ADMIN',
           status: 'ACTIF',
           dateInscription: new Date().toISOString(),
-          credits: 400,
+          credits: 1000,
         };
         set({ user: mockUser, isAuthenticated: true });
       },
