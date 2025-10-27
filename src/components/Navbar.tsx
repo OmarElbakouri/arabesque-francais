@@ -90,9 +90,9 @@ export function Navbar() {
                   </Button>
                 </Link>
                 <Link to="/profile" className="flex items-center gap-2">
-                  <Badge className={roleColors[user!.role]}>{user!.role}</Badge>
+                  {user && <Badge className={roleColors[user.role]}>{user.role}</Badge>}
                   <div className="text-right">
-                    <div className="text-sm font-medium">{user!.prenom} {user!.nom}</div>
+                    <div className="text-sm font-medium">{user?.prenom} {user?.nom}</div>
                   </div>
                 </Link>
                 <Button variant="ghost" size="icon" onClick={logout}>
@@ -174,7 +174,7 @@ export function Navbar() {
             {isAuthenticated ? (
               <>
                 <Link to="/profile" className="block py-2" onClick={() => setIsOpen(false)}>
-                  <Badge className={roleColors[user!.role]}>{user!.prenom} {user!.nom} - {user!.role}</Badge>
+                  {user && <Badge className={roleColors[user.role]}>{user.prenom} {user.nom} - {user.role}</Badge>}
                 </Link>
                 <Button variant="destructive" onClick={() => { logout(); setIsOpen(false); }} className="w-full">
                   تسجيل الخروج

@@ -32,7 +32,7 @@ export default function Dashboard() {
             <div>
               <h1 className="text-3xl font-bold mb-2">مرحباً بك، {user?.prenom}!</h1>
               <p className="text-white/90 mb-4">استمر في رحلتك التعليمية</p>
-              <Badge className={roleColors[user!.role]}>{user?.role}</Badge>
+              {user && <Badge className={roleColors[user.role]}>{user.role}</Badge>}
             </div>
             <div className="text-left">
               <div className="text-sm text-white/80">إجمالي التقدم</div>
