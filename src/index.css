@@ -1,88 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* BCLT French Learning Platform Design System
+   Inspired by the playful logo colors: blue-grey and golden
+   All colors in HSL format
 */
 
 @layer base {
   :root {
+    /* Brand Colors from Logo */
+    --primary: 210 25% 58%;        /* Blue-grey #7B90A8 */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 210 30% 48%;   /* Darker blue-grey */
+    
+    --secondary: 42 70% 60%;        /* Golden #E6B54C */
+    --secondary-foreground: 210 25% 20%;
+    --secondary-hover: 42 75% 55%;
+    
+    --accent: 210 20% 70%;          /* Lighter blue-grey */
+    --accent-foreground: 210 25% 20%;
+
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 210 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 210 25% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 210 15% 45%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --success: 145 65% 50%;
+    --warning: 35 90% 60%;
+    --info: 210 80% 55%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 210 25% 58%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --radius: 0.75rem;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(210 25% 58%) 0%, hsl(42 70% 60%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 20% 98%) 100%);
+    --gradient-overlay: linear-gradient(180deg, rgba(123, 144, 168, 0.05) 0%, rgba(230, 181, 76, 0.05) 100%);
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(123, 144, 168, 0.08);
+    --shadow-md: 0 4px 16px rgba(123, 144, 168, 0.12);
+    --shadow-lg: 0 8px 32px rgba(123, 144, 168, 0.16);
+    --shadow-gold: 0 4px 20px rgba(230, 181, 76, 0.25);
 
-    --radius: 0.5rem;
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --primary: 210 25% 58%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 210 30% 65%;
+    
+    --secondary: 42 70% 60%;
+    --secondary-foreground: 210 25% 10%;
+    --secondary-hover: 42 75% 65%;
+    
+    --accent: 210 20% 30%;
+    --accent-foreground: 210 20% 90%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --background: 210 25% 8%;
+    --foreground: 210 20% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --card: 210 25% 10%;
+    --card-foreground: 210 20% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --popover: 210 25% 10%;
+    --popover-foreground: 210 20% 95%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --muted: 210 20% 15%;
+    --muted-foreground: 210 15% 60%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --border: 210 20% 20%;
+    --input: 210 20% 20%;
+    --ring: 210 25% 58%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -100,6 +121,101 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-arabic;
+    direction: rtl;
+  }
+
+  html {
+    direction: rtl;
+  }
+}
+
+@layer components {
+  /* Hero Button Variants */
+  .btn-hero {
+    @apply bg-gradient-to-r from-primary to-secondary text-white font-bold px-8 py-4 rounded-xl;
+    @apply shadow-lg hover:shadow-gold transform hover:scale-105 transition-all duration-300;
+  }
+
+  .btn-hero-outline {
+    @apply border-2 border-white text-white font-bold px-8 py-4 rounded-xl;
+    @apply hover:bg-white hover:text-primary transition-all duration-300;
+  }
+
+  /* Card Variants */
+  .card-elevated {
+    @apply bg-card rounded-2xl shadow-md hover:shadow-lg transition-all duration-300;
+    @apply hover:-translate-y-1;
+  }
+
+  .card-feature {
+    @apply bg-gradient-to-br from-white to-muted rounded-2xl p-6 shadow-sm;
+    @apply border border-border hover:border-primary/50 transition-all duration-300;
+  }
+
+  /* Text Gradients */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+
+  /* Animated Underline */
+  .link-animated {
+    @apply relative inline-block;
+  }
+
+  .link-animated::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-secondary transition-all duration-300;
+  }
+
+  .link-animated:hover::after {
+    @apply w-full;
+  }
+
+  /* Badge Variants */
+  .badge-primary {
+    @apply bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-secondary {
+    @apply bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-success {
+    @apply bg-success/10 text-success px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  /* Animations */
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 }
