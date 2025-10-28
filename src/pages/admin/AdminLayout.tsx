@@ -25,12 +25,12 @@ export default function AdminLayout() {
   }
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'لوحة التحكم', path: '/admin' },
-    { icon: Users, label: 'المستخدمين', path: '/admin/users' },
-    { icon: UserCog, label: 'الفريق التجاري', path: '/admin/sales' },
-    { icon: BookOpen, label: 'الدورات', path: '/admin/courses' },
-    { icon: FileText, label: 'المستندات', path: '/admin/documents' },
-    { icon: DollarSign, label: 'المدفوعات', path: '/admin/payments' },
+    { icon: LayoutDashboard, label: 'Tableau de bord', path: '/admin' },
+    { icon: Users, label: 'Utilisateurs', path: '/admin/users' },
+    { icon: UserCog, label: 'Équipe Commerciale', path: '/admin/sales' },
+    { icon: BookOpen, label: 'Cours', path: '/admin/courses' },
+    { icon: FileText, label: 'Documents', path: '/admin/documents' },
+    { icon: DollarSign, label: 'Paiements', path: '/admin/payments' },
   ];
 
   const isActive = (path: string) => {
@@ -41,11 +41,11 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-background">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-card border-b z-50 px-4 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-primary">لوحة الإدارة</h1>
+          <h1 className="text-xl font-bold text-primary">Panneau d'Administration</h1>
           <Button
             variant="ghost"
             size="icon"
@@ -60,17 +60,17 @@ export default function AdminLayout() {
         {/* Sidebar */}
         <aside
           className={`
-            fixed lg:static inset-y-0 right-0 z-40
-            w-64 bg-card border-l transform transition-transform duration-200
-            ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+            fixed lg:static inset-y-0 left-0 z-40
+            w-64 bg-card border-r transform transition-transform duration-200
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             lg:block
           `}
         >
           <div className="h-full flex flex-col">
             {/* Logo */}
             <div className="p-6 border-b hidden lg:block">
-              <h1 className="text-2xl font-bold text-primary">لوحة الإدارة</h1>
-              <p className="text-sm text-muted-foreground mt-1">BCLT Français</p>
+              <h1 className="text-2xl font-bold text-primary">Admin BCLT</h1>
+              <p className="text-sm text-muted-foreground mt-1">Panneau de Contrôle</p>
             </div>
 
             {/* Navigation */}
@@ -105,7 +105,7 @@ export default function AdminLayout() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{user.prenom} {user.nom}</p>
-                  <p className="text-xs text-muted-foreground">مدير النظام</p>
+                  <p className="text-xs text-muted-foreground">Administrateur</p>
                 </div>
               </div>
               <Button
@@ -114,14 +114,14 @@ export default function AdminLayout() {
                 onClick={logout}
               >
                 <LogOut className="w-4 h-4" />
-                تسجيل الخروج
+                Déconnexion
               </Button>
             </div>
           </div>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 lg:mr-64 mt-16 lg:mt-0">
+        <main className="flex-1 lg:ml-64 mt-16 lg:mt-0">
           <div className="p-6">
             <Outlet />
           </div>

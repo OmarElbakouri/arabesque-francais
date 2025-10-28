@@ -137,27 +137,27 @@ export default function AdminSales() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">إدارة الفريق التجاري</h1>
-          <p className="text-muted-foreground mt-1">إدارة المندوبين وأكواد الكوبون</p>
+          <h1 className="text-3xl font-bold">Gestion de l'Équipe Commerciale</h1>
+          <p className="text-muted-foreground mt-1">Gérer les commerciaux et leurs codes promo</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="w-4 h-4" />
-              إضافة تجاري
+              Ajouter Commercial
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>إضافة تجاري جديد</DialogTitle>
+              <DialogTitle>Ajouter un nouveau commercial</DialogTitle>
               <DialogDescription>
-                أضف مندوب تجاري جديد وسيتم إنشاء كود كوبون خاص به تلقائياً
+                Ajoutez un commercial et un code promo sera généré automatiquement
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="prenom">الاسم الشخصي</Label>
+                  <Label htmlFor="prenom">Prénom</Label>
                   <Input
                     id="prenom"
                     value={newCommercial.prenom}
@@ -167,7 +167,7 @@ export default function AdminSales() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="nom">الاسم العائلي</Label>
+                  <Label htmlFor="nom">Nom</Label>
                   <Input
                     id="nom"
                     value={newCommercial.nom}
@@ -178,7 +178,7 @@ export default function AdminSales() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">البريد الإلكتروني</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -189,7 +189,7 @@ export default function AdminSales() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="telephone">رقم الهاتف</Label>
+                <Label htmlFor="telephone">Téléphone</Label>
                 <Input
                   id="telephone"
                   value={newCommercial.telephone}
@@ -199,7 +199,7 @@ export default function AdminSales() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="commission">نسبة العمولة (%)</Label>
+                <Label htmlFor="commission">Commission (%)</Label>
                 <Input
                   id="commission"
                   type="number"
@@ -215,9 +215,9 @@ export default function AdminSales() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                إلغاء
+                Annuler
               </Button>
-              <Button onClick={handleAddCommercial}>إضافة</Button>
+              <Button onClick={handleAddCommercial}>Ajouter</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -229,7 +229,7 @@ export default function AdminSales() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">إجمالي العملاء</p>
+                <p className="text-sm text-muted-foreground">Total Clients</p>
                 <p className="text-3xl font-bold text-primary">{totalStats.totalClients}</p>
               </div>
               <Users className="h-10 w-10 text-primary/20" />
@@ -241,7 +241,7 @@ export default function AdminSales() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">عملاء هذا الشهر</p>
+                <p className="text-sm text-muted-foreground">Clients ce mois</p>
                 <p className="text-3xl font-bold text-success">{totalStats.monthlyClients}</p>
               </div>
               <Users className="h-10 w-10 text-success/20" />
@@ -253,8 +253,8 @@ export default function AdminSales() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">إجمالي الإيرادات</p>
-                <p className="text-3xl font-bold text-secondary">{totalStats.totalRevenue} د.م</p>
+                <p className="text-sm text-muted-foreground">Revenus Totaux</p>
+                <p className="text-3xl font-bold text-secondary">{totalStats.totalRevenue} DH</p>
               </div>
               <DollarSign className="h-10 w-10 text-secondary/20" />
             </div>
@@ -265,8 +265,8 @@ export default function AdminSales() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">إيرادات الشهر</p>
-                <p className="text-3xl font-bold text-warning">{totalStats.monthlyRevenue} د.م</p>
+                <p className="text-sm text-muted-foreground">Revenus du mois</p>
+                <p className="text-3xl font-bold text-warning">{totalStats.monthlyRevenue} DH</p>
               </div>
               <DollarSign className="h-10 w-10 text-warning/20" />
             </div>
@@ -277,21 +277,21 @@ export default function AdminSales() {
       {/* Commercials Table */}
       <Card>
         <CardHeader>
-          <CardTitle>قائمة المندوبين التجاريين</CardTitle>
+          <CardTitle>Liste des Commerciaux</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-right">المندوب</TableHead>
-                  <TableHead className="text-right">كود الكوبون</TableHead>
-                  <TableHead className="text-right">إجمالي العملاء</TableHead>
-                  <TableHead className="text-right">عملاء الشهر</TableHead>
-                  <TableHead className="text-right">إجمالي الإيرادات</TableHead>
-                  <TableHead className="text-right">إيرادات الشهر</TableHead>
-                  <TableHead className="text-right">العمولة</TableHead>
-                  <TableHead className="text-right">الإجراءات</TableHead>
+                  <TableHead>Commercial</TableHead>
+                  <TableHead>Code Promo</TableHead>
+                  <TableHead>Total Clients</TableHead>
+                  <TableHead>Clients du mois</TableHead>
+                  <TableHead>Revenus Totaux</TableHead>
+                  <TableHead>Revenus du mois</TableHead>
+                  <TableHead>Commission</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -326,11 +326,11 @@ export default function AdminSales() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <p className="font-medium">{commercial.totalRevenue} د.م</p>
+                      <p className="font-medium">{commercial.totalRevenue} DH</p>
                     </TableCell>
                     <TableCell>
                       <p className="font-medium text-success">
-                        {commercial.monthlyRevenue} د.م
+                        {commercial.monthlyRevenue} DH
                       </p>
                     </TableCell>
                     <TableCell>
@@ -340,10 +340,10 @@ export default function AdminSales() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button size="icon" variant="ghost">
+                        <Button size="icon" variant="ghost" onClick={() => console.log('Edit commercial', commercial.id)}>
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button size="icon" variant="ghost">
+                        <Button size="icon" variant="ghost" onClick={() => console.log('Delete commercial', commercial.id)}>
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       </div>

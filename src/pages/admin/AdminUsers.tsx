@@ -136,8 +136,8 @@ export default function AdminUsers() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">إدارة المستخدمين</h1>
-        <p className="text-muted-foreground mt-1">عرض وإدارة جميع المستخدمين</p>
+        <h1 className="text-3xl font-bold">Gestion des Utilisateurs</h1>
+        <p className="text-muted-foreground mt-1">Afficher et gérer tous les utilisateurs</p>
       </div>
 
       {/* Stats */}
@@ -146,7 +146,7 @@ export default function AdminUsers() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-2xl font-bold text-primary">{stats.total}</p>
-              <p className="text-sm text-muted-foreground">إجمالي</p>
+              <p className="text-sm text-muted-foreground">Total</p>
             </div>
           </CardContent>
         </Card>
@@ -154,7 +154,7 @@ export default function AdminUsers() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-2xl font-bold">{stats.normal}</p>
-              <p className="text-sm text-muted-foreground">عادي</p>
+              <p className="text-sm text-muted-foreground">Normal</p>
             </div>
           </CardContent>
         </Card>
@@ -162,7 +162,7 @@ export default function AdminUsers() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-2xl font-bold text-primary">{stats.premium}</p>
-              <p className="text-sm text-muted-foreground">بريميوم</p>
+              <p className="text-sm text-muted-foreground">Premium</p>
             </div>
           </CardContent>
         </Card>
@@ -178,7 +178,7 @@ export default function AdminUsers() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-2xl font-bold text-success">{stats.active}</p>
-              <p className="text-sm text-muted-foreground">نشط</p>
+              <p className="text-sm text-muted-foreground">Actif</p>
             </div>
           </CardContent>
         </Card>
@@ -187,40 +187,40 @@ export default function AdminUsers() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>البحث والتصفية</CardTitle>
+          <CardTitle>Recherche et Filtres</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="ابحث بالاسم أو البريد الإلكتروني..."
+                placeholder="Rechercher par nom ou email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10"
+                className="pl-10"
               />
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="نوع الاشتراك" />
+                <SelectValue placeholder="Type d'abonnement" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع الأنواع</SelectItem>
-                <SelectItem value="NORMAL">عادي</SelectItem>
-                <SelectItem value="PREMIUM">بريميوم</SelectItem>
+                <SelectItem value="all">Tous les types</SelectItem>
+                <SelectItem value="NORMAL">Normal</SelectItem>
+                <SelectItem value="PREMIUM">Premium</SelectItem>
                 <SelectItem value="VIP">VIP</SelectItem>
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="الحالة" />
+                <SelectValue placeholder="Statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع الحالات</SelectItem>
-                <SelectItem value="ACTIF">نشط</SelectItem>
-                <SelectItem value="EXPIRE">منتهي</SelectItem>
-                <SelectItem value="EN_ATTENTE">في الانتظار</SelectItem>
-                <SelectItem value="SUSPENDU">معلق</SelectItem>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="ACTIF">Actif</SelectItem>
+                <SelectItem value="EXPIRE">Expiré</SelectItem>
+                <SelectItem value="EN_ATTENTE">En attente</SelectItem>
+                <SelectItem value="SUSPENDU">Suspendu</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -234,14 +234,14 @@ export default function AdminUsers() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-right">المستخدم</TableHead>
-                  <TableHead className="text-right">الاتصال</TableHead>
-                  <TableHead className="text-right">الاشتراك</TableHead>
-                  <TableHead className="text-right">الحالة</TableHead>
-                  <TableHead className="text-right">تاريخ التسجيل</TableHead>
-                  <TableHead className="text-right">تاريخ الانتهاء</TableHead>
-                  <TableHead className="text-right">التجاري</TableHead>
-                  <TableHead className="text-right">الإجراءات</TableHead>
+                  <TableHead>Utilisateur</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Abonnement</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date d'inscription</TableHead>
+                  <TableHead>Date d'expiration</TableHead>
+                  <TableHead>Commercial</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -283,10 +283,10 @@ export default function AdminUsers() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button size="icon" variant="ghost">
+                        <Button size="icon" variant="ghost" onClick={() => console.log('Edit user', user.id)}>
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button size="icon" variant="ghost">
+                        <Button size="icon" variant="ghost" onClick={() => console.log('Delete user', user.id)}>
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       </div>

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
+import SubjectSelection from "./pages/SubjectSelection";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -31,8 +32,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Subject Selection - Entry Point */}
+          <Route path="/" element={<SubjectSelection />} />
+          
           {/* Public routes with Navbar and Footer */}
-          <Route path="/" element={<><Navbar /><Index /><Footer /></>} />
+          <Route path="/home" element={<><Navbar /><Index /><Footer /></>} />
           <Route path="/login" element={<><Navbar /><Login /><Footer /></>} />
           <Route path="/register" element={<><Navbar /><Register /><Footer /></>} />
           <Route path="/dashboard" element={<><Navbar /><Dashboard /><Footer /></>} />
