@@ -340,22 +340,76 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                name: "أحمد محمد",
-                role: "طالب مستوى B2",
+                name: "Oujdi Oujdi",
+                role: "6 sem.",
                 rating: 5,
-                comment: "منصة رائعة! تمكنت من تحسين لغتي الفرنسية بشكل ملحوظ في 3 أشهر فقط. المحتوى منظم والدروس واضحة جداً."
+                comment: "Saraha une formation li stafadt menha bzaaaf o hasit b rasi niveau Dyali t7assan o bzaaaaf merci bclt français 🙏🙏🙏"
               },
               {
-                name: "فاطمة الزهراء",
-                role: "طالبة مستوى C1",
+                name: "Sofyane Lahnid",
+                role: "6 sem.",
                 rating: 5,
-                comment: "أفضل استثمار قمت به! الذكاء الاصطناعي ساعدني كثيراً في تحسين النطق. أنصح الجميع بهذه المنصة."
+                comment: "Une formation claire et motivante, qui donne vraiment envie d'apprendre le français et de progresser rapidement merci Mr Anas"
               },
               {
-                name: "يوسف إبراهيم",
-                role: "طالب مستوى A2",
+                name: "Khalid Ouazzani",
+                role: "6 sem.",
                 rating: 5,
-                comment: "كنت مبتدئ تماماً والآن أستطيع التحدث الفرنسية بثقة. الدروس ممتعة والمدرب محترف جداً."
+                comment: "Filicitation et bonne courage tu es le meilleur"
+              },
+              {
+                name: "Tarik Éss",
+                role: "6 sem.",
+                rating: 5,
+                comment: "Tebarekkellah formation tooop bdaw m3aya mn la base odb hmd 9dart ntwafa9 fl formation .courage oustad"
+              },
+              {
+                name: "El Idrissi Ridoine",
+                role: "35 sem.",
+                rating: 5,
+                comment: "Je la recommande vivement"
+              },
+              {
+                name: "Soukaina Soukaina",
+                role: "35 sem.",
+                rating: 5,
+                comment: "تبارك الله عليك استاذ في المستوى استفدت معاك بزاف وحتى صحباتي دخلو عندك قلتلها ليهم"
+              },
+              {
+                name: "Salma Salm",
+                role: "35 sem.",
+                rating: 5,
+                comment: "شكرا جزيلا أستاذ انس بفضل الشرح الميمز تبسطت عندي اللغة الفرنسية والقواعد ديالها الحمد لله استفدت ومزال بغا نزيدو ان شاء الله"
+              },
+              {
+                name: "Farid Ibrahim",
+                role: "34 sem.",
+                rating: 5,
+                comment: "أستاذ رائع واصل بارك الله لك في عملك .."
+              },
+              {
+                name: "Fatna Rafii",
+                role: "3 sem.",
+                rating: 5,
+                comment: "كاين فرق بين استاذ واستاذ تبارك الله عليك.والله تستاهل 7000درهم حيث جربت بزاف الأساتذة .شكرا"
+              },
+              {
+                name: "Kawtar Ali",
+                role: "6 sem.",
+                rating: 5,
+                comment: "Formation tooooooooop lah yjazip belkhir"
+              },
+              {
+                name: "Med Qssmy",
+                role: "6 sem.",
+                rating: 5,
+                comment: "حقيقة دورة تكوينية ممتازة تمكن الأعضاء من تعلم قواعد اللغة الفرنسية وطريقة استعمالها. منهاج واضح وسهل، أستاذ ذو كفاءة وسهل، كل الشكر لكم أستاذ أنس جزاكم الله خيرا"
+              },
+              {
+                name: "Fadila Sadik",
+                role: "6 sem.",
+                rating: 5,
+                comment: "بارك الله فيكم أستاذ أنس. بالتوفيق إن شاء الله."
               }
             ].map((testimonial, idx) => (
               <Card key={idx} className="card-elevated p-6">
