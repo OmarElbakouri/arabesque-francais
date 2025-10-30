@@ -407,6 +407,54 @@ const Index = () => {
         </div>
       </section>
 
+      {/* AI Features Section */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16 animate-fade-in">
+            <h2 className="text-4xl font-black mb-4">
+              تعلم بذكاء مع <span className="text-gradient">الذكاء الاصطناعي</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              نستخدم تقنيات الذكاء الاصطناعي المتقدمة لتوفير تجربة تعليمية مخصصة وفعالة
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                icon: MessageCircle,
+                title: "مساعد ذكي متاح 24/7",
+                description: "احصل على إجابات فورية لأسئلتك حول القواعد والمفردات في أي وقت",
+                color: "primary"
+              },
+              {
+                icon: Video,
+                title: "تدريب صوتي متقدم",
+                description: "تحليل نطقك وتقديم ملاحظات دقيقة لتحسين طريقة تحدثك بالفرنسية",
+                color: "secondary"
+              },
+              {
+                icon: Target,
+                title: "تمارين مخصصة",
+                description: "توليد تمارين تناسب مستواك ونقاط ضعفك تلقائياً",
+                color: "info"
+              }
+            ].map((feature, idx) => {
+              const Icon = feature.icon;
+              return (
+                <Card key={idx} className="card-feature p-6 text-center hover:scale-105 transition-transform">
+                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-${feature.color}/10 mb-4`}>
+                    <Icon className={`h-8 w-8 text-${feature.color}`} />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="py-20 bg-gradient-overlay">
         <div className="container mx-auto px-4">
@@ -419,48 +467,39 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {[
               {
                 name: "عادي",
-                price: "مجاناً",
-                period: "",
+                originalPrice: "1500",
+                price: "750",
+                period: "درهم",
                 features: [
-                  "الوصول لـ 5 دروس مجانية",
-                  "تمارين محدودة",
-                  "شهادة إتمام للمستوى A1",
-                  "دعم عبر البريد"
+                  "الوصول الكامل لجميع الدروس والمستويات",
+                  "تمارين وامتحانات تفاعلية",
+                  "10 رسائل صوتية بالذكاء الاصطناعي في كل فصل",
+                  "30 رسالة نصية مع الذكاء الاصطناعي في كل فصل",
+                  "شهادات معتمدة لكل مستوى",
+                  "دعم يومي من الأستاذ"
                 ],
                 popular: false,
-                cta: "ابدأ مجاناً"
-              },
-              {
-                name: "بريميوم",
-                price: "499",
-                period: "درهم / شهر",
-                features: [
-                  "الوصول الكامل لجميع المستويات",
-                  "تمارين غير محدودة",
-                  "400 رصيد شهري للذكاء الاصطناعي",
-                  "شهادات معتمدة لكل مستوى",
-                  "دعم أولوية"
-                ],
-                popular: true,
-                cta: "اشترك الآن"
+                cta: "ابدأ الآن"
               },
               {
                 name: "VIP",
-                price: "999",
-                period: "درهم / شهر",
+                originalPrice: "2000",
+                price: "1000",
+                period: "درهم",
                 features: [
-                  "كل مميزات البريميوم",
-                  "1000 رصيد شهري للذكاء الاصطناعي",
-                  "600 تدريب صوتي شهرياً",
-                  "جلسات فردية مع المدرب",
+                  "جميع مميزات الخطة العادية",
+                  "25 رسالة صوتية بالذكاء الاصطناعي في كل فصل",
+                  "70 رسالة نصية مع الذكاء الاصطناعي في كل فصل",
+                  "أولوية في الدعم والمتابعة",
+                  "جلسات خاصة مع الأستاذ",
                   "مجموعة خاصة للطلاب VIP",
                   "دعم 24/7"
                 ],
-                popular: false,
+                popular: true,
                 cta: "ترقية لـ VIP"
               }
             ].map((plan, idx) => (
@@ -482,9 +521,12 @@ const Index = () => {
                 
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                  <div className="mb-2">
+                    <span className="text-lg text-muted-foreground line-through">{plan.originalPrice} درهم</span>
+                  </div>
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-black text-gradient">{plan.price}</span>
-                    {plan.period && <span className="text-muted-foreground">{plan.period}</span>}
+                    <span className="text-5xl font-black text-gradient">{plan.price}</span>
+                    <span className="text-muted-foreground">{plan.period}</span>
                   </div>
                 </div>
 
