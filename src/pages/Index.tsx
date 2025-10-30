@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, BookOpen, Target, Award, Users, Play, Check, Star, MessageCircle } from "lucide-react";
+import { ChevronDown, BookOpen, Target, Award, Users, Play, Check, Star, MessageCircle, Lightbulb, Video, UserCheck, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -97,6 +97,190 @@ const Index = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* 3 Stages Path */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16 animate-fade-in">
+            <h2 className="text-4xl font-black mb-4">
+              طريقك لإتقان <span className="text-gradient">التواصل باللغة الفرنسية</span>
+            </h2>
+            <p className="text-2xl font-bold text-primary mb-2">عبر 3 مراحل</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {[
+              {
+                stage: "المرحلة 1",
+                icon: Lightbulb,
+                title: "ضبط القواعد اللغوية والتدرب على الكتابة",
+                points: [
+                  "عبر دروس بالفيديو بطريقة سلسة و عملية، بالإضافة إلى تمارين و إمتحانات تفاعلية",
+                  "يمكنكم التواصل مع الأستاذ في أي وقت للإجابة على أي تساؤلات",
+                ],
+                highlight: "75 درس، 120 تمرين و 5 امتحانات، 10 كتب",
+                duration: "من A1 إلى C1 في مدة 4 أشهر و نصف غوض 5 ساعات في مراكز أخرى",
+                color: "bg-primary/10 text-primary border-primary"
+              },
+              {
+                stage: "المرحلة 2",
+                icon: Video,
+                title: "التمرن على التكلم باللغة الفرنسية",
+                points: [
+                  "عبر قراءة نصوص و قصص و تلخيصها شفهيا أو إرسالها للأستاذ للتصحيح و ملاحضات و نصائح",
+                ],
+                highlight: "لمدة شهر و نصف",
+                color: "bg-secondary/10 text-secondary border-secondary"
+              },
+              {
+                stage: "المرحلة 3",
+                icon: UserCheck,
+                title: "التمرن على التحدث مع شخص آخر باللغة الفرنسية",
+                points: [
+                  "عبر حصص مباشرة مع طلاب آخرين و تحضير أستاذ تقوم بمناقشة مواضيع مختلفة",
+                  "كل هذا فيه فيديو التمرن على التواصل المباشر باللغة الفرنسية في مواقف واقعية",
+                ],
+                highlight: "إختياري لمدة شهرين - دفع إضافي",
+                color: "bg-info/10 text-info border-info"
+              }
+            ].map((stage, idx) => {
+              const Icon = stage.icon;
+              return (
+                <Card 
+                  key={idx} 
+                  className={`p-6 border-2 ${stage.color} hover:scale-105 transition-all duration-300`}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="px-4 py-2 rounded-full bg-secondary text-white font-bold text-sm">
+                      {stage.stage}
+                    </span>
+                    <Icon className="h-8 w-8" />
+                  </div>
+                  
+                  <h3 className="text-xl font-bold mb-4 leading-tight">
+                    {stage.title}
+                  </h3>
+                  
+                  <ul className="space-y-3 mb-4">
+                    {stage.points.map((point, pidx) => (
+                      <li key={pidx} className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                        <span className="text-muted-foreground">{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <p className="text-secondary font-bold text-center">{stage.highlight}</p>
+                    {stage.duration && (
+                      <p className="text-xs text-muted-foreground text-center mt-2 italic">
+                        {stage.duration}
+                      </p>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Special Offer */}
+      <section className="py-20 bg-gradient-to-br from-secondary/20 via-primary/10 to-secondary/20">
+        <div className="container mx-auto px-4">
+          <Card className="max-w-4xl mx-auto p-8 md:p-12 shadow-gold border-2 border-secondary/30">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl md:text-5xl font-black mb-4">
+                6 أشهر <span className="text-gradient">لإتقان اللغة الفرنسية</span>
+              </h2>
+              
+              <div className="inline-block bg-gradient-hero text-white px-6 py-3 rounded-full text-xl font-bold mb-6 shadow-lg">
+                خصم 30% لل 50 الأوائل
+              </div>
+              
+              <div className="flex items-baseline justify-center gap-3 mb-2">
+                <span className="text-6xl md:text-7xl font-black text-gradient">700</span>
+                <span className="text-3xl font-bold">درهم</span>
+              </div>
+              <p className="text-xl text-muted-foreground line-through mb-8">
+                عوض <span className="font-bold">1000 درهم</span>
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* المرحلة الأولى */}
+              <div className="bg-primary/5 rounded-2xl p-6 border-2 border-primary/20">
+                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                  <span className="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
+                  المرحلة الأولى
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4 font-semibold">( 4 أشهر و نصف )</p>
+                
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">إتقان جميع قواعد اللغة الفرنسية A1 - C1</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">120 تمرين و 5 امتحانات و 3 كتب بالمجان</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">إتقان كتابة الإيمايل و التقارير و الوثائق باللغة الفرنسية</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">المرافقة اليومية من طرف الأستاذ أنس</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">الحصول على شهادة عند نهاية الدورة مستوى B2</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* المرحلة الثانية */}
+              <div className="bg-secondary/5 rounded-2xl p-6 border-2 border-secondary/20">
+                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                  <span className="bg-secondary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
+                  المرحلة الثانية
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4 font-semibold">( شهر و نصف )</p>
+                
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">التمرن على التكلم باللغة الفرنسية عبر قراءة لنصوص و قصص و تلخيصها شفهيا أو إرسالها (شهر و نصف)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">المرافقة اليومية من طرف الأستاذ أنس</span>
+                  </li>
+                </ul>
+
+                <div className="mt-6 pt-6 border-t border-border">
+                  <div className="flex items-center gap-2 text-secondary">
+                    <Clock className="h-5 w-5" />
+                    <span className="font-bold">لمدة شهر و نصف</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 text-center">
+              <Button size="lg" className="btn-hero text-lg px-8 py-6">
+                <Play className="ml-2 h-5 w-5" />
+                احجز مكانك الآن بـ 700 درهم فقط
+              </Button>
+              <p className="text-sm text-muted-foreground mt-4 flex items-center justify-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                تواصل معنا عبر الواتساب
+              </p>
+            </div>
+          </Card>
         </div>
       </section>
 
