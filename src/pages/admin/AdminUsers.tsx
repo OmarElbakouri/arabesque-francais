@@ -18,8 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Filter, Edit, Trash2, Mail, Phone } from 'lucide-react';
+import { Search, Filter, Edit, Trash2, Mail, Phone, MessageSquare } from 'lucide-react';
 import { UserRole, UserStatus } from '@/stores/authStore';
+import { Progress } from '@/components/ui/progress';
 
 interface User {
   id: string;
@@ -32,6 +33,8 @@ interface User {
   dateInscription: string;
   dateExpiration?: string;
   commercial?: string;
+  creditsIA?: number;
+  maxCreditsIA?: number;
 }
 
 export default function AdminUsers() {
@@ -52,6 +55,8 @@ export default function AdminUsers() {
       dateInscription: '2024-01-15',
       dateExpiration: '2024-12-15',
       commercial: 'أحمد السعيد',
+      creditsIA: 18,
+      maxCreditsIA: 30,
     },
     {
       id: '2',
@@ -64,6 +69,8 @@ export default function AdminUsers() {
       dateInscription: '2024-02-01',
       dateExpiration: '2025-02-01',
       commercial: 'خالد المنصوري',
+      creditsIA: 45,
+      maxCreditsIA: 70,
     },
     {
       id: '3',
@@ -74,6 +81,8 @@ export default function AdminUsers() {
       role: 'NORMAL',
       status: 'ACTIF',
       dateInscription: '2024-03-10',
+      creditsIA: 22,
+      maxCreditsIA: 30,
     },
     {
       id: '4',
@@ -86,6 +95,8 @@ export default function AdminUsers() {
       dateInscription: '2023-06-20',
       dateExpiration: '2024-06-20',
       commercial: 'أحمد السعيد',
+      creditsIA: 0,
+      maxCreditsIA: 30,
     },
     {
       id: '5',
@@ -97,6 +108,8 @@ export default function AdminUsers() {
       status: 'EN_ATTENTE',
       dateInscription: '2024-10-01',
       commercial: 'خالد المنصوري',
+      creditsIA: 30,
+      maxCreditsIA: 30,
     },
   ]);
 
@@ -237,6 +250,7 @@ export default function AdminUsers() {
                   <TableHead>Utilisateur</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Abonnement</TableHead>
+                  <TableHead>Crédits IA</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Date d'inscription</TableHead>
                   <TableHead>Date d'expiration</TableHead>
@@ -266,6 +280,24 @@ export default function AdminUsers() {
                     </TableCell>
                     <TableCell>
                       <Badge className={roleColors[user.role]}>{user.role}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {user.creditsIA !== undefined ? (
+                        <div className="space-y-1 min-w-[120px]">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="font-medium">
+                              {user.creditsIA}/{user.maxCreditsIA}
+                            </span>
+                            <MessageSquare className="w-3 h-3 text-muted-foreground" />
+                          </div>
+                          <Progress
+                            value={(user.creditsIA / (user.maxCreditsIA || 1)) * 100}
+                            className="h-1.5"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge className={statusColors[user.status]}>{user.status}</Badge>

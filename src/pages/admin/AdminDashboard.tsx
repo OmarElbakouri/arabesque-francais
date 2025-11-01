@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, DollarSign, TrendingUp, UserPlus, Award, BookOpen } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, UserPlus, Award, BookOpen, MessageSquare, ArrowUpRight, Percent } from 'lucide-react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -27,14 +27,20 @@ ChartJS.register(
 );
 
 export default function AdminDashboard() {
-  // Mock data
+  // Mock data avec métriques détaillées
   const stats = {
     totalUsers: 1250,
+    normalUsers: 450,
+    vipUsers: 180,
     activeUsers: 890,
     monthlyRevenue: 45600,
     newUsersThisMonth: 156,
     totalCourses: 12,
     conversionRate: 23.5,
+    normalToVip: 42, // Conversions NORMAL→VIP ce mois
+    totalAICredits: 89500, // Crédits IA totaux utilisés
+    avgAIUsage: 67, // Utilisation moyenne des crédits IA en %
+    commercialRevenue: 15548, // Revenus générés par commerciaux
   };
 
   const lineChartData = {
@@ -90,14 +96,17 @@ export default function AdminDashboard() {
         <p className="text-muted-foreground mt-1">Vue d'ensemble de la plateforme</p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      {/* KPI Cards - Ligne 1 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="card-elevated">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Utilisateurs</p>
                 <p className="text-2xl font-bold text-primary">{stats.totalUsers}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.normalUsers} Normal • {stats.vipUsers} VIP
+                </p>
               </div>
               <Users className="h-8 w-8 text-primary/20" />
             </div>
@@ -108,20 +117,12 @@ export default function AdminDashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Utilisateurs Actifs</p>
-                <p className="text-2xl font-bold text-success">{stats.activeUsers}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-success/20" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="card-elevated">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
                 <p className="text-sm text-muted-foreground">Revenus Mensuels</p>
                 <p className="text-2xl font-bold text-secondary">{stats.monthlyRevenue} DH</p>
+                <p className="text-xs text-success mt-1 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  +12.5% vs mois dernier
+                </p>
               </div>
               <DollarSign className="h-8 w-8 text-secondary/20" />
             </div>
@@ -132,8 +133,60 @@ export default function AdminDashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
+                <p className="text-sm text-muted-foreground">Conversions NORMAL→VIP</p>
+                <p className="text-2xl font-bold text-success">{stats.normalToVip}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.conversionRate}% taux ce mois
+                </p>
+              </div>
+              <ArrowUpRight className="h-8 w-8 text-success/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Utilisation IA Moy.</p>
+                <p className="text-2xl font-bold text-warning">{stats.avgAIUsage}%</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.totalAICredits.toLocaleString()} crédits utilisés
+                </p>
+              </div>
+              <MessageSquare className="h-8 w-8 text-warning/20" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* KPI Cards - Ligne 2 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Utilisateurs Actifs</p>
+                <p className="text-2xl font-bold text-success">{stats.activeUsers}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {Math.round((stats.activeUsers / stats.totalUsers) * 100)}% du total
+                </p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-success/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-sm text-muted-foreground">Nouveaux ce mois</p>
                 <p className="text-2xl font-bold text-info">{stats.newUsersThisMonth}</p>
+                <p className="text-xs text-success mt-1 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  +8.3% vs mois dernier
+                </p>
               </div>
               <UserPlus className="h-8 w-8 text-info/20" />
             </div>
@@ -144,10 +197,13 @@ export default function AdminDashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Nombre de Cours</p>
-                <p className="text-2xl font-bold text-warning">{stats.totalCourses}</p>
+                <p className="text-sm text-muted-foreground">Revenus Commerciaux</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.commercialRevenue} DH</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {Math.round((stats.commercialRevenue / stats.monthlyRevenue) * 100)}% du total
+                </p>
               </div>
-              <BookOpen className="h-8 w-8 text-warning/20" />
+              <Percent className="h-8 w-8 text-purple-600/20" />
             </div>
           </CardContent>
         </Card>
@@ -156,10 +212,13 @@ export default function AdminDashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Taux de Conversion</p>
-                <p className="text-2xl font-bold text-primary">{stats.conversionRate}%</p>
+                <p className="text-sm text-muted-foreground">Nombre de Cours</p>
+                <p className="text-2xl font-bold text-primary">{stats.totalCourses}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tous publiés et actifs
+                </p>
               </div>
-              <Award className="h-8 w-8 text-primary/20" />
+              <BookOpen className="h-8 w-8 text-primary/20" />
             </div>
           </CardContent>
         </Card>

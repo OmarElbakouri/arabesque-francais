@@ -22,6 +22,9 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSales from "./pages/admin/AdminSales";
 import AdminCourses from "./pages/admin/AdminCourses";
+import AdminPayments from "./pages/admin/AdminPayments";
+import AdminAICredits from "./pages/admin/AdminAICredits";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 
 const queryClient = new QueryClient();
 
@@ -54,7 +57,9 @@ const App = () => (
             <Route path="sales" element={<AdminSales />} />
             <Route path="courses" element={<AdminCourses />} />
             <Route path="documents" element={<AdminCourses />} />
-            <Route path="payments" element={<AdminUsers />} />
+            <Route path="payments" element={<AdminPayments />} />
+            <Route path="ai-credits" element={<AdminAICredits />} />
+            <Route path="notifications" element={<AdminNotifications />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

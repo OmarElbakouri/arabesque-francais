@@ -8,7 +8,9 @@ import {
   UserCog,
   LogOut,
   Menu,
-  X
+  X,
+  MessageSquare,
+  Bell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
@@ -31,6 +33,8 @@ export default function AdminLayout() {
     { icon: BookOpen, label: 'Cours', path: '/admin/courses' },
     { icon: FileText, label: 'Documents', path: '/admin/documents' },
     { icon: DollarSign, label: 'Paiements', path: '/admin/payments' },
+    { icon: MessageSquare, label: 'Crédits IA', path: '/admin/ai-credits' },
+    { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
   ];
 
   const isActive = (path: string) => {
