@@ -24,9 +24,17 @@ export default function Login() {
         title: 'مرحباً بك!',
         description: 'تم تسجيل الدخول بنجاح',
       });
-      navigate('/dashboard');
-    } catch (err) {
-      setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+      
+      // Redirect based on role
+      const authState = useAuthStore.getState();
+      if (authState.user?.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+      setError(errorMessage);
     }
   };
 

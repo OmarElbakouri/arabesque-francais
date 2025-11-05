@@ -117,6 +117,7 @@ export default function AdminUsers() {
     NORMAL: 'bg-muted text-muted-foreground',
     PREMIUM: 'bg-primary text-primary-foreground',
     VIP: 'bg-secondary text-secondary-foreground',
+    COMMERCIAL: 'bg-info text-white',
     ADMIN: 'bg-destructive text-destructive-foreground',
   };
 
