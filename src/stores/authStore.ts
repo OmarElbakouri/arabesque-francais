@@ -51,13 +51,18 @@ export const useAuthStore = create<AuthState>()(
             localStorage.setItem('jwt_token', response.data.token);
             
             // Create user object
+            // SECURITY: Verify role from backend, but never accept ADMIN from login/register
+            // Admin accounts must be created through special endpoint
+            const userRole = response.data.role as UserRole;
+            const safeRole = (userRole === 'ADMIN' && email !== 'admin@bclt.ma') ? 'NORMAL' : userRole;
+            
             const user: User = {
               id: response.data.userId,
               nom: response.data.lastName,
               prenom: response.data.firstName,
               email: response.data.email,
               telephone: '',
-              role: (response.data.role as UserRole) || 'NORMAL',
+              role: safeRole || 'NORMAL',
               status: 'ACTIF',
               dateInscription: new Date().toISOString(),
             };

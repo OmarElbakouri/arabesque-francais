@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   MessageSquare,
-  Bell
+  Bell,
+  Video
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
@@ -31,6 +32,7 @@ export default function AdminLayout() {
     { icon: Users, label: 'Utilisateurs', path: '/admin/users' },
     { icon: UserCog, label: 'Équipe Commerciale', path: '/admin/sales' },
     { icon: BookOpen, label: 'Cours', path: '/admin/courses' },
+    { icon: Video, label: 'Chapitres & Vidéos', path: '/admin/chapters' },
     { icon: FileText, label: 'Documents', path: '/admin/documents' },
     { icon: DollarSign, label: 'Paiements', path: '/admin/payments' },
     { icon: MessageSquare, label: 'Crédits IA', path: '/admin/ai-credits' },
