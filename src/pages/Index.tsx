@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { ChevronDown, BookOpen, Target, Award, Users, Play, Check, Star, MessageCircle, Lightbulb, Video, UserCheck, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,8 +30,12 @@ const Index = () => {
               <a href="#faq" className="link-animated text-foreground hover:text-primary font-medium">الأسئلة الشائعة</a>
             </nav>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" className="font-medium">تسجيل الدخول</Button>
-              <Button className="btn-hero text-sm">ابدأ مجاناً</Button>
+              <Link to="/login">
+                <Button variant="ghost" className="font-medium">تسجيل الدخول</Button>
+              </Link>
+              <Link to="/register">
+                <Button className="btn-hero text-sm">ابدأ مجاناً</Button>
+              </Link>
             </div>
           </div>
         </div>
