@@ -102,13 +102,14 @@ export const useAuthStore = create<AuthState>()(
             localStorage.setItem('jwt_token', response.data.token);
             
             // Create user object
+            // New registrations always get NORMAL role from backend
             const user: User = {
               id: response.data.userId,
               nom: response.data.lastName,
               prenom: response.data.firstName,
               email: response.data.email,
               telephone: data.telephone,
-              role: 'NORMAL',
+              role: (response.data.role as UserRole) || 'NORMAL',
               status: 'ACTIF',
               dateInscription: new Date().toISOString(),
               credits: 30, // Default credits for new users

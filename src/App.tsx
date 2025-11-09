@@ -17,6 +17,7 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -43,10 +44,10 @@ const App = () => (
           <Route path="/home" element={<><Navbar /><Index /><Footer /></>} />
           <Route path="/login" element={<><Navbar /><Login /><Footer /></>} />
           <Route path="/register" element={<><Navbar /><Register /><Footer /></>} />
-          <Route path="/dashboard" element={<><Navbar /><Dashboard /><Footer /></>} />
-          <Route path="/courses" element={<><Navbar /><Courses /><Footer /></>} />
-          <Route path="/course/:id" element={<><Navbar /><CourseDetail /><Footer /></>} />
-          <Route path="/profile" element={<><Navbar /><Profile /><Footer /></>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Navbar /><Dashboard /><Footer /></ProtectedRoute>} />
+          <Route path="/courses" element={<ProtectedRoute><Navbar /><Courses /><Footer /></ProtectedRoute>} />
+          <Route path="/course/:id" element={<ProtectedRoute><Navbar /><CourseDetail /><Footer /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Navbar /><Profile /><Footer /></ProtectedRoute>} />
           <Route path="/blog" element={<><Navbar /><Blog /><Footer /></>} />
           <Route path="/contact" element={<><Navbar /><Contact /><Footer /></>} />
           <Route path="/faq" element={<><Navbar /><FAQ /><Footer /></>} />
