@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
-import { Footer } from "./components/Footer";
 import SubjectSelection from "./pages/SubjectSelection";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -40,17 +39,17 @@ const App = () => (
           {/* Subject Selection - Entry Point */}
           <Route path="/" element={<SubjectSelection />} />
           
-          {/* Public routes with Navbar and Footer */}
-          <Route path="/home" element={<><Navbar /><Index /><Footer /></>} />
-          <Route path="/login" element={<><Navbar /><Login /><Footer /></>} />
-          <Route path="/register" element={<><Navbar /><Register /><Footer /></>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Navbar /><Dashboard /><Footer /></ProtectedRoute>} />
-          <Route path="/courses" element={<ProtectedRoute><Navbar /><Courses /><Footer /></ProtectedRoute>} />
-          <Route path="/course/:id" element={<ProtectedRoute><Navbar /><CourseDetail /><Footer /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Navbar /><Profile /><Footer /></ProtectedRoute>} />
-          <Route path="/blog" element={<><Navbar /><Blog /><Footer /></>} />
-          <Route path="/contact" element={<><Navbar /><Contact /><Footer /></>} />
-          <Route path="/faq" element={<><Navbar /><FAQ /><Footer /></>} />
+          {/* Public routes with Navbar */}
+          <Route path="/home" element={<><Navbar /><Index /></>} />
+          <Route path="/login" element={<><Navbar /><Login /></>} />
+          <Route path="/register" element={<><Navbar /><Register /></>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Navbar /><Dashboard /></ProtectedRoute>} />
+          <Route path="/courses" element={<ProtectedRoute><Navbar /><Courses /></ProtectedRoute>} />
+          <Route path="/course/:id" element={<ProtectedRoute><Navbar /><CourseDetail /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Navbar /><Profile /></ProtectedRoute>} />
+          <Route path="/blog" element={<><Navbar /><Blog /></>} />
+          <Route path="/contact" element={<><Navbar /><Contact /></>} />
+          <Route path="/faq" element={<><Navbar /><FAQ /></>} />
           
           {/* Admin routes with separate layout */}
           <Route path="/admin" element={<AdminLayout />}>
