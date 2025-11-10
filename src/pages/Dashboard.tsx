@@ -23,7 +23,8 @@ export default function Dashboard() {
       console.log('Dashboard: user.id:', user?.id);
       
       if (!user?.id) {
-        console.log('Dashboard: No user ID, skipping fetch');
+        console.log('Dashboard: No user ID, setting error');
+        setError('لم يتم العثور على معلومات المستخدم');
         setIsLoading(false);
         return;
       }
