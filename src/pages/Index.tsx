@@ -286,10 +286,15 @@ const Index = () => {
                   احجز مكانك الآن بـ 700 درهم فقط
                 </Button>
               </Link>
-              <p className="text-sm text-muted-foreground mt-4 flex items-center justify-center gap-2">
+              <a 
+                href="https://wa.me/212612097399" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm text-muted-foreground mt-4 flex items-center justify-center gap-2 hover:text-primary transition-colors"
+              >
                 <MessageCircle className="h-4 w-4" />
-                تواصل معنا عبر الواتساب
-              </p>
+                تواصل معنا عبر الواتساب: +212 612-097399
+              </a>
             </div>
           </Card>
         </div>
