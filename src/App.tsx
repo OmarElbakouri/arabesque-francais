@@ -41,8 +41,8 @@ const App = () => (
           
           {/* Public routes with Navbar */}
           <Route path="/home" element={<><Navbar /><Index /></>} />
-          <Route path="/login" element={<><Navbar /><Login /></>} />
-          <Route path="/register" element={<><Navbar /><Register /></>} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<ProtectedRoute><Navbar /><Dashboard /></ProtectedRoute>} />
           <Route path="/courses" element={<ProtectedRoute><Navbar /><Courses /></ProtectedRoute>} />
           <Route path="/course/:id" element={<ProtectedRoute><Navbar /><CourseDetail /></ProtectedRoute>} />

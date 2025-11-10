@@ -40,8 +40,12 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-hero py-12 px-4">
-      <Card className="w-full max-w-md shadow-custom-lg">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(210,35%,96%)] via-background to-[hsl(42,45%,97%)] py-12 px-4 relative">
+      {/* Modern floating shapes */}
+      <div className="absolute top-20 right-20 w-72 h-72 bg-primary/5 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-20 left-20 w-96 h-96 bg-secondary/5 rounded-full blur-3xl"></div>
+      
+      <Card className="w-full max-w-md shadow-2xl border-0 backdrop-blur-sm bg-white/90 relative z-10">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold text-gradient">إنشاء حساب جديد</CardTitle>
           <CardDescription>انضم إلينا وابدأ رحلتك في تعلم الفرنسية</CardDescription>
