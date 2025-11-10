@@ -58,14 +58,18 @@ const Index = () => {
                 تعلم اللغة الفرنسية بأسلوب عصري وتفاعلي مع أفضل المدربين. دروس فيديو، تمارين تفاعلية، وذكاء اصطناعي لمساعدتك في كل خطوة.
               </p>
               <div className="flex flex-wrap gap-4 mb-8">
-                <Button size="lg" className="btn-hero">
-                  <Play className="ml-2 h-5 w-5" />
-                  ابدأ التعلم الآن
-                </Button>
-                <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold">
-                  <BookOpen className="ml-2 h-5 w-5" />
-                  تصفح الدورات
-                </Button>
+                <Link to="/subject-selection">
+                  <Button size="lg" className="btn-hero">
+                    <Play className="ml-2 h-5 w-5" />
+                    ابدأ التعلم الآن
+                  </Button>
+                </Link>
+                <Link to="/courses">
+                  <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold">
+                    <BookOpen className="ml-2 h-5 w-5" />
+                    تصفح الدورات
+                  </Button>
+                </Link>
               </div>
               <div className="flex items-center gap-8 text-sm">
                 <div className="flex items-center gap-2">
@@ -276,10 +280,12 @@ const Index = () => {
             </div>
 
             <div className="mt-8 text-center">
-              <Button size="lg" className="btn-hero text-lg px-8 py-6">
-                <Play className="ml-2 h-5 w-5" />
-                احجز مكانك الآن بـ 700 درهم فقط
-              </Button>
+              <Link to="/register">
+                <Button size="lg" className="btn-hero text-lg px-8 py-6">
+                  <Play className="ml-2 h-5 w-5" />
+                  احجز مكانك الآن بـ 700 درهم فقط
+                </Button>
+              </Link>
               <p className="text-sm text-muted-foreground mt-4 flex items-center justify-center gap-2">
                 <MessageCircle className="h-4 w-4" />
                 تواصل معنا عبر الواتساب
@@ -544,12 +550,14 @@ const Index = () => {
                   ))}
                 </ul>
 
-                <Button 
-                  className={`w-full ${plan.popular ? 'btn-hero' : 'bg-primary hover:bg-primary-hover text-white'}`}
-                  size="lg"
-                >
-                  {plan.cta}
-                </Button>
+                <Link to="/register" className="block">
+                  <Button 
+                    className={`w-full ${plan.popular ? 'btn-hero' : 'bg-primary hover:bg-primary-hover text-white'}`}
+                    size="lg"
+                  >
+                    {plan.cta}
+                  </Button>
+                </Link>
               </Card>
             ))}
           </div>
@@ -731,13 +739,17 @@ const Index = () => {
               انضم لآلاف الطلاب الذين حققوا أحلامهم في إتقان اللغة الفرنسية
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Button size="lg" className="btn-hero-outline bg-white text-primary hover:bg-white/90">
-                ابدأ التعلم مجاناً
-              </Button>
-              <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-primary">
-                <MessageCircle className="ml-2 h-5 w-5" />
-                تحدث معنا
-              </Button>
+              <Link to="/register">
+                <Button size="lg" className="btn-hero-outline bg-white text-primary hover:bg-white/90">
+                  ابدأ التعلم مجاناً
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-primary">
+                  <MessageCircle className="ml-2 h-5 w-5" />
+                  تحدث معنا
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
