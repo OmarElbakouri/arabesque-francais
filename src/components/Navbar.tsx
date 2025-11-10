@@ -62,12 +62,6 @@ export function Navbar() {
               </>
             )}
             <Link
-              to="/blog"
-              className={`link-animated ${isActive('/blog') ? 'text-primary font-bold' : 'text-foreground'}`}
-            >
-              المدونة
-            </Link>
-            <Link
               to="/contact"
               className={`link-animated ${isActive('/contact') ? 'text-primary font-bold' : 'text-foreground'}`}
             >
@@ -157,13 +151,6 @@ export function Navbar() {
                 )}
               </>
             )}
-            <Link
-              to="/blog"
-              className="block py-2 text-foreground"
-              onClick={() => setIsOpen(false)}
-            >
-              المدونة
-            </Link>
             <Link
               to="/contact"
               className="block py-2 text-foreground"

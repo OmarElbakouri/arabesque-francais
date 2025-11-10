@@ -95,14 +95,11 @@ export default function CourseDetail() {
                     alt={course.titre}
                     className="w-full rounded-lg mb-4"
                   />
-                  <div className="text-3xl font-bold text-primary mb-2">
-                    {course.gratuit ? 'مجاني' : `${course.prix} درهم`}
-                  </div>
                   {isEnrolled ? (
                     <div>
                       <Progress value={course.progression} className="mb-2" />
                       <p className="text-sm text-muted-foreground mb-4">{course.progression}% مكتمل</p>
-                      <Link to={`/learn/${course.id}`}>
+                      <Link to="/home">
                         <Button className="w-full btn-hero">متابعة التعلم</Button>
                       </Link>
                     </div>
