@@ -293,7 +293,7 @@ const Index = () => {
                 className="text-sm text-muted-foreground mt-4 flex items-center justify-center gap-2 hover:text-primary transition-colors"
               >
                 <MessageCircle className="h-4 w-4" />
-                تواصل معنا عبر الواتساب: +212 612-097399
+                تواصل معنا عبر الواتساب: +212 612097399
               </a>
             </div>
           </Card>
