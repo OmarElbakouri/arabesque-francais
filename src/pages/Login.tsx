@@ -45,11 +45,6 @@ export default function Login() {
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
       <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent/5 rounded-full blur-2xl animate-float" style={{ animationDelay: '2s' }}></div>
       
-      {/* Decorative circles */}
-      <div className="absolute top-10 left-10 w-20 h-20 border-2 border-primary/20 rounded-full"></div>
-      <div className="absolute bottom-10 right-10 w-32 h-32 border-2 border-secondary/20 rounded-full"></div>
-      <div className="absolute top-1/3 right-20 w-16 h-16 border border-accent/30 rounded-full"></div>
-      
       <Card className="w-full max-w-md shadow-2xl border-0 backdrop-blur-sm bg-white/95 relative z-10 animate-fade-in overflow-hidden">
         {/* Top decorative bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>

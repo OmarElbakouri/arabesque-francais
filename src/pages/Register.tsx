@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, User, Phone, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, Phone, AlertCircle, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,11 +45,6 @@ export default function Register() {
       <div className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float"></div>
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
       <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent/5 rounded-full blur-2xl animate-float" style={{ animationDelay: '2s' }}></div>
-      
-      {/* Decorative elements */}
-      <div className="absolute top-10 left-10 w-20 h-20 border-2 border-primary/20 rounded-full"></div>
-      <div className="absolute bottom-10 right-10 w-32 h-32 border-2 border-secondary/20 rounded-full"></div>
-      <div className="absolute top-1/3 right-20 w-16 h-16 border border-accent/30 rounded-full"></div>
       
       <Card className="w-full max-w-md shadow-2xl border-0 backdrop-blur-sm bg-white/95 relative z-10 animate-fade-in overflow-hidden">
         {/* Top decorative bar */}
@@ -135,6 +130,20 @@ export default function Register() {
               {errors.telephone && (
                 <p className="text-sm text-destructive mt-1 animate-fade-in">{errors.telephone.message as string}</p>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="promoCode" className="text-sm font-medium">كود البرومو <span className="text-muted-foreground text-xs">(اختياري)</span></Label>
+              <div className="relative group">
+                <Tag className="absolute right-3 top-3 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-secondary" />
+                <Input
+                  id="promoCode"
+                  type="text"
+                  placeholder="أدخل كود البرومو"
+                  className="pr-10 transition-all duration-300 focus:ring-2 focus:ring-secondary/20 border-border hover:border-secondary/50"
+                  {...register('promoCode')}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
