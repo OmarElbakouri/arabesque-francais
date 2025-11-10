@@ -47,22 +47,21 @@ export const useAuthStore = create<AuthState>()(
           const response = await authService.login({ email, password });
           
           if (response.success) {
-            // Store JWT token
+            // Clear all localStorage data before storing new login data
+            localStorage.clear();
+            
+            // Store JWT token and role
             localStorage.setItem('jwt_token', response.data.token);
+            localStorage.setItem('role', response.data.role || 'NORMAL');
             
-            // Create user object
-            // SECURITY: Verify role from backend, but never accept ADMIN from login/register
-            // Admin accounts must be created through special endpoint
-            const userRole = response.data.role as UserRole;
-            const safeRole = (userRole === 'ADMIN' && email !== 'admin@bclt.ma') ? 'NORMAL' : userRole;
-            
+            // Create user object with role from backend
             const user: User = {
               id: response.data.userId,
               nom: response.data.lastName,
               prenom: response.data.firstName,
               email: response.data.email,
               telephone: '',
-              role: safeRole || 'NORMAL',
+              role: (response.data.role as UserRole) || 'NORMAL',
               status: 'ACTIF',
               dateInscription: new Date().toISOString(),
             };
@@ -129,7 +128,7 @@ export const useAuthStore = create<AuthState>()(
       },
       
       logout: () => {
-        localStorage.removeItem('jwt_token');
+        localStorage.clear();
         set({ user: null, isAuthenticated: false });
       },
       

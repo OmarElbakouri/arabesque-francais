@@ -17,6 +17,7 @@ export function Navbar() {
     NORMAL: 'bg-muted text-muted-foreground',
     PREMIUM: 'bg-primary text-primary-foreground',
     VIP: 'bg-secondary text-secondary-foreground',
+    COMMERCIAL: 'bg-accent text-accent-foreground',
     ADMIN: 'bg-destructive text-destructive-foreground',
   };
 
