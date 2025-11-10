@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Eye, Upload, FileText } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, FileText } from 'lucide-react';
 import { useCoursesStore } from '@/stores/coursesStore';
 
 export default function AdminCourses() {
@@ -156,24 +156,6 @@ export default function AdminCourses() {
         ))}
       </div>
 
-      {/* Documents Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>المستندات والملفات</CardTitle>
-            <Button variant="outline" className="gap-2">
-              <Upload className="w-4 h-4" />
-              رفع ملف PDF
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
-            <p>لا توجد مستندات مرفوعة بعد</p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
