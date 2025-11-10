@@ -32,8 +32,8 @@ export function Navbar() {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-6">
             <Link
-              to="/"
-              className={`link-animated ${isActive('/') ? 'text-primary font-bold' : 'text-foreground'}`}
+              to="/home"
+              className={`link-animated ${isActive('/home') ? 'text-primary font-bold' : 'text-foreground'}`}
             >
               الرئيسية
             </Link>
@@ -118,7 +118,7 @@ export function Navbar() {
         {isOpen && (
           <div className="md:hidden py-4 space-y-4 animate-fade-in">
             <Link
-              to="/"
+              to="/home"
               className="block py-2 text-foreground"
               onClick={() => setIsOpen(false)}
             >
