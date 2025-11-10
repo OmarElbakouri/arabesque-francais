@@ -17,8 +17,12 @@ import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { CommercialRoute } from "./components/CommercialRoute";
 import AdminLayout from "./pages/admin/AdminLayout";
+import CommercialLayout from "./pages/commercial/CommercialLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import CommercialDashboard from "./pages/commercial/CommercialDashboard";
+import CreateUser from "./pages/commercial/CreateUser";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSales from "./pages/admin/AdminSales";
 import AdminCourses from "./pages/admin/AdminCourses";
@@ -62,6 +66,12 @@ const App = () => (
             <Route path="payments" element={<AdminPayments />} />
             <Route path="ai-credits" element={<AdminAICredits />} />
             <Route path="notifications" element={<AdminNotifications />} />
+          </Route>
+
+          {/* Commercial routes with separate layout */}
+          <Route path="/commercial" element={<CommercialRoute><CommercialLayout /></CommercialRoute>}>
+            <Route index element={<CommercialDashboard />} />
+            <Route path="create-user" element={<CreateUser />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

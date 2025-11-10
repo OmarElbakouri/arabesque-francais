@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { authService } from '@/services/authService';
 import { creditsService } from '@/services/creditsService';
 
-export type UserRole = 'NORMAL' | 'PREMIUM' | 'VIP' | 'COMMERCIAL' | 'ADMIN';
+export type UserRole = 'FREE' | 'NORMAL' | 'PREMIUM' | 'VIP' | 'COMMERCIAL' | 'ADMIN';
 export type UserStatus = 'ACTIF' | 'EXPIRE' | 'EN_ATTENTE' | 'SUSPENDU';
 
 interface User {
