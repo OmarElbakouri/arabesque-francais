@@ -19,14 +19,25 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchDashboard = async () => {
-      if (!user?.id) return;
+      console.log('Dashboard: user object:', user);
+      console.log('Dashboard: user.id:', user?.id);
+      
+      if (!user?.id) {
+        console.log('Dashboard: No user ID, skipping fetch');
+        setIsLoading(false);
+        return;
+      }
       
       try {
         setIsLoading(true);
         setError(null);
+        console.log('Dashboard: Fetching dashboard for user:', user.id);
         const data = await dashboardService.getDashboard(user.id);
+        console.log('Dashboard: Received data:', data);
         setDashboardData(data);
       } catch (err: any) {
+        console.error('Dashboard: Error fetching dashboard:', err);
+        console.error('Dashboard: Error response:', err.response);
         const errorMessage = err.response?.data?.message || 'فشل تحميل البيانات';
         setError(errorMessage);
         toast({
