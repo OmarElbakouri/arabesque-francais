@@ -17,15 +17,13 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   data: {
-    data: {
-      token: string;
-      userId: string;
-      email: string;
-      firstName: string;
-      lastName: string;
-      role?: string;
-      type?: string;
-    };
+    token: string;
+    userId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role?: string;
+    type?: string;
   };
 }
 

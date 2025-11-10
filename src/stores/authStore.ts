@@ -51,17 +51,17 @@ export const useAuthStore = create<AuthState>()(
             localStorage.clear();
             
             // Store JWT token and role
-            localStorage.setItem('jwt_token', response.data.data.token);
-            localStorage.setItem('role', response.data.data.role || 'NORMAL');
+            localStorage.setItem('jwt_token', response.data.token);
+            localStorage.setItem('role', response.data.role || 'NORMAL');
             
             // Create user object with role from backend
             const user: User = {
-              id: response.data.data.userId,
-              nom: response.data.data.lastName,
-              prenom: response.data.data.firstName,
-              email: response.data.data.email,
+              id: response.data.userId,
+              nom: response.data.lastName,
+              prenom: response.data.firstName,
+              email: response.data.email,
               telephone: '',
-              role: (response.data.data.role as UserRole) || 'NORMAL',
+              role: (response.data.role as UserRole) || 'NORMAL',
               status: 'ACTIF',
               dateInscription: new Date().toISOString(),
             };
@@ -98,17 +98,17 @@ export const useAuthStore = create<AuthState>()(
           
           if (response.success) {
             // Store JWT token
-            localStorage.setItem('jwt_token', response.data.data.token);
+            localStorage.setItem('jwt_token', response.data.token);
             
             // Create user object
             // New registrations always get NORMAL role from backend
             const user: User = {
-              id: response.data.data.userId,
-              nom: response.data.data.lastName,
-              prenom: response.data.data.firstName,
-              email: response.data.data.email,
+              id: response.data.userId,
+              nom: response.data.lastName,
+              prenom: response.data.firstName,
+              email: response.data.email,
               telephone: data.telephone,
-              role: (response.data.data.role as UserRole) || 'NORMAL',
+              role: (response.data.role as UserRole) || 'NORMAL',
               status: 'ACTIF',
               dateInscription: new Date().toISOString(),
               credits: 30, // Default credits for new users
