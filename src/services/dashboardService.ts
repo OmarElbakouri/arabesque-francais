@@ -39,7 +39,8 @@ export interface DashboardResponse {
 
 export const dashboardService = {
   getDashboard: async (userId: string) => {
-    const response = await api.get<DashboardResponse>(`/user/dashboard/${userId}`);
-    return response.data;
+    const response = await api.get<{ success: boolean; message: string; data: DashboardResponse }>(`/user/dashboard/${userId}`);
+    // The backend returns data wrapped in a response object
+    return response.data.data;
   },
 };

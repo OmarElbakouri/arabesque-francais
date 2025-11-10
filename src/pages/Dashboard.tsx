@@ -35,6 +35,9 @@ export default function Dashboard() {
         console.log('Dashboard: Fetching dashboard for user:', user.id);
         const data = await dashboardService.getDashboard(user.id);
         console.log('Dashboard: Received data:', data);
+        console.log('Dashboard: userInfo:', data?.userInfo);
+        console.log('Dashboard: stats:', data?.stats);
+        console.log('Dashboard: credits:', data?.credits);
         setDashboardData(data);
       } catch (err: any) {
         console.error('Dashboard: Error fetching dashboard:', err);
@@ -92,12 +95,28 @@ export default function Dashboard() {
     );
   }
 
-  if (error || !dashboardData) {
+  if (error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
-            <p className="text-destructive mb-4">{error || 'حدث خطأ في تحميل البيانات'}</p>
+            <p className="text-destructive mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>إعادة المحاولة</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!dashboardData || !dashboardData.userInfo) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <p className="text-destructive mb-4">حدث خطأ في تحميل البيانات</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              {!dashboardData ? 'لا توجد بيانات' : 'معلومات المستخدم غير متوفرة'}
+            </p>
             <Button onClick={() => window.location.reload()}>إعادة المحاولة</Button>
           </CardContent>
         </Card>
@@ -106,6 +125,21 @@ export default function Dashboard() {
   }
 
   const { userInfo, stats, credits, enrolledCourses } = dashboardData;
+  
+  // Add safety check for role
+  if (!userInfo || !userInfo.role) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <p className="text-destructive mb-4">بيانات المستخدم غير مكتملة</p>
+            <Button onClick={() => window.location.reload()}>إعادة المحاولة</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
   const currentRole = roleConfig[userInfo.role];
   const shouldShowCredits = userInfo.role === 'NORMAL' || userInfo.role === 'VIP';
 
