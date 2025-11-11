@@ -16,10 +16,10 @@ const CommercialLayout = () => {
   }
 
   const navItems = [
-    { icon: Users, label: 'المستخدمين', path: '/commercial' },
-    { icon: DollarSign, label: 'الإيرادات', path: '/commercial/revenues' },
-    { icon: UserPlus, label: 'إنشاء حساب', path: '/commercial/create-user' },
-    { icon: Settings, label: 'الإعدادات', path: '/commercial/settings' },
+    { icon: Users, label: 'Utilisateurs', path: '/commercial' },
+    { icon: DollarSign, label: 'Revenus', path: '/commercial/revenues' },
+    { icon: UserPlus, label: 'Créer un compte', path: '/commercial/create-user' },
+    { icon: Settings, label: 'Paramètres', path: '/commercial/settings' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -30,12 +30,12 @@ const CommercialLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30" dir="rtl">
+    <div className="min-h-screen bg-muted/30">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-background border-b z-50 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img src={logoImg} alt="BCLT" className="h-8 w-8" />
-          <span className="font-bold text-lg">لوحة التحكم - تجاري</span>
+          <span className="font-bold text-lg">Tableau de Bord - Commercial</span>
         </div>
         <Button
           variant="ghost"
@@ -48,8 +48,8 @@ const CommercialLayout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 right-0 h-full bg-background border-l w-64 z-40 transform transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed top-0 left-0 h-full bg-background border-r w-64 z-40 transform transition-transform duration-300 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
       >
         <div className="p-6 border-b">
@@ -57,7 +57,7 @@ const CommercialLayout = () => {
             <img src={logoImg} alt="BCLT" className="h-10 w-10" />
             <div>
               <h1 className="font-bold text-lg">BCLT</h1>
-              <p className="text-xs text-muted-foreground">لوحة التحكم - تجاري</p>
+              <p className="text-xs text-muted-foreground">Tableau de Bord - Commercial</p>
             </div>
           </div>
           <div className="bg-primary/10 rounded-lg p-3">
@@ -65,7 +65,7 @@ const CommercialLayout = () => {
             <p className="text-xs text-muted-foreground">{user.email}</p>
             <div className="mt-2">
               <span className="inline-block bg-secondary text-white text-xs px-2 py-1 rounded">
-                تجاري
+                Commercial
               </span>
             </div>
           </div>
@@ -99,13 +99,13 @@ const CommercialLayout = () => {
             onClick={handleLogout}
           >
             <LogOut className="h-5 w-5" />
-            تسجيل الخروج
+            Déconnexion
           </Button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="lg:mr-64 pt-16 lg:pt-0">
+      <main className="lg:ml-64 pt-16 lg:pt-0">
         <div className="container mx-auto p-6">
           <Outlet />
         </div>

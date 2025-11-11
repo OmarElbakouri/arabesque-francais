@@ -69,7 +69,7 @@ export function Navbar() {
                     to="/commercial"
                     className={`link-animated ${isActive('/commercial') ? 'text-primary font-bold' : 'text-foreground'}`}
                   >
-                    لوحة التحكم
+                    Tableau de Bord
                   </Link>
                 )}
               </>
@@ -172,7 +172,7 @@ export function Navbar() {
                     className="block py-2 text-foreground"
                     onClick={() => setIsOpen(false)}
                   >
-                    لوحة التحكم
+                    Tableau de Bord
                   </Link>
                 )}
               </>

@@ -19,8 +19,8 @@ const Settings = () => {
     
     if (newPassword !== confirmPassword) {
       toast({
-        title: 'خطأ',
-        description: 'كلمات المرور غير متطابقة',
+        title: 'Erreur',
+        description: 'Les mots de passe ne correspondent pas',
         variant: 'destructive',
       });
       return;
@@ -28,8 +28,8 @@ const Settings = () => {
 
     // Mock password change - sera remplacé par appel API
     toast({
-      title: 'تم تحديث كلمة المرور',
-      description: 'تم تغيير كلمة المرور بنجاح',
+      title: 'Mot de passe mis à jour',
+      description: 'Votre mot de passe a été modifié avec succès',
     });
 
     setCurrentPassword('');
@@ -40,8 +40,8 @@ const Settings = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">الإعدادات</h1>
-        <p className="text-muted-foreground">إدارة إعدادات حسابك</p>
+        <h1 className="text-3xl font-bold mb-2">Paramètres</h1>
+        <p className="text-muted-foreground">Gérez les paramètres de votre compte</p>
       </div>
 
       {/* Profile Info */}
@@ -49,27 +49,27 @@ const Settings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            معلومات الحساب
+            Informations du Compte
           </CardTitle>
-          <CardDescription>معلوماتك الشخصية</CardDescription>
+          <CardDescription>Vos informations personnelles</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>الاسم الأول</Label>
+              <Label>Prénom</Label>
               <Input value={user?.prenom || ''} disabled />
             </div>
             <div className="space-y-2">
-              <Label>الاسم الأخير</Label>
+              <Label>Nom</Label>
               <Input value={user?.nom || ''} disabled />
             </div>
           </div>
           <div className="space-y-2">
-            <Label>البريد الإلكتروني</Label>
+            <Label>Email</Label>
             <Input value={user?.email || ''} disabled />
           </div>
           <div className="space-y-2">
-            <Label>رقم الهاتف</Label>
+            <Label>Téléphone</Label>
             <Input value={user?.telephone || ''} disabled />
           </div>
         </CardContent>
@@ -80,14 +80,14 @@ const Settings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Key className="h-5 w-5" />
-            تغيير كلمة المرور
+            Changer le Mot de Passe
           </CardTitle>
-          <CardDescription>تحديث كلمة المرور الخاصة بك</CardDescription>
+          <CardDescription>Mettez à jour votre mot de passe</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePasswordChange} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="current-password">كلمة المرور الحالية</Label>
+              <Label htmlFor="current-password">Mot de passe actuel</Label>
               <Input
                 id="current-password"
                 type="password"
@@ -97,7 +97,7 @@ const Settings = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-password">كلمة المرور الجديدة</Label>
+              <Label htmlFor="new-password">Nouveau mot de passe</Label>
               <Input
                 id="new-password"
                 type="password"
@@ -107,7 +107,7 @@ const Settings = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">تأكيد كلمة المرور</Label>
+              <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
               <Input
                 id="confirm-password"
                 type="password"
@@ -117,7 +117,7 @@ const Settings = () => {
               />
             </div>
             <Button type="submit">
-              تحديث كلمة المرور
+              Mettre à jour le mot de passe
             </Button>
           </form>
         </CardContent>
@@ -128,18 +128,18 @@ const Settings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <SettingsIcon className="h-5 w-5" />
-            كود البروموشن
+            Code Promo
           </CardTitle>
-          <CardDescription>كودك الترويجي الخاص</CardDescription>
+          <CardDescription>Votre code promo personnel</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-2">شارك هذا الكود مع العملاء</p>
+              <p className="text-sm text-muted-foreground mb-2">Partagez ce code avec vos clients</p>
               <p className="text-3xl font-bold text-primary">COMM2025</p>
             </div>
             <Button onClick={() => navigator.clipboard.writeText('COMM2025')}>
-              نسخ الكود
+              Copier le code
             </Button>
           </div>
         </CardContent>

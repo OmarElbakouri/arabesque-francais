@@ -25,30 +25,30 @@ const Revenues = () => {
   const revenues: RevenueRecord[] = [
     {
       id: '1',
-      userName: 'فاطمة الزهراء',
+      userName: 'Fatima Zahra',
       userEmail: 'fatima@example.com',
       amount: 700,
       date: '2025-01-10',
       status: 'PAID',
-      paymentMethod: 'تحويل بنكي',
+      paymentMethod: 'Virement bancaire',
     },
     {
       id: '2',
-      userName: 'محمد العلوي',
+      userName: 'Mohamed Alaoui',
       userEmail: 'mohamed@example.com',
       amount: 700,
       date: '2025-01-05',
       status: 'PAID',
-      paymentMethod: 'بطاقة بنكية',
+      paymentMethod: 'Carte bancaire',
     },
     {
       id: '3',
-      userName: 'سارة بنعلي',
+      userName: 'Sara Benali',
       userEmail: 'sara@example.com',
       amount: 700,
       date: '2024-12-20',
       status: 'PAID',
-      paymentMethod: 'تحويل بنكي',
+      paymentMethod: 'Virement bancaire',
     },
   ];
 
@@ -64,53 +64,53 @@ const Revenues = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">الإيرادات</h1>
-        <p className="text-muted-foreground">تتبع إيراداتك من المستخدمين المسجلين بكودك</p>
+        <h1 className="text-3xl font-bold mb-2">Revenus</h1>
+        <p className="text-muted-foreground">Suivez vos revenus des utilisateurs inscrits avec votre code</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي الإيرادات</CardTitle>
+            <CardTitle className="text-sm font-medium">Revenus Totaux</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalRevenue} DH</div>
-            <p className="text-xs text-muted-foreground">جميع الأوقات</p>
+            <p className="text-xs text-muted-foreground">Tous les temps</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إيرادات مدفوعة</CardTitle>
+            <CardTitle className="text-sm font-medium">Revenus Payés</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{paidRevenue} DH</div>
-            <p className="text-xs text-muted-foreground">{revenues.filter(r => r.status === 'PAID').length} معاملة</p>
+            <p className="text-xs text-muted-foreground">{revenues.filter(r => r.status === 'PAID').length} transactions</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">في الانتظار</CardTitle>
+            <CardTitle className="text-sm font-medium">En Attente</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{pendingRevenue} DH</div>
-            <p className="text-xs text-muted-foreground">{revenues.filter(r => r.status === 'PENDING').length} معاملة</p>
+            <p className="text-xs text-muted-foreground">{revenues.filter(r => r.status === 'PENDING').length} transactions</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">هذا الشهر</CardTitle>
+            <CardTitle className="text-sm font-medium">Ce Mois</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{thisMonthRevenue} DH</div>
-            <p className="text-xs text-muted-foreground">الشهر الحالي</p>
+            <p className="text-xs text-muted-foreground">Mois en cours</p>
           </CardContent>
         </Card>
       </div>
@@ -118,18 +118,18 @@ const Revenues = () => {
       {/* Revenue Table */}
       <Card>
         <CardHeader>
-          <CardTitle>سجل الإيرادات</CardTitle>
+          <CardTitle>Historique des Revenus</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-right">المستخدم</TableHead>
-                  <TableHead className="text-right">المبلغ</TableHead>
-                  <TableHead className="text-right">التاريخ</TableHead>
-                  <TableHead className="text-right">طريقة الدفع</TableHead>
-                  <TableHead className="text-right">الحالة</TableHead>
+                  <TableHead>Utilisateur</TableHead>
+                  <TableHead>Montant</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Méthode de paiement</TableHead>
+                  <TableHead>Statut</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -145,14 +145,14 @@ const Revenues = () => {
                       <div className="font-bold text-primary">{record.amount} DH</div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">{new Date(record.date).toLocaleDateString('ar-MA')}</div>
+                      <div className="text-sm">{new Date(record.date).toLocaleDateString('fr-FR')}</div>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">{record.paymentMethod}</div>
                     </TableCell>
                     <TableCell>
                       <Badge className={record.status === 'PAID' ? 'bg-green-500' : 'bg-yellow-500'}>
-                        {record.status === 'PAID' ? 'مدفوع' : 'في الانتظار'}
+                        {record.status === 'PAID' ? 'Payé' : 'En attente'}
                       </Badge>
                     </TableCell>
                   </TableRow>

@@ -120,8 +120,8 @@ const CommercialDashboard = () => {
     ));
     
     toast({
-      title: 'تم تحديث الحالة',
-      description: `تم تغيير حالة المستخدم إلى ${statusLabels[newStatus]}`,
+      title: 'Statut mis à jour',
+      description: `Le statut de l'utilisateur a été changé en ${statusLabels[newStatus]}`,
     });
   };
 
@@ -130,8 +130,8 @@ const CommercialDashboard = () => {
     
     // Mock password update - sera remplacé par appel API
     toast({
-      title: 'تم تحديث كلمة المرور',
-      description: `تم تغيير كلمة المرور لـ ${selectedUser.name}`,
+      title: 'Mot de passe mis à jour',
+      description: `Le mot de passe de ${selectedUser.name} a été modifié`,
     });
     
     setPasswordDialogOpen(false);
@@ -145,8 +145,8 @@ const CommercialDashboard = () => {
     setUsers(users.filter(u => u.id !== selectedUser.id));
     
     toast({
-      title: 'تم حذف المستخدم',
-      description: `تم حذف ${selectedUser.name} بنجاح`,
+      title: 'Utilisateur supprimé',
+      description: `${selectedUser.name} a été supprimé avec succès`,
       variant: 'destructive',
     });
     
@@ -186,64 +186,64 @@ const CommercialDashboard = () => {
   };
 
   const statusLabels: Record<string, string> = {
-    FREE: 'مجاني',
-    EN_ATTENTE: 'في الانتظار',
-    CONFIRME: 'مؤكد',
-    NORMAL: 'عادي',
-    VIP: 'مميز',
+    FREE: 'Gratuit',
+    EN_ATTENTE: 'En attente',
+    CONFIRME: 'Confirmé',
+    NORMAL: 'Normal',
+    VIP: 'VIP',
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">مرحباً، {user?.prenom}</h1>
-        <p className="text-muted-foreground">إدارة المستخدمين المسجلين بكود البروموشن الخاص بك</p>
+        <h1 className="text-3xl font-bold mb-2">Bienvenue, {user?.prenom}</h1>
+        <p className="text-muted-foreground">Gérez les utilisateurs inscrits avec votre code promo</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي المستخدمين</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Utilisateurs</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users.length}</div>
-            <p className="text-xs text-muted-foreground">جميع المسجلين بكودك</p>
+            <p className="text-xs text-muted-foreground">Tous inscrits avec votre code</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">الإيرادات الإجمالية</CardTitle>
+            <CardTitle className="text-sm font-medium">Revenus Totaux</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalRevenue} DH</div>
-            <p className="text-xs text-muted-foreground">من جميع المشتركين</p>
+            <p className="text-xs text-muted-foreground">De tous les abonnés</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">مستخدمين مؤكدين</CardTitle>
+            <CardTitle className="text-sm font-medium">Utilisateurs Confirmés</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{confirmedUsers}</div>
-            <p className="text-xs text-muted-foreground">عملاء نشطون</p>
+            <p className="text-xs text-muted-foreground">Clients actifs</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">في الانتظار</CardTitle>
+            <CardTitle className="text-sm font-medium">En Attente</CardTitle>
             <UserPlus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{pendingUsers}</div>
-            <p className="text-xs text-muted-foreground">{freeUsers} مجاني</p>
+            <p className="text-xs text-muted-foreground">{freeUsers} gratuit</p>
           </CardContent>
         </Card>
       </div>
@@ -253,11 +253,11 @@ const CommercialDashboard = () => {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-2">كود البروموشن الخاص بك</p>
+              <p className="text-sm text-muted-foreground mb-2">Votre code promo</p>
               <p className="text-3xl font-bold text-primary">{promoCode}</p>
             </div>
             <Button onClick={() => navigator.clipboard.writeText(promoCode)}>
-              نسخ الكود
+              Copier le code
             </Button>
           </div>
         </CardContent>
@@ -266,30 +266,30 @@ const CommercialDashboard = () => {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>المستخدمين المسجلين</CardTitle>
+          <CardTitle>Utilisateurs Inscrits</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="البحث بالاسم أو البريد الإلكتروني..."
+                placeholder="Rechercher par nom ou email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-9"
+                className="pl-9"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="تصفية حسب الحالة" />
+                <SelectValue placeholder="Filtrer par statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع الحالات</SelectItem>
-                <SelectItem value="FREE">مجاني</SelectItem>
-                <SelectItem value="EN_ATTENTE">في الانتظار</SelectItem>
-                <SelectItem value="CONFIRME">مؤكد</SelectItem>
-                <SelectItem value="NORMAL">عادي</SelectItem>
-                <SelectItem value="VIP">مميز</SelectItem>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="FREE">Gratuit</SelectItem>
+                <SelectItem value="EN_ATTENTE">En attente</SelectItem>
+                <SelectItem value="CONFIRME">Confirmé</SelectItem>
+                <SelectItem value="NORMAL">Normal</SelectItem>
+                <SelectItem value="VIP">VIP</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -299,12 +299,12 @@ const CommercialDashboard = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-right">المستخدم</TableHead>
-                  <TableHead className="text-right">معلومات الاتصال</TableHead>
-                  <TableHead className="text-right">الحالة</TableHead>
-                  <TableHead className="text-right">تاريخ التسجيل</TableHead>
-                  <TableHead className="text-right">الإيرادات</TableHead>
-                  <TableHead className="text-right">الإجراءات</TableHead>
+                  <TableHead>Utilisateur</TableHead>
+                  <TableHead>Coordonnées</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date d'inscription</TableHead>
+                  <TableHead>Revenus</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -338,8 +338,8 @@ const CommercialDashboard = () => {
                             size="sm"
                             onClick={() => handleStatusChange(user.id, user.status)}
                           >
-                            <ArrowLeft className="h-4 w-4 ml-1" />
-                            {user.status === 'FREE' ? 'في الانتظار' : 'تأكيد'}
+                            <ArrowLeft className="h-4 w-4 mr-1" />
+                            {user.status === 'FREE' ? 'En attente' : 'Confirmer'}
                           </Button>
                         )}
                         <Button 
@@ -371,29 +371,29 @@ const CommercialDashboard = () => {
       <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>تغيير كلمة المرور</DialogTitle>
+            <DialogTitle>Changer le mot de passe</DialogTitle>
             <DialogDescription>
-              تغيير كلمة المرور لـ {selectedUser?.name}
+              Changer le mot de passe de {selectedUser?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="new-password">كلمة المرور الجديدة</Label>
+              <Label htmlFor="new-password">Nouveau mot de passe</Label>
               <Input
                 id="new-password"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="أدخل كلمة المرور الجديدة"
+                placeholder="Entrez le nouveau mot de passe"
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
-              إلغاء
+              Annuler
             </Button>
             <Button onClick={handlePasswordChange} disabled={!newPassword}>
-              تحديث كلمة المرور
+              Mettre à jour le mot de passe
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -403,15 +403,15 @@ const CommercialDashboard = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم حذف المستخدم {selectedUser?.name} نهائياً. هذا الإجراء لا يمكن التراجع عنه.
+              L'utilisateur {selectedUser?.name} sera supprimé définitivement. Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              حذف
+              Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

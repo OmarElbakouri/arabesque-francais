@@ -21,8 +21,8 @@ const CreateUser = () => {
     
     // Mock creation - will be replaced with backend API
     toast({
-      title: 'تم إنشاء الحساب',
-      description: 'تم إنشاء حساب المستخدم بنجاح',
+      title: 'Compte créé',
+      description: 'Le compte utilisateur a été créé avec succès',
     });
 
     setFormData({
@@ -40,17 +40,17 @@ const CreateUser = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserPlus className="h-6 w-6" />
-            إنشاء حساب مستخدم جديد
+            Créer un Nouveau Compte Utilisateur
           </CardTitle>
           <CardDescription>
-            إنشاء حساب مستخدم جديد مع كود البروموشن الخاص بك
+            Créer un nouveau compte utilisateur avec votre code promo
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">الاسم الأول</Label>
+                <Label htmlFor="firstName">Prénom</Label>
                 <Input
                   id="firstName"
                   value={formData.firstName}
@@ -59,7 +59,7 @@ const CreateUser = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">الاسم الأخير</Label>
+                <Label htmlFor="lastName">Nom</Label>
                 <Input
                   id="lastName"
                   value={formData.lastName}
@@ -70,7 +70,7 @@ const CreateUser = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">البريد الإلكتروني</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -81,7 +81,7 @@ const CreateUser = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">رقم الهاتف</Label>
+              <Label htmlFor="phone">Téléphone</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -92,7 +92,7 @@ const CreateUser = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
+              <Label htmlFor="password">Mot de passe</Label>
               <Input
                 id="password"
                 type="password"
@@ -103,7 +103,7 @@ const CreateUser = () => {
             </div>
 
             <Button type="submit" className="w-full">
-              إنشاء الحساب
+              Créer le Compte
             </Button>
           </form>
         </CardContent>
