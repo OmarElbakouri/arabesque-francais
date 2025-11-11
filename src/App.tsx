@@ -23,6 +23,8 @@ import CommercialLayout from "./pages/commercial/CommercialLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import CommercialDashboard from "./pages/commercial/CommercialDashboard";
 import CreateUser from "./pages/commercial/CreateUser";
+import Revenues from "./pages/commercial/Revenues";
+import CommercialSettings from "./pages/commercial/Settings";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSales from "./pages/admin/AdminSales";
 import AdminCourses from "./pages/admin/AdminCourses";
@@ -71,7 +73,9 @@ const App = () => (
           {/* Commercial routes with separate layout */}
           <Route path="/commercial" element={<CommercialRoute><CommercialLayout /></CommercialRoute>}>
             <Route index element={<CommercialDashboard />} />
+            <Route path="revenues" element={<Revenues />} />
             <Route path="create-user" element={<CreateUser />} />
+            <Route path="settings" element={<CommercialSettings />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

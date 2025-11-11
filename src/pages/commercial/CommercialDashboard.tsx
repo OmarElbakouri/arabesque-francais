@@ -18,8 +18,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Users, DollarSign, UserPlus, TrendingUp, Search, Edit, Trash2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Label } from '@/components/ui/label';
+import { Users, DollarSign, UserPlus, TrendingUp, Search, Key, Trash2, Copy, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useToast } from '@/hooks/use-toast';
 
 interface PromoUser {
   id: string;
@@ -34,12 +54,14 @@ interface PromoUser {
 
 const CommercialDashboard = () => {
   const { user } = useAuthStore();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-
-  // Mock data - sera remplacé par des données backend
-  const promoCode = 'COMM2025'; // Le code promo du commercial
-  const users: PromoUser[] = [
+  const [selectedUser, setSelectedUser] = useState<PromoUser | null>(null);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [users, setUsers] = useState<PromoUser[]>([
     {
       id: '1',
       name: 'أحمد محمد',
@@ -48,7 +70,7 @@ const CommercialDashboard = () => {
       status: 'FREE',
       registeredDate: '2025-01-15',
       revenue: 0,
-      promoCode: promoCode,
+      promoCode: 'COMM2025',
     },
     {
       id: '2',
@@ -58,7 +80,7 @@ const CommercialDashboard = () => {
       status: 'EN_ATTENTE',
       registeredDate: '2025-01-10',
       revenue: 700,
-      promoCode: promoCode,
+      promoCode: 'COMM2025',
     },
     {
       id: '3',
@@ -68,7 +90,7 @@ const CommercialDashboard = () => {
       status: 'CONFIRME',
       registeredDate: '2025-01-05',
       revenue: 700,
-      promoCode: promoCode,
+      promoCode: 'COMM2025',
     },
     {
       id: '4',
@@ -78,9 +100,69 @@ const CommercialDashboard = () => {
       status: 'NORMAL',
       registeredDate: '2024-12-20',
       revenue: 700,
-      promoCode: promoCode,
+      promoCode: 'COMM2025',
     },
-  ];
+  ]);
+
+  const promoCode = 'COMM2025'; // Le code promo du commercial
+
+  const handleStatusChange = (userId: string, currentStatus: string) => {
+    let newStatus: string = currentStatus;
+    
+    if (currentStatus === 'FREE') {
+      newStatus = 'EN_ATTENTE';
+    } else if (currentStatus === 'EN_ATTENTE') {
+      newStatus = 'CONFIRME';
+    }
+    
+    setUsers(users.map(u => 
+      u.id === userId ? { ...u, status: newStatus as PromoUser['status'] } : u
+    ));
+    
+    toast({
+      title: 'تم تحديث الحالة',
+      description: `تم تغيير حالة المستخدم إلى ${statusLabels[newStatus]}`,
+    });
+  };
+
+  const handlePasswordChange = () => {
+    if (!selectedUser || !newPassword) return;
+    
+    // Mock password update - sera remplacé par appel API
+    toast({
+      title: 'تم تحديث كلمة المرور',
+      description: `تم تغيير كلمة المرور لـ ${selectedUser.name}`,
+    });
+    
+    setPasswordDialogOpen(false);
+    setNewPassword('');
+    setSelectedUser(null);
+  };
+
+  const handleDeleteUser = () => {
+    if (!selectedUser) return;
+    
+    setUsers(users.filter(u => u.id !== selectedUser.id));
+    
+    toast({
+      title: 'تم حذف المستخدم',
+      description: `تم حذف ${selectedUser.name} بنجاح`,
+      variant: 'destructive',
+    });
+    
+    setDeleteDialogOpen(false);
+    setSelectedUser(null);
+  };
+
+  const openPasswordDialog = (user: PromoUser) => {
+    setSelectedUser(user);
+    setPasswordDialogOpen(true);
+  };
+
+  const openDeleteDialog = (user: PromoUser) => {
+    setSelectedUser(user);
+    setDeleteDialogOpen(true);
+  };
 
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
@@ -250,10 +332,29 @@ const CommercialDashboard = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
+                        {(user.status === 'FREE' || user.status === 'EN_ATTENTE') && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleStatusChange(user.id, user.status)}
+                          >
+                            <ArrowLeft className="h-4 w-4 ml-1" />
+                            {user.status === 'FREE' ? 'في الانتظار' : 'تأكيد'}
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => openPasswordDialog(user)}
+                        >
+                          <Key className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-destructive">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive"
+                          onClick={() => openDeleteDialog(user)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -265,6 +366,56 @@ const CommercialDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Password Change Dialog */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>تغيير كلمة المرور</DialogTitle>
+            <DialogDescription>
+              تغيير كلمة المرور لـ {selectedUser?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">كلمة المرور الجديدة</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="أدخل كلمة المرور الجديدة"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
+              إلغاء
+            </Button>
+            <Button onClick={handlePasswordChange} disabled={!newPassword}>
+              تحديث كلمة المرور
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف المستخدم {selectedUser?.name} نهائياً. هذا الإجراء لا يمكن التراجع عنه.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              حذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
