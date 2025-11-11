@@ -38,26 +38,38 @@ export function Navbar() {
             >
               الرئيسية
             </Link>
-            <Link
-              to="/courses"
-              className={`link-animated ${isActive('/courses') ? 'text-primary font-bold' : 'text-foreground'}`}
-            >
-              الدورات
-            </Link>
+            {user?.role !== 'COMMERCIAL' && (
+              <Link
+                to="/courses"
+                className={`link-animated ${isActive('/courses') ? 'text-primary font-bold' : 'text-foreground'}`}
+              >
+                الدورات
+              </Link>
+            )}
             {isAuthenticated && (
               <>
-                <Link
-                  to="/dashboard"
-                  className={`link-animated ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-foreground'}`}
-                >
-                  لوحة التحكم
-                </Link>
+                {user?.role !== 'COMMERCIAL' && (
+                  <Link
+                    to="/dashboard"
+                    className={`link-animated ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-foreground'}`}
+                  >
+                    لوحة التحكم
+                  </Link>
+                )}
                 {user?.role === 'ADMIN' && (
                   <Link
                     to="/admin"
                     className={`link-animated ${isActive('/admin') ? 'text-primary font-bold' : 'text-foreground'}`}
                   >
                     الإدارة
+                  </Link>
+                )}
+                {user?.role === 'COMMERCIAL' && (
+                  <Link
+                    to="/commercial"
+                    className={`link-animated ${isActive('/commercial') ? 'text-primary font-bold' : 'text-foreground'}`}
+                  >
+                    لوحة التحكم
                   </Link>
                 )}
               </>
@@ -125,22 +137,26 @@ export function Navbar() {
             >
               الرئيسية
             </Link>
-            <Link
-              to="/courses"
-              className="block py-2 text-foreground"
-              onClick={() => setIsOpen(false)}
-            >
-              الدورات
-            </Link>
+            {user?.role !== 'COMMERCIAL' && (
+              <Link
+                to="/courses"
+                className="block py-2 text-foreground"
+                onClick={() => setIsOpen(false)}
+              >
+                الدورات
+              </Link>
+            )}
             {isAuthenticated && (
               <>
-                <Link
-                  to="/dashboard"
-                  className="block py-2 text-foreground"
-                  onClick={() => setIsOpen(false)}
-                >
-                  لوحة التحكم
-                </Link>
+                {user?.role !== 'COMMERCIAL' && (
+                  <Link
+                    to="/dashboard"
+                    className="block py-2 text-foreground"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    لوحة التحكم
+                  </Link>
+                )}
                 {user?.role === 'ADMIN' && (
                   <Link
                     to="/admin"
@@ -148,6 +164,15 @@ export function Navbar() {
                     onClick={() => setIsOpen(false)}
                   >
                     الإدارة
+                  </Link>
+                )}
+                {user?.role === 'COMMERCIAL' && (
+                  <Link
+                    to="/commercial"
+                    className="block py-2 text-foreground"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    لوحة التحكم
                   </Link>
                 )}
               </>
