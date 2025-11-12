@@ -13,6 +13,11 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/login" replace />;
   }
 
+  // Redirect COMMERCIAL users to their dashboard
+  if (user?.role === 'COMMERCIAL') {
+    return <Navigate to="/commercial" replace />;
+  }
+
   if (requiredRole && user?.role !== requiredRole) {
     return <Navigate to="/dashboard" replace />;
   }

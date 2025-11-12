@@ -114,6 +114,7 @@ export default function AdminUsers() {
   ]);
 
   const roleColors: Record<UserRole, string> = {
+    FREE: 'bg-gray-500 text-white',
     NORMAL: 'bg-muted text-muted-foreground',
     PREMIUM: 'bg-primary text-primary-foreground',
     VIP: 'bg-secondary text-secondary-foreground',

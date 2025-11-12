@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { dashboardService, DashboardResponse } from '@/services/dashboardService';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { FreeUserRestriction } from '@/components/FreeUserRestriction';
 
 export default function Dashboard() {
   const { user } = useAuthStore();
@@ -58,6 +59,11 @@ export default function Dashboard() {
   }, [user?.id, toast]);
 
   const roleConfig = {
+    FREE: { 
+      className: 'bg-gray-500 text-white',
+      icon: User,
+      label: 'مجاني'
+    },
     NORMAL: { 
       className: 'bg-muted text-muted-foreground',
       icon: User,
@@ -139,6 +145,9 @@ export default function Dashboard() {
       </div>
     );
   }
+  
+  // Check if user is FREE and show limited content
+  const isFreeUser = userInfo.role === 'FREE';
   
   const currentRole = roleConfig[userInfo.role];
   const shouldShowCredits = userInfo.role === 'NORMAL' || userInfo.role === 'VIP';
@@ -253,31 +262,38 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {enrolledCourses.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {enrolledCourses.map((course) => (
-                  <div key={course.courseId} className="card-feature">
-                    <div className="flex gap-4">
-                      <img
-                        src={course.courseImage}
-                        alt={course.courseName}
-                        className="w-24 h-24 rounded-lg object-cover"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-bold mb-1">{course.courseName}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">{course.courseLevel}</p>
-                        <Progress value={course.progressPercentage} className="mb-2" />
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">
-                            {course.completedLessons}/{course.totalLessons} دروس • {Math.round(course.progressPercentage)}%
-                          </span>
-                          <Link to={`/course/${course.courseId}`}>
-                            <Button size="sm">متابعة</Button>
-                          </Link>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* For FREE users, only show the first course */}
+                  {(isFreeUser ? [enrolledCourses[0]] : enrolledCourses).map((course) => (
+                    <div key={course.courseId} className="card-feature">
+                      <div className="flex gap-4">
+                        <img
+                          src={course.courseImage}
+                          alt={course.courseName}
+                          className="w-24 h-24 rounded-lg object-cover"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-bold mb-1">{course.courseName}</h3>
+                          <p className="text-sm text-muted-foreground mb-2">{course.courseLevel}</p>
+                          <Progress value={course.progressPercentage} className="mb-2" />
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">
+                              {course.completedLessons}/{course.totalLessons} دروس • {Math.round(course.progressPercentage)}%
+                            </span>
+                            <Link to={`/course/${course.courseId}`}>
+                              <Button size="sm">{isFreeUser && course.completedLessons > 0 ? 'مقفل' : 'متابعة'}</Button>
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                {/* Show restriction message for FREE users */}
+                {isFreeUser && enrolledCourses.length > 1 && (
+                  <FreeUserRestriction featureName="الدورات الإضافية" />
+                )}
               </div>
             ) : (
               <div className="text-center py-8">
