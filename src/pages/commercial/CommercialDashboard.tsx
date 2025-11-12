@@ -178,11 +178,11 @@ const CommercialDashboard = () => {
   const freeUsers = users.filter((u) => u.status === 'FREE').length;
 
   const statusColors: Record<string, string> = {
-    FREE: 'bg-gray-500',
-    EN_ATTENTE: 'bg-yellow-500',
-    CONFIRME: 'bg-green-500',
-    NORMAL: 'bg-blue-500',
-    VIP: 'bg-purple-500',
+    FREE: 'bg-muted text-muted-foreground',
+    EN_ATTENTE: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20',
+    CONFIRME: 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20',
+    NORMAL: 'bg-primary/10 text-primary border border-primary/20',
+    VIP: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20',
   };
 
   const statusLabels: Record<string, string> = {
@@ -299,68 +299,79 @@ const CommercialDashboard = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Utilisateur</TableHead>
-                  <TableHead>Coordonnées</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Date d'inscription</TableHead>
-                  <TableHead>Revenus</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="w-[200px]">Utilisateur</TableHead>
+                  <TableHead className="w-[150px]">Coordonnées</TableHead>
+                  <TableHead className="w-[100px]">Revenus</TableHead>
+                  <TableHead className="w-[120px]">Date d'inscription</TableHead>
+                  <TableHead className="w-[120px]">Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">{user.phone}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[user.status]}>
-                        {statusLabels[user.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">{new Date(user.registeredDate).toLocaleDateString('ar-MA')}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{user.revenue} DH</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {(user.status === 'FREE' || user.status === 'EN_ATTENTE') && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleStatusChange(user.id, user.status)}
-                          >
-                            <ArrowLeft className="h-4 w-4 mr-1" />
-                            {user.status === 'FREE' ? 'En attente' : 'Confirmer'}
-                          </Button>
-                        )}
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => openPasswordDialog(user)}
-                        >
-                          <Key className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-destructive"
-                          onClick={() => openDeleteDialog(user)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                {filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                      Aucun utilisateur trouvé
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{user.name}</div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">{user.phone}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">{user.revenue} DH</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">{new Date(user.registeredDate).toLocaleDateString('fr-FR')}</div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={statusColors[user.status]}>
+                          {statusLabels[user.status]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-2">
+                          {(user.status === 'FREE' || user.status === 'EN_ATTENTE') && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleStatusChange(user.id, user.status)}
+                              className="gap-1"
+                            >
+                              {user.status === 'FREE' ? 'En attente' : 'Confirmer'}
+                              <ArrowLeft className="h-3 w-3 rotate-180" />
+                            </Button>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => openPasswordDialog(user)}
+                            title="Changer le mot de passe"
+                          >
+                            <Key className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => openDeleteDialog(user)}
+                            title="Supprimer l'utilisateur"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
