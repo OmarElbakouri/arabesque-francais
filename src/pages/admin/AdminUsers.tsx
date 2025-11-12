@@ -74,7 +74,7 @@ export default function AdminUsers() {
     try {
       setLoading(true);
       const data = await adminService.getAllUsers();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Erreur lors du chargement des utilisateurs:', error);
       toast({
@@ -82,6 +82,7 @@ export default function AdminUsers() {
         description: 'Impossible de charger les utilisateurs',
         variant: 'destructive',
       });
+      setUsers([]);
     } finally {
       setLoading(false);
     }
