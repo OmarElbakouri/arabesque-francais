@@ -23,8 +23,18 @@ export const adminService = {
     return response.data;
   },
 
+  getUsersByStatus: async (status: string) => {
+    const response = await api.get(`/admin/users/status/${status}`);
+    return response.data;
+  },
+
   getUsersByRole: async (role: string) => {
     const response = await api.get(`/admin/users/role/${role}`);
+    return response.data;
+  },
+
+  getUsersByCommercial: async (commercialId: string) => {
+    const response = await api.get(`/admin/users/commercial/${commercialId}`);
     return response.data;
   },
 
@@ -40,9 +50,9 @@ export const adminService = {
     return response.data;
   },
 
-  updateUserStatus: async (id: string, active: boolean) => {
-    const response = await api.put(`/admin/users/${id}/status`, null, {
-      params: { active },
+  updateUserStatus: async (id: string, status: string) => {
+    const response = await api.put(`/admin/users/${id}/user-status`, null, {
+      params: { status },
     });
     return response.data;
   },
