@@ -3,34 +3,45 @@ import api from '@/lib/api';
 export const adminService = {
   // Dashboard
   getDashboardStats: async () => {
-    const response = await api.get('/admin/dashboard/stats');
-    return response.data;
+    const response = await api.get<{ success: boolean; message: string; data: any }>('/admin/dashboard/stats');
+    return response.data.data || response.data;
   },
 
   getSalesReps: async () => {
-    const response = await api.get('/admin/dashboard/sales-reps');
-    return response.data;
+    const response = await api.get<{ success: boolean; message: string; data: any[] }>('/admin/dashboard/sales-reps');
+    return response.data.data || response.data;
   },
 
   getSalesRepById: async (id: string) => {
-    const response = await api.get(`/admin/dashboard/sales-reps/${id}`);
-    return response.data;
+    const response = await api.get<{ success: boolean; message: string; data: any }>(`/admin/dashboard/sales-reps/${id}`);
+    return response.data.data || response.data;
   },
 
   // User Management
   getAllUsers: async () => {
-    const response = await api.get('/admin/users');
-    return response.data;
+    const response = await api.get<{ success: boolean; message: string; data: any[] }>('/admin/users');
+    // Backend returns data wrapped in { success, message, data }
+    return response.data.data;
+  },
+
+  getUsersByStatus: async (status: string) => {
+    const response = await api.get<{ success: boolean; message: string; data: any[] }>(`/admin/users/status/${status}`);
+    return response.data.data;
   },
 
   getUsersByRole: async (role: string) => {
-    const response = await api.get(`/admin/users/role/${role}`);
-    return response.data;
+    const response = await api.get<{ success: boolean; message: string; data: any[] }>(`/admin/users/role/${role}`);
+    return response.data.data;
+  },
+
+  getUsersByCommercial: async (commercialId: string) => {
+    const response = await api.get<{ success: boolean; message: string; data: any[] }>(`/admin/users/commercial/${commercialId}`);
+    return response.data.data;
   },
 
   getUserById: async (id: string) => {
-    const response = await api.get(`/admin/users/${id}`);
-    return response.data;
+    const response = await api.get<{ success: boolean; message: string; data: any }>(`/admin/users/${id}`);
+    return response.data.data;
   },
 
   updateUserRole: async (id: string, role: string) => {
@@ -40,9 +51,9 @@ export const adminService = {
     return response.data;
   },
 
-  updateUserStatus: async (id: string, active: boolean) => {
-    const response = await api.put(`/admin/users/${id}/status`, null, {
-      params: { active },
+  updateUserStatus: async (id: string, status: string) => {
+    const response = await api.put(`/admin/users/${id}/user-status`, null, {
+      params: { status },
     });
     return response.data;
   },
