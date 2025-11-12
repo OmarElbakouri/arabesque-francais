@@ -73,10 +73,17 @@ export default function AdminUsers() {
   const loadUsers = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Chargement des utilisateurs...');
       const data = await adminService.getAllUsers();
-      setUsers(Array.isArray(data) ? data : []);
+      console.log('✅ Données reçues de l\'API:', data);
+      console.log('📊 Type de données:', typeof data);
+      console.log('📦 Est un tableau?', Array.isArray(data));
+      
+      const usersArray = Array.isArray(data) ? data : [];
+      console.log('👥 Nombre d\'utilisateurs:', usersArray.length);
+      setUsers(usersArray);
     } catch (error) {
-      console.error('Erreur lors du chargement des utilisateurs:', error);
+      console.error('❌ Erreur lors du chargement des utilisateurs:', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les utilisateurs',
