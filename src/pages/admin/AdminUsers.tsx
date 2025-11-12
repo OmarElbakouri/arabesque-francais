@@ -177,8 +177,8 @@ export default function AdminUsers() {
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (user.fullName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
@@ -323,7 +323,7 @@ export default function AdminUsers() {
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
-                        <p className="font-medium">{user.fullName}</p>
+                        <p className="font-medium">{user.fullName || 'N/A'}</p>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
