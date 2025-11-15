@@ -162,7 +162,8 @@ export default function AdminUsers() {
   };
 
   const roleColors: Record<string, string> = {
-    USER: 'bg-muted/10 text-muted-foreground border border-muted',
+    NORMAL: 'bg-muted/10 text-muted-foreground border border-muted',
+    VIP: 'bg-primary/10 text-primary border border-primary/20',
     COMMERCIAL: 'bg-blue-500/10 text-blue-600 border border-blue-500/20',
     ADMIN: 'bg-destructive/10 text-destructive border border-destructive/20',
   };
@@ -176,8 +177,8 @@ export default function AdminUsers() {
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      (user.fullName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
@@ -185,9 +186,8 @@ export default function AdminUsers() {
 
   const stats = {
     total: users.length,
-    user: users.filter((u) => u.role === 'USER').length,
-    commercial: users.filter((u) => u.role === 'COMMERCIAL').length,
-    admin: users.filter((u) => u.role === 'ADMIN').length,
+    normal: users.filter((u) => u.role === 'NORMAL').length,
+    vip: users.filter((u) => u.role === 'VIP').length,
     confirme: users.filter((u) => u.status === 'CONFIRME').length,
     enAttente: users.filter((u) => u.status === 'EN_ATTENTE').length,
   };
@@ -221,16 +221,16 @@ export default function AdminUsers() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-2xl font-bold">{stats.user}</p>
-              <p className="text-sm text-muted-foreground">Utilisateurs</p>
+              <p className="text-2xl font-bold">{stats.normal}</p>
+              <p className="text-sm text-muted-foreground">Normal</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats.commercial}</p>
-              <p className="text-sm text-muted-foreground">Commercial</p>
+              <p className="text-2xl font-bold text-primary">{stats.vip}</p>
+              <p className="text-sm text-muted-foreground">VIP</p>
             </div>
           </CardContent>
         </Card>
@@ -274,7 +274,8 @@ export default function AdminUsers() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les types</SelectItem>
-                <SelectItem value="USER">Utilisateur</SelectItem>
+                <SelectItem value="NORMAL">Normal</SelectItem>
+                <SelectItem value="VIP">VIP</SelectItem>
                 <SelectItem value="COMMERCIAL">Commercial</SelectItem>
                 <SelectItem value="ADMIN">Admin</SelectItem>
               </SelectContent>
@@ -322,7 +323,7 @@ export default function AdminUsers() {
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
-                        <p className="font-medium">{user.fullName || 'N/A'}</p>
+                        <p className="font-medium">{user.fullName}</p>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
@@ -397,7 +398,8 @@ export default function AdminUsers() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USER">Utilisateur</SelectItem>
+                  <SelectItem value="NORMAL">Normal</SelectItem>
+                  <SelectItem value="VIP">VIP</SelectItem>
                   <SelectItem value="COMMERCIAL">Commercial</SelectItem>
                   <SelectItem value="ADMIN">Admin</SelectItem>
                 </SelectContent>

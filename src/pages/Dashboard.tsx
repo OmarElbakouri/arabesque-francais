@@ -59,10 +59,20 @@ export default function Dashboard() {
   }, [user?.id, toast]);
 
   const roleConfig = {
-    USER: { 
+    FREE: { 
+      className: 'bg-gray-500 text-white',
+      icon: User,
+      label: 'مجاني'
+    },
+    NORMAL: { 
       className: 'bg-muted text-muted-foreground',
       icon: User,
-      label: 'مستخدم'
+      label: 'عضو'
+    },
+    VIP: { 
+      className: 'bg-warning text-warning-foreground',
+      icon: Crown,
+      label: 'VIP ⭐'
     },
     COMMERCIAL: { 
       className: 'bg-info text-info-foreground',
@@ -136,11 +146,11 @@ export default function Dashboard() {
     );
   }
   
-  // Check if user has basic subscription (should check subscription table in future)
-  const isBasicUser = userInfo.role === 'USER';
+  // Check if user is FREE and show limited content
+  const isFreeUser = userInfo.role === 'FREE';
   
   const currentRole = roleConfig[userInfo.role];
-  const shouldShowCredits = userInfo.role === 'USER' || userInfo.role === 'COMMERCIAL';
+  const shouldShowCredits = userInfo.role === 'NORMAL' || userInfo.role === 'VIP';
 
   return (
     <div className="min-h-screen bg-background">
@@ -254,8 +264,8 @@ export default function Dashboard() {
             {enrolledCourses.length > 0 ? (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* For basic users, only show the first course */}
-                  {(isBasicUser ? [enrolledCourses[0]] : enrolledCourses).map((course) => (
+                  {/* For FREE users, only show the first course */}
+                  {(isFreeUser ? [enrolledCourses[0]] : enrolledCourses).map((course) => (
                     <div key={course.courseId} className="card-feature">
                       <div className="flex gap-4">
                         <img
@@ -272,7 +282,7 @@ export default function Dashboard() {
                               {course.completedLessons}/{course.totalLessons} دروس • {Math.round(course.progressPercentage)}%
                             </span>
                             <Link to={`/course/${course.courseId}`}>
-                              <Button size="sm">{isBasicUser && course.completedLessons > 0 ? 'مقفل' : 'متابعة'}</Button>
+                              <Button size="sm">{isFreeUser && course.completedLessons > 0 ? 'مقفل' : 'متابعة'}</Button>
                             </Link>
                           </div>
                         </div>
@@ -280,8 +290,8 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-                {/* Show restriction message for basic users */}
-                {isBasicUser && enrolledCourses.length > 1 && (
+                {/* Show restriction message for FREE users */}
+                {isFreeUser && enrolledCourses.length > 1 && (
                   <FreeUserRestriction featureName="الدورات الإضافية" />
                 )}
               </div>

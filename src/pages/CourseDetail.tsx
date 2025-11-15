@@ -29,9 +29,7 @@ export default function CourseDetail() {
       toast({ title: 'يجب تسجيل الدخول أولاً', variant: 'destructive' });
       return;
     }
-    // Check subscription plan instead of role for premium courses
-    // This check should be updated to check user's subscription plan
-    if (!course.gratuit && user?.role === 'USER') {
+    if (!course.gratuit && user?.role === 'NORMAL') {
       toast({ title: 'يتطلب اشتراك Premium', variant: 'destructive' });
       return;
     }
