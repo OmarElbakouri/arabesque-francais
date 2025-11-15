@@ -40,6 +40,7 @@ import { Label } from '@/components/ui/label';
 import { Search, Edit, Trash2, Mail, Phone } from 'lucide-react';
 import { adminService } from '@/services/adminService';
 import { toast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/stores/authStore';
 
 interface User {
   id: string;
@@ -52,6 +53,7 @@ interface User {
 }
 
 export default function AdminUsers() {
+  const { user: currentUser } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -111,18 +113,15 @@ export default function AdminUsers() {
   };
 
   const handleSaveEdit = async () => {
-    if (!selectedUser) return;
+    if (!selectedUser || !currentUser?.id) return;
 
     try {
-      if (editForm.role !== selectedUser.role) {
-        await adminService.updateUserRole(selectedUser.id, editForm.role);
-      }
-      if (editForm.status !== selectedUser.status) {
-        await adminService.updateUserStatus(selectedUser.id, editForm.status);
-      }
-      if (editForm.credits !== selectedUser.creditBalance) {
-        await adminService.updateUserCredits(selectedUser.id, editForm.credits);
-      }
+      // Update user with all changes at once
+      await adminService.updateUser(selectedUser.id, {
+        role: editForm.role,
+        status: editForm.status,
+        creditBalance: editForm.credits,
+      });
 
       toast({
         title: 'Succès',
@@ -141,10 +140,10 @@ export default function AdminUsers() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!selectedUser) return;
+    if (!selectedUser || !currentUser?.id) return;
 
     try {
-      await adminService.deleteUser(selectedUser.id);
+      await adminService.deleteUser(selectedUser.id, currentUser.id);
       toast({
         title: 'Succès',
         description: 'Utilisateur supprimé avec succès',
