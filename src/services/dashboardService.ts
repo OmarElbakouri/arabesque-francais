@@ -6,7 +6,7 @@ export interface DashboardResponse {
     firstName: string;
     lastName: string;
     email: string;
-    role: 'FREE' | 'NORMAL' | 'VIP' | 'ADMIN' | 'COMMERCIAL';
+    role: 'USER' | 'COMMERCIAL' | 'ADMIN';
   };
   stats: {
     overallProgress: number;

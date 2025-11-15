@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { authService } from '@/services/authService';
 import { creditsService } from '@/services/creditsService';
 
-export type UserRole = 'FREE' | 'NORMAL' | 'PREMIUM' | 'VIP' | 'COMMERCIAL' | 'ADMIN';
+export type UserRole = 'USER' | 'COMMERCIAL' | 'ADMIN';
 export type UserStatus = 'ACTIF' | 'EXPIRE' | 'EN_ATTENTE' | 'SUSPENDU';
 
 interface User {
@@ -52,7 +52,7 @@ export const useAuthStore = create<AuthState>()(
             
             // Store JWT token and role
             localStorage.setItem('jwt_token', response.data.token);
-            localStorage.setItem('role', response.data.role || 'NORMAL');
+            localStorage.setItem('role', response.data.role || 'USER');
             
             // Create user object with role from backend
             const user: User = {
@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>()(
               prenom: response.data.firstName,
               email: response.data.email,
               telephone: '',
-              role: (response.data.role as UserRole) || 'NORMAL',
+              role: (response.data.role as UserRole) || 'USER',
               status: 'ACTIF',
               dateInscription: new Date().toISOString(),
             };
@@ -101,14 +101,14 @@ export const useAuthStore = create<AuthState>()(
             localStorage.setItem('jwt_token', response.data.token);
             
             // Create user object
-            // New registrations always get NORMAL role from backend
+            // New registrations always get USER role from backend
             const user: User = {
               id: response.data.userId,
               nom: response.data.lastName,
               prenom: response.data.firstName,
               email: response.data.email,
               telephone: data.telephone,
-              role: (response.data.role as UserRole) || 'NORMAL',
+              role: (response.data.role as UserRole) || 'USER',
               status: 'ACTIF',
               dateInscription: new Date().toISOString(),
               credits: 30, // Default credits for new users
