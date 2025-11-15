@@ -27,9 +27,8 @@ export default function Profile() {
   };
 
   const roleColors = {
-    NORMAL: 'bg-muted text-muted-foreground',
-    PREMIUM: 'bg-primary text-primary-foreground',
-    VIP: 'bg-secondary text-secondary-foreground',
+    USER: 'bg-muted text-muted-foreground',
+    COMMERCIAL: 'bg-blue-500 text-white',
     ADMIN: 'bg-destructive text-destructive-foreground',
   };
 
@@ -156,50 +155,43 @@ export default function Profile() {
                   <div className="bg-gradient-hero p-6 rounded-lg text-white">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="text-2xl font-bold mb-2">حساب {user?.role}</h3>
+                        <h3 className="text-2xl font-bold mb-2">
+                          {user?.role === 'ADMIN' ? 'حساب مدير' : user?.role === 'COMMERCIAL' ? 'حساب تجاري' : 'حساب مستخدم'}
+                        </h3>
                         <p className="text-white/90">
-                          {user?.role === 'PREMIUM' ? 'الوصول إلى جميع الدورات المدفوعة' : 'ترقية لفتح جميع المميزات'}
+                          حسابك نشط
                         </p>
                       </div>
                       <Badge className="bg-white/20 text-white">نشط</Badge>
                     </div>
-                    {user?.role !== 'NORMAL' && (
-                      <div>
-                        <p className="text-sm text-white/80 mb-2">التجديد في: 15 يناير 2026</p>
-                        <Progress value={30} className="bg-white/20" />
-                        <p className="text-sm text-white/80 mt-2">30 يوماً متبقية</p>
-                      </div>
-                    )}
                   </div>
 
-                  {user?.role === 'NORMAL' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Card className="border-2 border-primary">
-                        <CardContent className="pt-6">
-                          <h4 className="text-xl font-bold mb-2">Premium</h4>
-                          <p className="text-3xl font-bold text-primary mb-4">299 درهم/شهر</p>
-                          <ul className="space-y-2 text-sm mb-6">
-                            <li>✓ جميع الدورات</li>
-                            <li>✓ 400 رصيد شهري</li>
-                            <li>✓ شهادات معتمدة</li>
-                          </ul>
-                          <Button className="w-full">الترقية الآن</Button>
-                        </CardContent>
-                      </Card>
-                      <Card className="border-2 border-secondary">
-                        <CardContent className="pt-6">
-                          <h4 className="text-xl font-bold mb-2">VIP</h4>
-                          <p className="text-3xl font-bold text-secondary mb-4">599 درهم/شهر</p>
-                          <ul className="space-y-2 text-sm mb-6">
-                            <li>✓ كل مميزات Premium</li>
-                            <li>✓ 1000 رصيد شهري</li>
-                            <li>✓ مساعد صوتي</li>
-                          </ul>
-                          <Button className="w-full" variant="secondary">الترقية الآن</Button>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="border-2 border-primary">
+                      <CardContent className="pt-6">
+                        <h4 className="text-xl font-bold mb-2">Premium</h4>
+                        <p className="text-3xl font-bold text-primary mb-4">299 درهم/شهر</p>
+                        <ul className="space-y-2 text-sm mb-6">
+                          <li>✓ جميع الدورات</li>
+                          <li>✓ 400 رصيد شهري</li>
+                          <li>✓ شهادات معتمدة</li>
+                        </ul>
+                        <Button className="w-full">الترقية الآن</Button>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-2 border-secondary">
+                      <CardContent className="pt-6">
+                        <h4 className="text-xl font-bold mb-2">VIP</h4>
+                        <p className="text-3xl font-bold text-secondary mb-4">599 درهم/شهر</p>
+                        <ul className="space-y-2 text-sm mb-6">
+                          <li>✓ كل مميزات Premium</li>
+                          <li>✓ 1000 رصيد شهري</li>
+                          <li>✓ مساعد صوتي</li>
+                        </ul>
+                        <Button className="w-full" variant="secondary">الترقية الآن</Button>
+                      </CardContent>
+                    </Card>
+                  </div>
 
                   <Card>
                     <CardHeader>
