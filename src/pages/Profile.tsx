@@ -27,9 +27,8 @@ export default function Profile() {
   };
 
   const roleColors = {
-    NORMAL: 'bg-muted text-muted-foreground',
-    PREMIUM: 'bg-primary text-primary-foreground',
-    VIP: 'bg-secondary text-secondary-foreground',
+    USER: 'bg-muted text-muted-foreground',
+    COMMERCIAL: 'bg-blue-500 text-white',
     ADMIN: 'bg-destructive text-destructive-foreground',
   };
 
