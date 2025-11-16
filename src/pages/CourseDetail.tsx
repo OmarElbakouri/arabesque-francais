@@ -29,11 +29,10 @@ export default function CourseDetail() {
       toast({ title: 'يجب تسجيل الدخول أولاً', variant: 'destructive' });
       return;
     }
-    // TODO: Check subscription plan instead of role
-    // if (!course.gratuit && !hasValidSubscription) {
-    //   toast({ title: 'يتطلب اشتراك Premium', variant: 'destructive' });
-    //   return;
-    // }
+    if (!course.gratuit && user?.role === 'NORMAL') {
+      toast({ title: 'يتطلب اشتراك Premium', variant: 'destructive' });
+      return;
+    }
     enrollCourse(id!);
     toast({ title: 'تم التسجيل بنجاح!', description: 'يمكنك البدء في التعلم الآن' });
   };
