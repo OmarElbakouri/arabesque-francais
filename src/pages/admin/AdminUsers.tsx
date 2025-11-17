@@ -129,7 +129,6 @@ export default function AdminUsers() {
     if (!selectedUser) return;
 
     try {
-<<<<<<< HEAD
       // Prepare update data - match backend expected format
       const updateData: Record<string, any> = {
         role: editForm.role,
@@ -145,17 +144,6 @@ export default function AdminUsers() {
       // Update user with all changes at once
       console.log('Updating user with data:', updateData);
       await adminService.updateUser(selectedUser.id, updateData);
-=======
-      if (editForm.role !== selectedUser.role) {
-        await adminService.updateUserRole(selectedUser.id, editForm.role);
-      }
-      if (editForm.status !== selectedUser.status) {
-        await adminService.updateUserStatus(selectedUser.id, editForm.status);
-      }
-      if (editForm.credits !== selectedUser.creditBalance) {
-        await adminService.updateUserCredits(selectedUser.id, editForm.credits);
-      }
->>>>>>> 9c8af4faee744b93a735caa79338d04ec1eae11b
 
       toast({
         title: 'Succès',

@@ -4,7 +4,14 @@ export const adminService = {
   // Dashboard
   getDashboardStats: async () => {
     const response = await api.get('/admin/dashboard/stats');
-    return response.data;
+    return response.data.data;
+  },
+
+  getRecentActivities: async (limit: number = 10) => {
+    const response = await api.get('/admin/dashboard/recent-activities', {
+      params: { limit }
+    });
+    return response.data.data;
   },
 
   getSalesReps: async () => {
@@ -30,7 +37,7 @@ export const adminService = {
   // User Management
   getAllUsers: async () => {
     const response = await api.get('/admin/users');
-    return response.data;
+    return response.data.data;
   },
 
   getUsersByStatus: async (status: string) => {
@@ -48,12 +55,6 @@ export const adminService = {
     return response.data;
   },
 
-  getUserById: async (id: string) => {
-    const response = await api.get(`/admin/users/${id}`);
-    return response.data;
-  },
-
-<<<<<<< HEAD
   getUserById: async (userId: string) => {
     const response = await api.get(`/admin/users/${userId}`);
     return response.data.data;
@@ -99,16 +100,10 @@ export const adminService = {
   deleteUser: async (userId: string, adminId: string) => {
     const response = await api.delete(`/admin/users/${userId}`, {
       params: { adminId }
-=======
-  updateUserRole: async (id: string, role: string) => {
-    const response = await api.put(`/admin/users/${id}/role`, null, {
-      params: { role },
->>>>>>> 9c8af4faee744b93a735caa79338d04ec1eae11b
     });
     return response.data;
   },
 
-<<<<<<< HEAD
   // Commercial Users Management
   getAllCommercials: async () => {
     const response = await api.get('/admin/commercial-users');
@@ -125,11 +120,6 @@ export const adminService = {
     return response.data.data;
   },
 
-  getCommercialUsers: async (commercialId: string) => {
-    const response = await api.get(`/commercial/${commercialId}/users`);
-    return response.data.data;
-  },
-
   searchCommercialUsers: async (commercialId: string, query: string) => {
     const response = await api.get(`/commercial/${commercialId}/users/search`, {
       params: { query }
@@ -140,11 +130,6 @@ export const adminService = {
   deactivateCommercial: async (id: string, adminId: string, reason: string) => {
     const response = await api.put(`/admin/commercial-users/${id}/deactivate`, null, {
       params: { adminId, reason }
-=======
-  updateUserStatus: async (id: string, status: string) => {
-    const response = await api.put(`/admin/users/${id}/user-status`, null, {
-      params: { status },
->>>>>>> 9c8af4faee744b93a735caa79338d04ec1eae11b
     });
     return response.data;
   },
@@ -153,16 +138,6 @@ export const adminService = {
     const response = await api.put(`/admin/users/${id}/credits`, null, {
       params: { credits },
     });
-    return response.data;
-  },
-
-  createCommercial: async (data: any) => {
-    const response = await api.post('/admin/users/commercial', data);
-    return response.data;
-  },
-
-  deleteUser: async (id: string) => {
-    const response = await api.delete(`/admin/users/${id}`);
     return response.data;
   },
 

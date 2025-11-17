@@ -274,6 +274,12 @@ export default function AdminSales() {
       setCommercialUsers(users || []);
     } catch (error: any) {
       console.error('❌ Erreur lors du chargement des utilisateurs:', error);
+      console.error('❌ Détails de l\'erreur backend:', {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+        data: error.response?.data,
+        fullError: error.response
+      });
       toast({
         title: 'Erreur',
         description: error.response?.data?.message || 'Impossible de charger les utilisateurs',
