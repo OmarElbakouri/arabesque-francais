@@ -50,6 +50,8 @@ interface User {
   status: string;
   active: boolean;
   creditBalance: number;
+  currentPlan?: string; // FREE, NORMAL, VIP - from backend
+  plan?: string; // For backward compatibility
 }
 
 export default function AdminUsers() {
@@ -66,6 +68,7 @@ export default function AdminUsers() {
     role: '',
     status: '',
     credits: 0,
+    plan: '',
   });
 
   useEffect(() => {
@@ -83,12 +86,23 @@ export default function AdminUsers() {
       
       const usersArray = Array.isArray(data) ? data : [];
       console.log('👥 Nombre d\'utilisateurs:', usersArray.length);
+      
+      // Log first user to see structure
+      if (usersArray.length > 0) {
+        console.log('🔍 Premier utilisateur structure:', usersArray[0]);
+        console.log('🔍 Current Plan field:', usersArray[0].currentPlan);
+        console.log('🔍 Plan field (old):', usersArray[0].plan);
+      }
+      
       setUsers(usersArray);
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Erreur lors du chargement des utilisateurs:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      console.error('❌ Error message:', error.response?.data?.message);
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger les utilisateurs',
+        description: error.response?.data?.message || 'Impossible de charger les utilisateurs',
         variant: 'destructive',
       });
       setUsers([]);
@@ -103,6 +117,7 @@ export default function AdminUsers() {
       role: user.role,
       status: user.status,
       credits: user.creditBalance,
+      plan: user.currentPlan || user.plan || 'FREE',
     });
     setEditDialogOpen(true);
   };
@@ -116,12 +131,21 @@ export default function AdminUsers() {
     if (!selectedUser || !currentUser?.id) return;
 
     try {
-      // Update user with all changes at once
-      await adminService.updateUser(selectedUser.id, {
+      // Prepare update data - match backend expected format
+      const updateData: Record<string, any> = {
         role: editForm.role,
         status: editForm.status,
         creditBalance: editForm.credits,
-      });
+      };
+
+      // Only include plan for USER/NORMAL role
+      if (editForm.role === 'USER' || editForm.role === 'NORMAL') {
+        updateData.plan = editForm.plan;
+      }
+
+      // Update user with all changes at once
+      console.log('Updating user with data:', updateData);
+      await adminService.updateUser(selectedUser.id, updateData);
 
       toast({
         title: 'Succès',
@@ -129,11 +153,14 @@ export default function AdminUsers() {
       });
       setEditDialogOpen(false);
       loadUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la mise à jour:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error response message:', JSON.stringify(error.response?.data, null, 2));
+      console.error('Error status:', error.response?.status);
       toast({
         title: 'Erreur',
-        description: 'Impossible de mettre à jour l\'utilisateur',
+        description: error.response?.data?.message || 'Impossible de mettre à jour l\'utilisateur',
         variant: 'destructive',
       });
     }
@@ -175,8 +202,8 @@ export default function AdminUsers() {
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (user.fullName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
@@ -304,6 +331,7 @@ export default function AdminUsers() {
                   <TableHead>Email</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Plan</TableHead>
                   <TableHead>Crédits</TableHead>
                   <TableHead>Actif</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -312,7 +340,7 @@ export default function AdminUsers() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Aucun utilisateur trouvé
                     </TableCell>
                   </TableRow>
@@ -320,7 +348,7 @@ export default function AdminUsers() {
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
-                        <p className="font-medium">{user.fullName}</p>
+                        <p className="font-medium">{user.fullName || 'N/A'}</p>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
@@ -337,6 +365,24 @@ export default function AdminUsers() {
                         <Badge variant="outline" className={statusColors[user.status] || ''}>
                           {user.status === 'CONFIRME' ? 'CONFIRMÉ' : user.status.replace('_', ' ')}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {(user.role === 'USER' || user.role === 'NORMAL') ? (
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              (user.currentPlan || user.plan) === 'VIP' 
+                                ? 'bg-purple-500/10 text-purple-600 border-purple-500/20' 
+                                : (user.currentPlan || user.plan) === 'NORMAL'
+                                ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                                : 'bg-gray-500/10 text-gray-600 border-gray-500/20'
+                            }
+                          >
+                            {user.currentPlan || user.plan || 'FREE'}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <span className="font-medium">{user.creditBalance}</span>
@@ -418,6 +464,25 @@ export default function AdminUsers() {
                 </SelectContent>
               </Select>
             </div>
+            {/* Only show plan field for USER/NORMAL role, not for COMMERCIAL or ADMIN */}
+            {(editForm.role === 'USER' || editForm.role === 'NORMAL') && (
+              <div className="space-y-2">
+                <Label htmlFor="plan">Type de Plan</Label>
+                <Select
+                  value={editForm.plan}
+                  onValueChange={(value) => setEditForm({ ...editForm, plan: value })}
+                >
+                  <SelectTrigger id="plan">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FREE">Free</SelectItem>
+                    <SelectItem value="NORMAL">Normal</SelectItem>
+                    <SelectItem value="VIP">VIP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="credits">Crédits</Label>
               <Input

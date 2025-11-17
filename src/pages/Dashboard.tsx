@@ -43,13 +43,47 @@ export default function Dashboard() {
       } catch (err: any) {
         console.error('Dashboard: Error fetching dashboard:', err);
         console.error('Dashboard: Error response:', err.response);
-        const errorMessage = err.response?.data?.message || 'فشل تحميل البيانات';
-        setError(errorMessage);
-        toast({
-          title: 'خطأ',
-          description: errorMessage,
-          variant: 'destructive',
-        });
+        
+        // Handle 500 errors for new users with no data
+        if (err.response?.status === 500) {
+          console.log('Dashboard: 500 error - possibly a new user with no data');
+          // Set empty dashboard data for new users
+          setDashboardData({
+            userInfo: {
+              userId: parseInt(user.id),
+              firstName: user.prenom || '',
+              lastName: user.nom || '',
+              email: user.email || '',
+              role: user.role || 'FREE',
+            },
+            stats: {
+              overallProgress: 0,
+              totalCertificates: 0,
+              totalBadges: 0,
+              totalLearningHours: 0,
+              completedLessons: 0,
+              totalLessons: 0,
+              totalXp: 0,
+              enrolledCoursesCount: 0,
+            },
+            credits: {
+              currentCredits: user.credits || 0,
+              usedCredits: 0,
+              monthlyLimit: user.role === 'FREE' ? 10 : null,
+              hasUnlimitedCredits: user.role === 'VIP',
+            },
+            enrolledCourses: [],
+          });
+          setError(null); // Clear error for new users
+        } else {
+          const errorMessage = err.response?.data?.message || 'فشل تحميل البيانات';
+          setError(errorMessage);
+          toast({
+            title: 'خطأ',
+            description: errorMessage,
+            variant: 'destructive',
+          });
+        }
       } finally {
         setIsLoading(false);
       }
@@ -59,6 +93,11 @@ export default function Dashboard() {
   }, [user?.id, toast]);
 
   const roleConfig = {
+    USER: { 
+      className: 'bg-gray-500 text-white',
+      icon: User,
+      label: 'مستخدم'
+    },
     FREE: { 
       className: 'bg-gray-500 text-white',
       icon: User,
@@ -147,9 +186,11 @@ export default function Dashboard() {
   }
   
   // Check if user is FREE and show limited content
-  const isFreeUser = userInfo.role === 'FREE';
+  const isFreeUser = userInfo.role === 'FREE' || userInfo.role === 'USER';
   
-  const currentRole = roleConfig[userInfo.role];
+  // Ensure role exists in roleConfig, fallback to USER if not found
+  const userRole = userInfo.role && roleConfig[userInfo.role] ? userInfo.role : 'USER';
+  const currentRole = roleConfig[userRole];
   const shouldShowCredits = userInfo.role === 'NORMAL' || userInfo.role === 'VIP';
 
   return (

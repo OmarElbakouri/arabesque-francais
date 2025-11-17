@@ -26,6 +26,16 @@ export const adminService = {
     return response.data.data;
   },
 
+  getCommercialSales: async () => {
+    const response = await api.get('/admin/dashboard/commercial-sales');
+    return response.data.data;
+  },
+
+  getCommercialUsers: async (commercialId: number) => {
+    const response = await api.get(`/admin/commercial/${commercialId}/users`);
+    return response.data.data;
+  },
+
   // User Management
   getAllUsers: async () => {
     const response = await api.get('/admin/users');
@@ -59,9 +69,41 @@ export const adminService = {
     return response.data.data;
   },
 
+  // User update methods - backend uses specific endpoints for each field
   updateUser: async (userId: string, data: any) => {
-    const response = await api.put(`/admin/users/${userId}`, data);
-    return response.data.data;
+    // This is a wrapper that calls individual endpoints based on what fields are being updated
+    // Update role first if it's being changed, as it may affect other operations
+    try {
+      if (data.role !== undefined) {
+        await api.put(`/admin/users/${userId}/role`, null, {
+          params: { role: data.role }
+        });
+      }
+      
+      if (data.status !== undefined) {
+        await api.put(`/admin/users/${userId}/user-status`, null, {
+          params: { status: data.status }
+        });
+      }
+      
+      if (data.creditBalance !== undefined) {
+        await api.put(`/admin/users/${userId}/credits`, null, {
+          params: { credits: data.creditBalance }
+        });
+      }
+      
+      // Update plan last, only for USER/NORMAL roles
+      if (data.plan !== undefined) {
+        await api.put(`/admin/users/${userId}/plan`, null, {
+          params: { planName: data.plan }
+        });
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
   },
 
   deleteUser: async (userId: string, adminId: string) => {
@@ -77,10 +119,8 @@ export const adminService = {
     return response.data.data;
   },
 
-  createCommercial: async (adminId: string, data: any) => {
-    const response = await api.post('/admin/commercial-users', data, {
-      params: { adminId }
-    });
+  createCommercial: async (data: { firstName: string; lastName: string; email: string; phone?: string; commissionPercentage: number }) => {
+    const response = await api.post('/admin/users/commercial', data);
     return response.data.data;
   },
 
@@ -216,5 +256,23 @@ export const adminService = {
       params: { title, message, deepLink },
     });
     return response.data;
+  },
+
+  // Payment Management
+  getAllPayments: async () => {
+    const response = await api.get('/admin/payments/all');
+    return response.data.data;
+  },
+
+  updatePayment: async (paymentId: number, data: {
+    status?: string;
+    paymentMethod?: string;
+    amount?: number;
+  }) => {
+    const response = await api.put('/admin/payments/update', {
+      paymentId,
+      ...data
+    });
+    return response.data.data;
   },
 };
