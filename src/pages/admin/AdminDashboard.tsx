@@ -1,13 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, DollarSign, TrendingUp, UserPlus, Award, BookOpen, MessageSquare, ArrowUpRight, Percent } from 'lucide-react';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { Doughnut } from 'react-chartjs-2';
+import { useState, useEffect } from 'react';
+import { adminService } from '@/services/adminService';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
   ArcElement,
   Title,
   Tooltip,
@@ -17,76 +18,125 @@ import {
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
   ArcElement,
   Title,
   Tooltip,
   Legend
 );
 
+interface DashboardStats {
+  totalUsers: number;
+  freeUsers: number;
+  normalUsers: number;
+  vipUsers: number;
+  activeUsers: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  conversionRate: number;
+  conversionsThisMonth: number;
+  totalCourses: number;
+  totalEnrollments: number;
+  totalAiMessages: number;
+  pendingPayments: number;
+}
+
+interface RecentActivity {
+  userName: string;
+  userInitial: string;
+  activityType: string;
+  activityDescription: string;
+  activityDetail: string | null;
+  timestamp: string;
+  timeAgo: string;
+}
+
 export default function AdminDashboard() {
-  // Mock data avec métriques détaillées
-  const stats = {
-    totalUsers: 1250,
-    normalUsers: 450,
-    vipUsers: 180,
-    activeUsers: 890,
-    monthlyRevenue: 45600,
-    newUsersThisMonth: 156,
-    totalCourses: 12,
-    conversionRate: 23.5,
-    normalToVip: 42, // Conversions NORMAL→VIP ce mois
-    totalAICredits: 89500, // Crédits IA totaux utilisés
-    avgAIUsage: 67, // Utilisation moyenne des crédits IA en %
-    commercialRevenue: 15548, // Revenus générés par commerciaux
+  const { toast } = useToast();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardStats();
+    loadRecentActivities();
+  }, []);
+
+  const loadDashboardStats = async () => {
+    try {
+      setLoading(true);
+      console.log('📊 Chargement des statistiques du tableau de bord...');
+      const data = await adminService.getDashboardStats();
+      console.log('✅ Statistiques reçues:', data);
+      setStats(data);
+    } catch (error: any) {
+      console.error('❌ Erreur lors du chargement des statistiques:', error);
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.message || 'Impossible de charger les statistiques',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const lineChartData = {
-    labels: ['1', '5', '10', '15', '20', '25', '30'],
-    datasets: [
-      {
-        label: 'Inscriptions',
-        data: [12, 19, 15, 25, 22, 30, 28],
-        borderColor: 'hsl(var(--primary))',
-        backgroundColor: 'hsla(var(--primary), 0.1)',
-        tension: 0.4,
-      },
-    ],
+  const loadRecentActivities = async () => {
+    try {
+      setActivitiesLoading(true);
+      console.log('📋 Chargement des activités récentes...');
+      const data = await adminService.getRecentActivities(20);
+      console.log('✅ Activités reçues:', data);
+      setRecentActivities(data || []);
+    } catch (error: any) {
+      console.error('❌ Erreur lors du chargement des activités:', error);
+      // Don't show toast for activities error, just log it
+      setRecentActivities([]);
+    } finally {
+      setActivitiesLoading(false);
+    }
   };
 
-  const barChartData = {
-    labels: ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin'],
-    datasets: [
-      {
-        label: 'Revenus (DH)',
-        data: [35000, 42000, 38000, 45600, 48000, 52000],
-        backgroundColor: 'hsl(var(--secondary))',
-      },
-    ],
-  };
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Tableau de Bord</h1>
+          <p className="text-muted-foreground mt-1">Vue d'ensemble de la plateforme</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Tableau de Bord</h1>
+          <p className="text-muted-foreground mt-1">Aucune donnée disponible</p>
+        </div>
+      </div>
+    );
+  }
 
   const doughnutData = {
-    labels: ['Normal', 'Premium', 'VIP'],
+    labels: ['FREE', 'NORMAL', 'VIP'],
     datasets: [
       {
-        data: [450, 620, 180],
+        data: [stats?.freeUsers || 0, stats?.normalUsers || 0, stats?.vipUsers || 0],
         backgroundColor: [
-          'hsl(var(--muted))',
-          'hsl(var(--primary))',
-          'hsl(var(--secondary))',
+          '#94A3B8', // Gray for FREE
+          '#3B82F6', // Blue for NORMAL
+          '#8B5CF6', // Purple for VIP
         ],
       },
     ],
   };
-
-  const recentActivities = [
-    { user: 'Mohamed Idrissi', action: 'Abonné au plan Premium', time: 'Il y a 5 min', amount: 299 },
-    { user: 'Fatima Zahra', action: 'A terminé le cours A1', time: 'Il y a 15 min', amount: null },
-    { user: 'Youssef Hassani', action: 'Abonné au plan VIP', time: 'Il y a 30 min', amount: 499 },
-    { user: 'Sara Mansouri', action: 'Inscription complétée', time: 'Il y a 1h', amount: null },
-  ];
 
   return (
     <div className="space-y-6">
@@ -103,9 +153,9 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Utilisateurs</p>
-                <p className="text-2xl font-bold text-primary">{stats.totalUsers}</p>
+                <p className="text-2xl font-bold text-primary">{stats?.totalUsers || 0}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {stats.normalUsers} Normal • {stats.vipUsers} VIP
+                  {stats?.freeUsers || 0} FREE • {stats?.normalUsers || 0} NORMAL • {stats?.vipUsers || 0} VIP
                 </p>
               </div>
               <Users className="h-8 w-8 text-primary/20" />
@@ -118,7 +168,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Revenus Mensuels</p>
-                <p className="text-2xl font-bold text-secondary">{stats.monthlyRevenue} DH</p>
+                <p className="text-2xl font-bold text-secondary">{stats?.monthlyRevenue || 0} DH</p>
                 <p className="text-xs text-success mt-1 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" />
                   +12.5% vs mois dernier
@@ -134,9 +184,9 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Conversions NORMAL→VIP</p>
-                <p className="text-2xl font-bold text-success">{stats.normalToVip}</p>
+                <p className="text-2xl font-bold text-success">{stats?.normalToVip || 0}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {stats.conversionRate}% taux ce mois
+                  {stats?.conversionRate || 0}% taux ce mois
                 </p>
               </div>
               <ArrowUpRight className="h-8 w-8 text-success/20" />
@@ -149,9 +199,9 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Utilisation IA Moy.</p>
-                <p className="text-2xl font-bold text-warning">{stats.avgAIUsage}%</p>
+                <p className="text-2xl font-bold text-warning">{stats?.avgAIUsage || 0}%</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {stats.totalAICredits.toLocaleString()} crédits utilisés
+                  {(stats?.totalAICredits || 0).toLocaleString()} crédits utilisés
                 </p>
               </div>
               <MessageSquare className="h-8 w-8 text-warning/20" />
@@ -167,9 +217,9 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Utilisateurs Actifs</p>
-                <p className="text-2xl font-bold text-success">{stats.activeUsers}</p>
+                <p className="text-2xl font-bold text-success">{stats?.activeUsers || 0}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {Math.round((stats.activeUsers / stats.totalUsers) * 100)}% du total
+                  {stats?.totalUsers ? Math.round(((stats?.activeUsers || 0) / stats.totalUsers) * 100) : 0}% du total
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-success/20" />
@@ -182,7 +232,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Nouveaux ce mois</p>
-                <p className="text-2xl font-bold text-info">{stats.newUsersThisMonth}</p>
+                <p className="text-2xl font-bold text-info">{stats?.newUsersThisMonth || 0}</p>
                 <p className="text-xs text-success mt-1 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" />
                   +8.3% vs mois dernier
@@ -198,9 +248,9 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Revenus Commerciaux</p>
-                <p className="text-2xl font-bold text-purple-600">{stats.commercialRevenue} DH</p>
+                <p className="text-2xl font-bold text-purple-600">{stats?.commercialRevenue || 0} DH</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {Math.round((stats.commercialRevenue / stats.monthlyRevenue) * 100)}% du total
+                  {stats?.monthlyRevenue ? Math.round(((stats?.commercialRevenue || 0) / stats.monthlyRevenue) * 100) : 0}% du total
                 </p>
               </div>
               <Percent className="h-8 w-8 text-purple-600/20" />
@@ -213,7 +263,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Nombre de Cours</p>
-                <p className="text-2xl font-bold text-primary">{stats.totalCourses}</p>
+                <p className="text-2xl font-bold text-primary">{stats?.totalCourses || 0}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Tous publiés et actifs
                 </p>
@@ -224,54 +274,45 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Inscriptions sur 30 jours</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Line data={lineChartData} options={{ responsive: true, maintainAspectRatio: true }} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenus Mensuels</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Bar data={barChartData} options={{ responsive: true, maintainAspectRatio: true }} />
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Activités Récentes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentActivities.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between pb-4 border-b last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-primary font-bold">{activity.user.charAt(0)}</span>
+            {activitiesLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : recentActivities.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Aucune activité récente</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentActivities.map((activity, index) => (
+                  <div key={index} className="flex items-center justify-between pb-4 border-b last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-primary font-bold">{activity.userInitial}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">{activity.userName}</p>
+                        <p className="text-sm text-muted-foreground">{activity.activityDescription}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{activity.user}</p>
-                      <p className="text-sm text-muted-foreground">{activity.action}</p>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">{activity.timeAgo}</p>
+                      {activity.activityDetail && (
+                        <p className="text-sm font-bold text-success">{activity.activityDetail}</p>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">{activity.time}</p>
-                    {activity.amount && (
-                      <p className="text-sm font-bold text-success">+{activity.amount} DH</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -283,16 +324,25 @@ export default function AdminDashboard() {
             <Doughnut data={doughnutData} options={{ responsive: true, maintainAspectRatio: true }} />
             <div className="mt-4 space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Normal</span>
-                <span className="font-bold">450</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#94A3B8' }}></div>
+                  <span className="text-muted-foreground">FREE</span>
+                </div>
+                <span className="font-bold">{stats?.freeUsers || 0}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Premium</span>
-                <span className="font-bold">620</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#3B82F6' }}></div>
+                  <span className="text-muted-foreground">NORMAL</span>
+                </div>
+                <span className="font-bold">{stats?.normalUsers || 0}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">VIP</span>
-                <span className="font-bold">180</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#8B5CF6' }}></div>
+                  <span className="text-muted-foreground">VIP</span>
+                </div>
+                <span className="font-bold">{stats?.vipUsers || 0}</span>
               </div>
             </div>
           </CardContent>

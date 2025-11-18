@@ -24,54 +24,43 @@ export interface CreateCourseRequest {
 export const courseService = {
   getAllCourses: async () => {
     const response = await api.get('/courses');
-    return response.data.data;
-  },
-
-  getCourseStats: async () => {
-    const response = await api.get('/admin/courses/stats');
-    return response.data.data;
+    return response.data;
   },
 
   getPublishedCourses: async () => {
     const response = await api.get('/courses/published');
-    return response.data.data;
+    return response.data;
   },
 
   getCourseById: async (id: string) => {
     const response = await api.get(`/courses/${id}`);
-    return response.data.data;
+    return response.data;
   },
 
   getCoursesByLevel: async (level: string) => {
     const response = await api.get(`/courses/level/${level}`);
-    return response.data.data;
+    return response.data;
   },
 
   searchCourses: async (keyword: string) => {
     const response = await api.get(`/courses/search`, {
       params: { keyword },
     });
-    return response.data.data;
+    return response.data;
   },
 
-  createCourse: async (adminId: string, data: CreateCourseRequest) => {
-    const response = await api.post('/admin/courses', data, {
-      params: { adminId }
-    });
-    return response.data.data;
+  createCourse: async (data: CreateCourseRequest) => {
+    const response = await api.post('/courses', data);
+    return response.data;
   },
 
-  updateCourse: async (courseId: string, adminId: string, data: Partial<CreateCourseRequest>) => {
-    const response = await api.put(`/admin/courses/${courseId}`, data, {
-      params: { adminId }
-    });
-    return response.data.data;
+  updateCourse: async (id: string, data: Partial<CreateCourseRequest>) => {
+    const response = await api.put(`/courses/${id}`, data);
+    return response.data;
   },
 
-  deleteCourse: async (courseId: string, adminId: string) => {
-    const response = await api.delete(`/admin/courses/${courseId}`, {
-      params: { adminId }
-    });
+  deleteCourse: async (id: string) => {
+    const response = await api.delete(`/courses/${id}`);
     return response.data;
   },
 };

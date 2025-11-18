@@ -1,21 +1,9 @@
 import api from '@/lib/api';
 
 export const adminService = {
-  // Dashboard Stats
+  // Dashboard
   getDashboardStats: async () => {
     const response = await api.get('/admin/dashboard/stats');
-    return response.data.data;
-  },
-
-  getMonthlyRevenue: async () => {
-    const response = await api.get('/admin/dashboard/monthly-revenue');
-    return response.data.data;
-  },
-
-  getRegistrations: async (days: number = 30) => {
-    const response = await api.get('/admin/dashboard/registrations', {
-      params: { days }
-    });
     return response.data.data;
   },
 
@@ -26,32 +14,45 @@ export const adminService = {
     return response.data.data;
   },
 
+  getSalesReps: async () => {
+    const response = await api.get('/admin/dashboard/sales-reps');
+    return response.data;
+  },
+
+  getSalesRepById: async (id: string) => {
+    const response = await api.get(`/admin/dashboard/sales-reps/${id}`);
+    return response.data;
+  },
+
+  getCommercialSales: async () => {
+    const response = await api.get('/admin/dashboard/commercial-sales');
+    return response.data.data;
+  },
+
+  getCommercialUsers: async (commercialId: number) => {
+    const response = await api.get(`/admin/commercial/${commercialId}/users`);
+    return response.data.data;
+  },
+
   // User Management
   getAllUsers: async () => {
     const response = await api.get('/admin/users');
     return response.data.data;
   },
 
-  getUserStats: async () => {
-    const response = await api.get('/admin/users/stats');
-    return response.data.data;
+  getUsersByStatus: async (status: string) => {
+    const response = await api.get(`/admin/users/status/${status}`);
+    return response.data;
   },
 
-  searchUsers: async (query: string) => {
-    const response = await api.get('/admin/users/search', {
-      params: { query }
-    });
-    return response.data.data;
+  getUsersByRole: async (role: string) => {
+    const response = await api.get(`/admin/users/role/${role}`);
+    return response.data;
   },
 
-  filterUsersByRole: async (role: string) => {
-    const response = await api.get(`/admin/users/filter/role/${role}`);
-    return response.data.data;
-  },
-
-  filterUsersByStatus: async (status: string) => {
-    const response = await api.get(`/admin/users/filter/status/${status}`);
-    return response.data.data;
+  getUsersByCommercial: async (commercialId: string) => {
+    const response = await api.get(`/admin/users/commercial/${commercialId}`);
+    return response.data;
   },
 
   getUserById: async (userId: string) => {
@@ -59,9 +60,41 @@ export const adminService = {
     return response.data.data;
   },
 
+  // User update methods - backend uses specific endpoints for each field
   updateUser: async (userId: string, data: any) => {
-    const response = await api.put(`/admin/users/${userId}`, data);
-    return response.data.data;
+    // This is a wrapper that calls individual endpoints based on what fields are being updated
+    // Update role first if it's being changed, as it may affect other operations
+    try {
+      if (data.role !== undefined) {
+        await api.put(`/admin/users/${userId}/role`, null, {
+          params: { role: data.role }
+        });
+      }
+      
+      if (data.status !== undefined) {
+        await api.put(`/admin/users/${userId}/user-status`, null, {
+          params: { status: data.status }
+        });
+      }
+      
+      if (data.creditBalance !== undefined) {
+        await api.put(`/admin/users/${userId}/credits`, null, {
+          params: { credits: data.creditBalance }
+        });
+      }
+      
+      // Update plan last, only for USER/NORMAL roles
+      if (data.plan !== undefined) {
+        await api.put(`/admin/users/${userId}/plan`, null, {
+          params: { planName: data.plan }
+        });
+      }
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
   },
 
   deleteUser: async (userId: string, adminId: string) => {
@@ -77,20 +110,13 @@ export const adminService = {
     return response.data.data;
   },
 
-  createCommercial: async (adminId: string, data: any) => {
-    const response = await api.post('/admin/commercial-users', data, {
-      params: { adminId }
-    });
+  createCommercial: async (data: { firstName: string; lastName: string; email: string; phone?: string; commissionPercentage: number }) => {
+    const response = await api.post('/admin/users/commercial', data);
     return response.data.data;
   },
 
   getCommercialStats: async (commercialId: string) => {
     const response = await api.get(`/commercial/${commercialId}/dashboard/stats`);
-    return response.data.data;
-  },
-
-  getCommercialUsers: async (commercialId: string) => {
-    const response = await api.get(`/commercial/${commercialId}/users`);
     return response.data.data;
   },
 
@@ -108,16 +134,9 @@ export const adminService = {
     return response.data;
   },
 
-  reactivateCommercial: async (id: string, adminId: string) => {
-    const response = await api.put(`/admin/commercial-users/${id}/reactivate`, null, {
-      params: { adminId }
-    });
-    return response.data;
-  },
-
-  resetCommercialPassword: async (id: string, adminId: string) => {
-    const response = await api.post(`/admin/commercial-users/${id}/reset-password`, null, {
-      params: { adminId }
+  updateUserCredits: async (id: string, credits: number) => {
+    const response = await api.put(`/admin/users/${id}/credits`, null, {
+      params: { credits },
     });
     return response.data;
   },
@@ -125,19 +144,19 @@ export const adminService = {
   // Payments
   getPendingPayments: async () => {
     const response = await api.get('/admin/payments/pending');
-    return response.data.data;
+    return response.data;
   },
 
   getPaymentsByStatus: async (status: string) => {
     const response = await api.get('/admin/payments', {
       params: { status },
     });
-    return response.data.data;
+    return response.data;
   },
 
   getPaymentById: async (id: string) => {
     const response = await api.get(`/admin/payments/${id}`);
-    return response.data.data;
+    return response.data;
   },
 
   validatePayment: async (data: { paymentId: string; status: string; adminNotes: string }) => {
@@ -154,33 +173,33 @@ export const adminService = {
 
   getPaymentStatistics: async () => {
     const response = await api.get('/admin/payments/statistics');
-    return response.data.data;
+    return response.data;
   },
 
   // Promo Codes
   getAllPromoCodes: async () => {
     const response = await api.get('/admin/promo-codes');
-    return response.data.data;
+    return response.data;
   },
 
   getActivePromoCodes: async () => {
     const response = await api.get('/admin/promo-codes/active');
-    return response.data.data;
+    return response.data;
   },
 
   getPromoCodesByCommercial: async (commercialId: string) => {
     const response = await api.get(`/admin/promo-codes/commercial/${commercialId}`);
-    return response.data.data;
+    return response.data;
   },
 
   createPromoCode: async (data: any) => {
     const response = await api.post('/admin/promo-codes', data);
-    return response.data.data;
+    return response.data;
   },
 
   updatePromoCode: async (id: string, data: any) => {
     const response = await api.put(`/admin/promo-codes/${id}`, data);
-    return response.data.data;
+    return response.data;
   },
 
   deletePromoCode: async (id: string) => {
@@ -189,23 +208,6 @@ export const adminService = {
   },
 
   // Notifications
-  getAllNotifications: async () => {
-    const response = await api.get('/admin/notifications');
-    return response.data.data;
-  },
-
-  getNotificationStats: async () => {
-    const response = await api.get('/admin/notifications/stats');
-    return response.data.data;
-  },
-
-  createNotification: async (adminId: string, data: any) => {
-    const response = await api.post('/admin/notifications', data, {
-      params: { adminId }
-    });
-    return response.data.data;
-  },
-
   sendNotification: async (data: any) => {
     const response = await api.post('/admin/notifications/send', data);
     return response.data;
@@ -216,5 +218,23 @@ export const adminService = {
       params: { title, message, deepLink },
     });
     return response.data;
+  },
+
+  // Payment Management
+  getAllPayments: async () => {
+    const response = await api.get('/admin/payments/all');
+    return response.data.data;
+  },
+
+  updatePayment: async (paymentId: number, data: {
+    status?: string;
+    paymentMethod?: string;
+    amount?: number;
+  }) => {
+    const response = await api.put('/admin/payments/update', {
+      paymentId,
+      ...data
+    });
+    return response.data.data;
   },
 };

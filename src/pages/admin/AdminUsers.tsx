@@ -40,7 +40,6 @@ import { Label } from '@/components/ui/label';
 import { Search, Edit, Trash2, Mail, Phone } from 'lucide-react';
 import { adminService } from '@/services/adminService';
 import { toast } from '@/hooks/use-toast';
-import { useAuthStore } from '@/stores/authStore';
 
 interface User {
   id: string;
@@ -50,10 +49,11 @@ interface User {
   status: string;
   active: boolean;
   creditBalance: number;
+  currentPlan?: string; // FREE, NORMAL, VIP - from backend
+  plan?: string; // For backward compatibility
 }
 
 export default function AdminUsers() {
-  const { user: currentUser } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -66,6 +66,7 @@ export default function AdminUsers() {
     role: '',
     status: '',
     credits: 0,
+    plan: '',
   });
 
   useEffect(() => {
@@ -83,12 +84,23 @@ export default function AdminUsers() {
       
       const usersArray = Array.isArray(data) ? data : [];
       console.log('👥 Nombre d\'utilisateurs:', usersArray.length);
+      
+      // Log first user to see structure
+      if (usersArray.length > 0) {
+        console.log('🔍 Premier utilisateur structure:', usersArray[0]);
+        console.log('🔍 Current Plan field:', usersArray[0].currentPlan);
+        console.log('🔍 Plan field (old):', usersArray[0].plan);
+      }
+      
       setUsers(usersArray);
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Erreur lors du chargement des utilisateurs:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      console.error('❌ Error message:', error.response?.data?.message);
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger les utilisateurs',
+        description: error.response?.data?.message || 'Impossible de charger les utilisateurs',
         variant: 'destructive',
       });
       setUsers([]);
@@ -103,6 +115,7 @@ export default function AdminUsers() {
       role: user.role,
       status: user.status,
       credits: user.creditBalance,
+      plan: user.currentPlan || user.plan || 'FREE',
     });
     setEditDialogOpen(true);
   };
@@ -113,15 +126,24 @@ export default function AdminUsers() {
   };
 
   const handleSaveEdit = async () => {
-    if (!selectedUser || !currentUser?.id) return;
+    if (!selectedUser) return;
 
     try {
-      // Update user with all changes at once
-      await adminService.updateUser(selectedUser.id, {
+      // Prepare update data - match backend expected format
+      const updateData: Record<string, any> = {
         role: editForm.role,
         status: editForm.status,
         creditBalance: editForm.credits,
-      });
+      };
+
+      // Only include plan for USER/NORMAL role
+      if (editForm.role === 'USER' || editForm.role === 'NORMAL') {
+        updateData.plan = editForm.plan;
+      }
+
+      // Update user with all changes at once
+      console.log('Updating user with data:', updateData);
+      await adminService.updateUser(selectedUser.id, updateData);
 
       toast({
         title: 'Succès',
@@ -129,21 +151,24 @@ export default function AdminUsers() {
       });
       setEditDialogOpen(false);
       loadUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la mise à jour:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error response message:', JSON.stringify(error.response?.data, null, 2));
+      console.error('Error status:', error.response?.status);
       toast({
         title: 'Erreur',
-        description: 'Impossible de mettre à jour l\'utilisateur',
+        description: error.response?.data?.message || 'Impossible de mettre à jour l\'utilisateur',
         variant: 'destructive',
       });
     }
   };
 
   const handleConfirmDelete = async () => {
-    if (!selectedUser || !currentUser?.id) return;
+    if (!selectedUser) return;
 
     try {
-      await adminService.deleteUser(selectedUser.id, currentUser.id);
+      await adminService.deleteUser(selectedUser.id);
       toast({
         title: 'Succès',
         description: 'Utilisateur supprimé avec succès',
@@ -161,7 +186,8 @@ export default function AdminUsers() {
   };
 
   const roleColors: Record<string, string> = {
-    USER: 'bg-muted/10 text-muted-foreground border border-muted',
+    NORMAL: 'bg-muted/10 text-muted-foreground border border-muted',
+    VIP: 'bg-primary/10 text-primary border border-primary/20',
     COMMERCIAL: 'bg-blue-500/10 text-blue-600 border border-blue-500/20',
     ADMIN: 'bg-destructive/10 text-destructive border border-destructive/20',
   };
@@ -175,8 +201,8 @@ export default function AdminUsers() {
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (user.fullName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
@@ -184,10 +210,10 @@ export default function AdminUsers() {
 
   const stats = {
     total: users.length,
-    user: users.filter((u) => u.role === 'USER').length,
-    commercial: users.filter((u) => u.role === 'COMMERCIAL').length,
-    admin: users.filter((u) => u.role === 'ADMIN').length,
+    normal: users.filter((u) => u.role === 'NORMAL').length,
+    vip: users.filter((u) => u.role === 'VIP').length,
     confirme: users.filter((u) => u.status === 'CONFIRME').length,
+    enAttente: users.filter((u) => u.status === 'EN_ATTENTE').length,
   };
 
   if (loading) {
@@ -219,24 +245,16 @@ export default function AdminUsers() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-2xl font-bold">{stats.user}</p>
-              <p className="text-sm text-muted-foreground">Utilisateurs</p>
+              <p className="text-2xl font-bold">{stats.normal}</p>
+              <p className="text-sm text-muted-foreground">Normal</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats.commercial}</p>
-              <p className="text-sm text-muted-foreground">Commerciaux</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-destructive">{stats.admin}</p>
-              <p className="text-sm text-muted-foreground">Admins</p>
+              <p className="text-2xl font-bold text-primary">{stats.vip}</p>
+              <p className="text-sm text-muted-foreground">VIP</p>
             </div>
           </CardContent>
         </Card>
@@ -244,7 +262,15 @@ export default function AdminUsers() {
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-2xl font-bold text-green-600">{stats.confirme}</p>
-              <p className="text-sm text-muted-foreground">Confirmés</p>
+              <p className="text-sm text-muted-foreground">Confirmé</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-yellow-600">{stats.enAttente}</p>
+              <p className="text-sm text-muted-foreground">En Attente</p>
             </div>
           </CardContent>
         </Card>
@@ -268,11 +294,12 @@ export default function AdminUsers() {
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Rôle" />
+                <SelectValue placeholder="Type d'abonnement" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous les rôles</SelectItem>
-                <SelectItem value="USER">Utilisateur</SelectItem>
+                <SelectItem value="all">Tous les types</SelectItem>
+                <SelectItem value="NORMAL">Normal</SelectItem>
+                <SelectItem value="VIP">VIP</SelectItem>
                 <SelectItem value="COMMERCIAL">Commercial</SelectItem>
                 <SelectItem value="ADMIN">Admin</SelectItem>
               </SelectContent>
@@ -304,6 +331,7 @@ export default function AdminUsers() {
                   <TableHead>Email</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Plan</TableHead>
                   <TableHead>Crédits</TableHead>
                   <TableHead>Actif</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -312,7 +340,7 @@ export default function AdminUsers() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Aucun utilisateur trouvé
                     </TableCell>
                   </TableRow>
@@ -320,7 +348,7 @@ export default function AdminUsers() {
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
-                        <p className="font-medium">{user.fullName}</p>
+                        <p className="font-medium">{user.fullName || 'N/A'}</p>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 text-sm">
@@ -337,6 +365,24 @@ export default function AdminUsers() {
                         <Badge variant="outline" className={statusColors[user.status] || ''}>
                           {user.status === 'CONFIRME' ? 'CONFIRMÉ' : user.status.replace('_', ' ')}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {(user.role === 'USER' || user.role === 'NORMAL') ? (
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              (user.currentPlan || user.plan) === 'VIP' 
+                                ? 'bg-purple-500/10 text-purple-600 border-purple-500/20' 
+                                : (user.currentPlan || user.plan) === 'NORMAL'
+                                ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                                : 'bg-gray-500/10 text-gray-600 border-gray-500/20'
+                            }
+                          >
+                            {user.currentPlan || user.plan || 'FREE'}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <span className="font-medium">{user.creditBalance}</span>
@@ -386,7 +432,7 @@ export default function AdminUsers() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="role">Rôle</Label>
+              <Label htmlFor="role">Type</Label>
               <Select
                 value={editForm.role}
                 onValueChange={(value) => setEditForm({ ...editForm, role: value })}
@@ -395,7 +441,8 @@ export default function AdminUsers() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USER">Utilisateur</SelectItem>
+                  <SelectItem value="NORMAL">Normal</SelectItem>
+                  <SelectItem value="VIP">VIP</SelectItem>
                   <SelectItem value="COMMERCIAL">Commercial</SelectItem>
                   <SelectItem value="ADMIN">Admin</SelectItem>
                 </SelectContent>
@@ -418,6 +465,25 @@ export default function AdminUsers() {
                 </SelectContent>
               </Select>
             </div>
+            {/* Only show plan field for USER/NORMAL role, not for COMMERCIAL or ADMIN */}
+            {(editForm.role === 'USER' || editForm.role === 'NORMAL') && (
+              <div className="space-y-2">
+                <Label htmlFor="plan">Type de Plan</Label>
+                <Select
+                  value={editForm.plan}
+                  onValueChange={(value) => setEditForm({ ...editForm, plan: value })}
+                >
+                  <SelectTrigger id="plan">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FREE">Free</SelectItem>
+                    <SelectItem value="NORMAL">Normal</SelectItem>
+                    <SelectItem value="VIP">VIP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="credits">Crédits</Label>
               <Input

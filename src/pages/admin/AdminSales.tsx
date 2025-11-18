@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -20,117 +21,335 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, Copy, Users, DollarSign } from 'lucide-react';
+import { Plus, Trash2, Copy, Users, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { adminService } from '@/services/adminService';
+import { useAuthStore } from '@/stores/authStore';
 
 interface Commercial {
-  id: string;
-  nom: string;
-  prenom: string;
-  email: string;
-  telephone: string;
-  couponCode: string;
-  totalClients: number;
-  monthlyClients: number;
-  totalRevenue: number;
+  commercialId: number;
+  commercialName: string;
+  commercialEmail: string;
+  promoCode: string;
+  commissionRate: number;
   monthlyRevenue: number;
-  commission: number;
-  dateAjout: string;
+  totalRevenue: number;
+  monthlyClients: number;
+  totalClients: number;
+  promoCodeUsage: number;
+  status: string;
+}
+
+interface CommercialUser {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  dateInscription: string;
+  status: string;
+  credits: number;
 }
 
 export default function AdminSales() {
   const { toast } = useToast();
+  const user = useAuthStore((state) => state.user);
+  const [commercials, setCommercials] = useState<Commercial[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newCommercial, setNewCommercial] = useState({
-    nom: '',
-    prenom: '',
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [commercialToDelete, setCommercialToDelete] = useState<Commercial | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [usersDialogOpen, setUsersDialogOpen] = useState(false);
+  const [selectedCommercial, setSelectedCommercial] = useState<Commercial | null>(null);
+  const [commercialUsers, setCommercialUsers] = useState<CommercialUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
     email: '',
-    telephone: '',
-    commission: 10,
+    phone: '',
+    commissionPercentage: 10,
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Mock data
-  const [commercials] = useState<Commercial[]>([
-    {
-      id: '1',
-      nom: 'السعيد',
-      prenom: 'أحمد',
-      email: 'ahmed@bclt.com',
-      telephone: '+212600000010',
-      couponCode: 'AHMED2024',
-      totalClients: 45,
-      monthlyClients: 8,
-      totalRevenue: 13470,
-      monthlyRevenue: 2392,
-      commission: 10,
-      dateAjout: '2024-01-01',
-    },
-    {
-      id: '2',
-      nom: 'المنصوري',
-      prenom: 'خالد',
-      email: 'khaled@bclt.com',
-      telephone: '+212600000011',
-      couponCode: 'KHALED2024',
-      totalClients: 38,
-      monthlyClients: 5,
-      totalRevenue: 11362,
-      monthlyRevenue: 1495,
-      commission: 10,
-      dateAjout: '2024-01-15',
-    },
-    {
-      id: '3',
-      nom: 'الزهري',
-      prenom: 'ياسين',
-      email: 'yassine@bclt.com',
-      telephone: '+212600000012',
-      couponCode: 'YASSINE2024',
-      totalClients: 52,
-      monthlyClients: 12,
-      totalRevenue: 15548,
-      monthlyRevenue: 3588,
-      commission: 12,
-      dateAjout: '2024-02-01',
-    },
-  ]);
+  useEffect(() => {
+    loadCommercialSales();
+  }, []);
+
+  const loadCommercialSales = async () => {
+    try {
+      setLoading(true);
+      console.log('💼 Chargement des ventes commerciales...');
+      const data = await adminService.getCommercialSales();
+      console.log('✅ Données commerciales reçues:', data);
+      
+      // Log each commercial's totalClients for debugging
+      if (data && Array.isArray(data)) {
+        data.forEach((commercial: Commercial) => {
+          console.log(`📊 ${commercial.commercialName} (${commercial.promoCode}):`, {
+            totalClients: commercial.totalClients,
+            monthlyClients: commercial.monthlyClients,
+            promoCodeUsage: commercial.promoCodeUsage
+          });
+        });
+      }
+      
+      setCommercials(data || []);
+    } catch (error: any) {
+      console.error('❌ Erreur lors du chargement des ventes commerciales:', error);
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.message || 'Impossible de charger les données commerciales',
+        variant: 'destructive',
+      });
+      setCommercials([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.firstName.trim()) {
+      errors.firstName = 'Le prénom est requis';
+    }
+
+    if (!formData.lastName.trim()) {
+      errors.lastName = 'Le nom est requis';
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "L'email est requis";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = "L'email n'est pas valide";
+    }
+
+    if (formData.phone && !/^\+?[0-9]{10,15}$/.test(formData.phone.replace(/\s/g, ''))) {
+      errors.phone = "Le numéro de téléphone n'est pas valide";
+    }
+
+    if (!formData.commissionPercentage) {
+      errors.commissionPercentage = 'Le taux de commission est requis';
+    } else if (formData.commissionPercentage < 1 || formData.commissionPercentage > 100) {
+      errors.commissionPercentage = 'Le taux doit être entre 1 et 100';
+    }
+
+    return errors;
+  };
+
+  const handleAddCommercial = async () => {
+    // Validate form
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFormErrors({});
+
+    try {
+      console.log('🚀 Création du commercial...', formData);
+      const result = await adminService.createCommercial({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim() || undefined,
+        commissionPercentage: parseInt(formData.commissionPercentage.toString()),
+      });
+
+      console.log('✅ Commercial créé:', result);
+
+      // Success notification with promo code
+      toast({
+        title: 'Commercial créé avec succès!',
+        description: `${result.fullName} a été ajouté avec le code promo ${result.promoCode}`,
+      });
+
+      // Copy promo code to clipboard
+      if (result.promoCode) {
+        navigator.clipboard.writeText(result.promoCode);
+      }
+
+      // Reset form and close modal
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        commissionPercentage: 10,
+      });
+      setIsAddDialogOpen(false);
+
+      // Reload commercial list
+      loadCommercialSales();
+    } catch (error: any) {
+      console.error('❌ Erreur lors de la création du commercial:', error);
+      
+      const errorMessage = error.response?.data?.message || 'Erreur lors de la création du commercial';
+      
+      // Check for specific errors
+      if (errorMessage.includes('Email already exists') || errorMessage.includes('existe déjà')) {
+        setFormErrors({ email: 'Cet email est déjà utilisé' });
+      } else {
+        toast({
+          title: 'Erreur',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFormChange = (field: string, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error for this field
+    if (formErrors[field]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleDeleteCommercial = async () => {
+    if (!commercialToDelete || !user?.id) return;
+
+    setIsDeleting(true);
+    try {
+      console.log('🗑️ Suppression du commercial:', commercialToDelete.commercialId);
+      await adminService.deleteUser(commercialToDelete.commercialId.toString(), user.id);
+      
+      toast({
+        title: 'Commercial supprimé',
+        description: `${commercialToDelete.commercialName} a été supprimé avec succès`,
+      });
+
+      // Close dialog
+      setDeleteDialogOpen(false);
+      setCommercialToDelete(null);
+
+      // Reload commercial list
+      loadCommercialSales();
+    } catch (error: any) {
+      console.error('❌ Erreur lors de la suppression:', error);
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.message || 'Impossible de supprimer le commercial',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const loadCommercialUsers = async (commercial: Commercial) => {
+    try {
+      setLoadingUsers(true);
+      setSelectedCommercial(commercial);
+      setUsersDialogOpen(true);
+      
+      console.log(`👥 Chargement des utilisateurs pour ${commercial.commercialName} (ID: ${commercial.commercialId})...`);
+      const users = await adminService.getCommercialUsers(commercial.commercialId);
+      console.log('✅ Utilisateurs reçus:', users);
+      console.log('📋 Premier utilisateur détails:', users[0]);
+      
+      setCommercialUsers(users || []);
+    } catch (error: any) {
+      console.error('❌ Erreur lors du chargement des utilisateurs:', error);
+      console.error('❌ Détails de l\'erreur backend:', {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+        data: error.response?.data,
+        fullError: error.response
+      });
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.message || 'Impossible de charger les utilisateurs',
+        variant: 'destructive',
+      });
+      setCommercialUsers([]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const openDeleteDialog = (commercial: Commercial) => {
+    setCommercialToDelete(commercial);
+    setDeleteDialogOpen(true);
+  };
 
   const totalStats = {
     totalClients: commercials.reduce((sum, c) => sum + c.totalClients, 0),
     monthlyClients: commercials.reduce((sum, c) => sum + c.monthlyClients, 0),
-    totalRevenue: commercials.reduce((sum, c) => sum + c.totalRevenue, 0),
-    monthlyRevenue: commercials.reduce((sum, c) => sum + c.monthlyRevenue, 0),
+    totalRevenue: Math.round(commercials.reduce((sum, c) => sum + c.totalRevenue, 0)),
+    monthlyRevenue: Math.round(commercials.reduce((sum, c) => sum + c.monthlyRevenue, 0)),
   };
 
-  const generateCouponCode = () => {
-    const code = `${newCommercial.prenom.toUpperCase()}${new Date().getFullYear()}`;
-    return code;
+  const getCommissionColor = (rate: number) => {
+    if (rate >= 12) return 'bg-yellow-500 text-white';
+    if (rate >= 10) return 'bg-orange-500 text-white';
+    return 'bg-gray-500 text-white';
   };
 
-  const handleAddCommercial = () => {
-    // Mock add functionality
-    toast({
-      title: 'تم إضافة التجاري بنجاح',
-      description: `كود الكوبون: ${generateCouponCode()}`,
-    });
-    setIsAddDialogOpen(false);
-    setNewCommercial({
-      nom: '',
-      prenom: '',
-      email: '',
-      telephone: '',
-      commission: 10,
-    });
+  const getStatusBadge = (status: string) => {
+    return status === 'ACTIVE'
+      ? 'bg-green-500 text-white'
+      : 'bg-gray-400 text-white';
   };
 
   const copyCouponCode = (code: string) => {
     navigator.clipboard.writeText(code);
     toast({
-      title: 'تم النسخ',
-      description: 'تم نسخ كود الكوبون إلى الحافظة',
+      title: 'Code copié',
+      description: 'Le code promo a été copié dans le presse-papiers',
     });
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Gestion de l'Équipe Commerciale</h1>
+          <p className="text-muted-foreground mt-1">Gérer les commerciaux et leurs codes promo</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Liste des Commerciaux</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -157,24 +376,30 @@ export default function AdminSales() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="prenom">Prénom</Label>
+                  <Label htmlFor="lastName">Nom</Label>
                   <Input
-                    id="prenom"
-                    value={newCommercial.prenom}
-                    onChange={(e) =>
-                      setNewCommercial({ ...newCommercial, prenom: e.target.value })
-                    }
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => handleFormChange('lastName', e.target.value)}
+                    placeholder="Ex: السعيد"
+                    disabled={isSubmitting}
                   />
+                  {formErrors.lastName && (
+                    <p className="text-sm text-destructive">{formErrors.lastName}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="nom">Nom</Label>
+                  <Label htmlFor="firstName">Prénom</Label>
                   <Input
-                    id="nom"
-                    value={newCommercial.nom}
-                    onChange={(e) =>
-                      setNewCommercial({ ...newCommercial, nom: e.target.value })
-                    }
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => handleFormChange('firstName', e.target.value)}
+                    placeholder="Ex: أحمد"
+                    disabled={isSubmitting}
                   />
+                  {formErrors.firstName && (
+                    <p className="text-sm text-destructive">{formErrors.firstName}</p>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -182,42 +407,63 @@ export default function AdminSales() {
                 <Input
                   id="email"
                   type="email"
-                  value={newCommercial.email}
-                  onChange={(e) =>
-                    setNewCommercial({ ...newCommercial, email: e.target.value })
-                  }
+                  value={formData.email}
+                  onChange={(e) => handleFormChange('email', e.target.value)}
+                  placeholder="ahmed@bclt.com"
+                  disabled={isSubmitting}
                 />
+                {formErrors.email && (
+                  <p className="text-sm text-destructive">{formErrors.email}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="telephone">Téléphone</Label>
+                <Label htmlFor="phone">Téléphone</Label>
                 <Input
-                  id="telephone"
-                  value={newCommercial.telephone}
-                  onChange={(e) =>
-                    setNewCommercial({ ...newCommercial, telephone: e.target.value })
-                  }
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => handleFormChange('phone', e.target.value)}
+                  placeholder="+212612345678"
+                  disabled={isSubmitting}
                 />
+                {formErrors.phone && (
+                  <p className="text-sm text-destructive">{formErrors.phone}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="commission">Commission (%)</Label>
+                <Label htmlFor="commission">(%) Commission</Label>
                 <Input
                   id="commission"
                   type="number"
-                  value={newCommercial.commission}
-                  onChange={(e) =>
-                    setNewCommercial({
-                      ...newCommercial,
-                      commission: parseInt(e.target.value),
-                    })
-                  }
+                  min="1"
+                  max="100"
+                  value={formData.commissionPercentage}
+                  onChange={(e) => handleFormChange('commissionPercentage', parseInt(e.target.value) || 0)}
+                  placeholder="10"
+                  disabled={isSubmitting}
                 />
+                {formErrors.commissionPercentage && (
+                  <p className="text-sm text-destructive">{formErrors.commissionPercentage}</p>
+                )}
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsAddDialogOpen(false);
+                  setFormErrors({});
+                }}
+                disabled={isSubmitting}
+              >
                 Annuler
               </Button>
-              <Button onClick={handleAddCommercial}>Ajouter</Button>
+              <Button 
+                onClick={handleAddCommercial}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Création...' : 'Ajouter'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -295,66 +541,185 @@ export default function AdminSales() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {commercials.map((commercial) => (
-                  <TableRow key={commercial.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{commercial.prenom} {commercial.nom}</p>
-                        <p className="text-sm text-muted-foreground">{commercial.email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono">
-                          {commercial.couponCode}
-                        </Badge>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => copyCouponCode(commercial.couponCode)}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-bold text-primary">{commercial.totalClients}</p>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-success text-white">
-                        +{commercial.monthlyClients}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-medium">{commercial.totalRevenue} DH</p>
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-medium text-success">
-                        {commercial.monthlyRevenue} DH
-                      </p>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-secondary text-secondary-foreground">
-                        {commercial.commission}%
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="icon" variant="ghost" onClick={() => console.log('Edit commercial', commercial.id)}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" onClick={() => console.log('Delete commercial', commercial.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
+                {commercials.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      Aucun commercial trouvé
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  commercials.map((commercial) => (
+                    <TableRow key={commercial.commercialId}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{commercial.commercialName}</p>
+                          <p className="text-sm text-muted-foreground">{commercial.commercialEmail}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="font-mono">
+                            {commercial.promoCode}
+                          </Badge>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => copyCouponCode(commercial.promoCode)}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-primary">{commercial.totalClients}</p>
+                          {commercial.totalClients > 0 && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => loadCommercialUsers(commercial)}
+                              className="h-7 px-2"
+                            >
+                              <Users className="w-4 h-4 mr-1" />
+                              Voir
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-success text-white">
+                          +{commercial.monthlyClients}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium">{Math.round(commercial.totalRevenue)} DH</p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium text-success">
+                          {Math.round(commercial.monthlyRevenue)} DH
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getCommissionColor(commercial.commissionRate)}>
+                          {commercial.commissionRate}%
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          onClick={() => openDeleteDialog(commercial)}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer le commercial{' '}
+              <span className="font-semibold">{commercialToDelete?.commercialName}</span> ?
+              <br />
+              Cette action est irréversible et supprimera toutes les données associées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteCommercial}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Suppression...' : 'Supprimer'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Commercial Users Dialog */}
+      <Dialog open={usersDialogOpen} onOpenChange={setUsersDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Liste des utilisateurs - {selectedCommercial?.commercialName}
+            </DialogTitle>
+            <DialogDescription>
+              Utilisateurs inscrits avec le code promo: <span className="font-mono font-semibold">{selectedCommercial?.promoCode}</span>
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingUsers ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          ) : commercialUsers.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">Aucun utilisateur trouvé</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Total: {commercialUsers.length} utilisateur{commercialUsers.length > 1 ? 's' : ''}
+              </p>
+              
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nom</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Téléphone</TableHead>
+                    <TableHead>Date d'inscription</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Crédits</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {commercialUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{user.firstName} {user.lastName}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm">{user.email}</p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm">{user.phone || 'N/A'}</p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm">{new Date(user.dateInscription).toLocaleDateString('fr-FR')}</p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={user.status === 'ACTIF' ? 'default' : 'secondary'}>
+                          {user.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium">{user.credits}</p>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
