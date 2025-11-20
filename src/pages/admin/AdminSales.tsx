@@ -53,8 +53,7 @@ interface Commercial {
 
 interface CommercialUser {
   id: number;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
   phone: string;
   dateInscription: string;
@@ -267,9 +266,16 @@ export default function AdminSales() {
       setUsersDialogOpen(true);
       
       console.log(`👥 Chargement des utilisateurs pour ${commercial.commercialName} (ID: ${commercial.commercialId})...`);
+      console.log(`📝 Code promo: ${commercial.promoCode}`);
       const users = await adminService.getCommercialUsers(commercial.commercialId);
       console.log('✅ Utilisateurs reçus:', users);
-      console.log('📋 Premier utilisateur détails:', users[0]);
+      console.log('📊 Nombre d\'utilisateurs:', users?.length || 0);
+      console.log('📋 Type de données:', typeof users, 'Est un tableau?', Array.isArray(users));
+      if (users && users.length > 0) {
+        console.log('📋 Premier utilisateur détails:', users[0]);
+      } else {
+        console.log('⚠️ Aucun utilisateur retourné par l\'API');
+      }
       
       setCommercialUsers(users || []);
     } catch (error: any) {
@@ -692,7 +698,7 @@ export default function AdminSales() {
                     <TableRow key={user.id}>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{user.firstName} {user.lastName}</p>
+                          <p className="font-medium">{user.fullName}</p>
                         </div>
                       </TableCell>
                       <TableCell>
