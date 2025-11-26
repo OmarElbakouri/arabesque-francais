@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -11,363 +11,588 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Label } from '@/components/ui/label';
-import { Users, DollarSign, UserPlus, TrendingUp, Search, Key, Trash2, Copy, ArrowLeft } from 'lucide-react';
-import { useAuthStore } from '@/stores/authStore';
+import { DollarSign, CheckCircle, Clock, Users as UsersIcon, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getPayments, getPaymentStatistics, markPaymentAsPending, getPromoUsers, createPayment, deletePayment } from '@/services/commercialService';
+
+interface Payment {
+  id?: number;
+  paymentId: number;
+  userName: string;
+  userEmail: string;
+  planName: string;
+  amount: number;
+  status: 'PENDING' | 'VALIDATED' | 'REJECTED' | 'CANCELLED';
+  paymentMethod: 'BANK_TRANSFER' | 'CASH' | 'CHECK' | 'MOBILE';
+  reference: string;
+  paidAt: string | null;
+}
+
+interface PaymentStats {
+  totalUsersCreated: number;
+  confirmedUsers: number;
+  pendingUsers: number;
+  normalUsers: number;
+  vipUsers: number;
+  freeUsers: number;
+  promoCode: string;
+  promoCodeUsageCount: number;
+  promoCodeConversions: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+}
 
 interface PromoUser {
-  id: string;
-  name: string;
+  id: number;
   email: string;
-  phone: string;
-  status: 'FREE' | 'EN_ATTENTE' | 'CONFIRME' | 'NORMAL' | 'VIP';
-  registeredDate: string;
-  revenue: number;
-  promoCode: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  status: string;
+  promoCodeUsed: string;
+  createdAt: string;
+  planName: string;
+}
+
+interface CreatePaymentForm {
+  planName: string;
+  amount: number;
+  paymentMethod: string;
+  paymentDate: string;
+  status: string;
 }
 
 const CommercialDashboard = () => {
-  const { user } = useAuthStore();
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedUser, setSelectedUser] = useState<PromoUser | null>(null);
-  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [users, setUsers] = useState<PromoUser[]>([
-    {
-      id: '1',
-      name: 'أحمد محمد',
-      email: 'ahmed@example.com',
-      phone: '+212612345678',
-      status: 'FREE',
-      registeredDate: '2025-01-15',
-      revenue: 0,
-      promoCode: 'COMM2025',
-    },
-    {
-      id: '2',
-      name: 'فاطمة الزهراء',
-      email: 'fatima@example.com',
-      phone: '+212623456789',
-      status: 'EN_ATTENTE',
-      registeredDate: '2025-01-10',
-      revenue: 700,
-      promoCode: 'COMM2025',
-    },
-    {
-      id: '3',
-      name: 'محمد العلوي',
-      email: 'mohamed@example.com',
-      phone: '+212634567890',
-      status: 'CONFIRME',
-      registeredDate: '2025-01-05',
-      revenue: 700,
-      promoCode: 'COMM2025',
-    },
-    {
-      id: '4',
-      name: 'سارة بنعلي',
-      email: 'sara@example.com',
-      phone: '+212645678901',
-      status: 'NORMAL',
-      registeredDate: '2024-12-20',
-      revenue: 700,
-      promoCode: 'COMM2025',
-    },
-  ]);
-
-  const promoCode = 'COMM2025'; // Le code promo du commercial
-
-  const handleStatusChange = (userId: string, currentStatus: string) => {
-    let newStatus: string = currentStatus;
-    
-    if (currentStatus === 'FREE') {
-      newStatus = 'EN_ATTENTE';
-    } else if (currentStatus === 'EN_ATTENTE') {
-      newStatus = 'CONFIRME';
-    }
-    
-    setUsers(users.map(u => 
-      u.id === userId ? { ...u, status: newStatus as PromoUser['status'] } : u
-    ));
-    
-    toast({
-      title: 'Statut mis à jour',
-      description: `Le statut de l'utilisateur a été changé en ${statusLabels[newStatus]}`,
-    });
-  };
-
-  const handlePasswordChange = () => {
-    if (!selectedUser || !newPassword) return;
-    
-    // Mock password update - sera remplacé par appel API
-    toast({
-      title: 'Mot de passe mis à jour',
-      description: `Le mot de passe de ${selectedUser.name} a été modifié`,
-    });
-    
-    setPasswordDialogOpen(false);
-    setNewPassword('');
-    setSelectedUser(null);
-  };
-
-  const handleDeleteUser = () => {
-    if (!selectedUser) return;
-    
-    setUsers(users.filter(u => u.id !== selectedUser.id));
-    
-    toast({
-      title: 'Utilisateur supprimé',
-      description: `${selectedUser.name} a été supprimé avec succès`,
-      variant: 'destructive',
-    });
-    
-    setDeleteDialogOpen(false);
-    setSelectedUser(null);
-  };
-
-  const openPasswordDialog = (user: PromoUser) => {
-    setSelectedUser(user);
-    setPasswordDialogOpen(true);
-  };
-
-  const openDeleteDialog = (user: PromoUser) => {
-    setSelectedUser(user);
-    setDeleteDialogOpen(true);
-  };
-
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch =
-      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const [loading, setLoading] = useState(false);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [promoUsers, setPromoUsers] = useState<PromoUser[]>([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [formData, setFormData] = useState<CreatePaymentForm>({
+    planName: 'NORMAL',
+    amount: 350,
+    paymentMethod: 'VIREMENT',
+    paymentDate: new Date().toISOString().slice(0, 16),
+    status: 'EN_ATTENTE'
+  });
+  const [stats, setStats] = useState<PaymentStats>({
+    totalUsersCreated: 0,
+    confirmedUsers: 0,
+    pendingUsers: 0,
+    normalUsers: 0,
+    vipUsers: 0,
+    freeUsers: 0,
+    promoCode: '',
+    promoCodeUsageCount: 0,
+    promoCodeConversions: 0,
+    totalRevenue: 0,
+    monthlyRevenue: 0,
   });
 
-  const totalRevenue = users.reduce((sum, u) => sum + u.revenue, 0);
-  const confirmedUsers = users.filter((u) => u.status === 'CONFIRME' || u.status === 'NORMAL' || u.status === 'VIP').length;
-  const pendingUsers = users.filter((u) => u.status === 'EN_ATTENTE').length;
-  const freeUsers = users.filter((u) => u.status === 'FREE').length;
+  useEffect(() => {
+    // Vérifier le token JWT
+    const token = localStorage.getItem('jwt_token');
+    console.log('🔑 Token JWT présent:', token ? 'OUI' : 'NON');
+    console.log('🔑 Token (premiers 50 chars):', token?.substring(0, 50));
+    
+    loadPayments();
+    loadStatistics();
+    loadPromoUsers();
+  }, []);
 
-  const statusColors: Record<string, string> = {
-    FREE: 'bg-muted text-muted-foreground',
-    EN_ATTENTE: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20',
-    CONFIRME: 'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20',
-    NORMAL: 'bg-primary/10 text-primary border border-primary/20',
-    VIP: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20',
+  const loadPayments = async () => {
+    try {
+      setLoading(true);
+      const data = await getPayments();
+      console.log('📦 Payments reçus du backend:', data);
+      console.log('📊 Nombre de paiements:', Array.isArray(data) ? data.length : 'pas un array');
+      setPayments(data || []);
+    } catch (error) {
+      console.error('❌ Erreur chargement paiements:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de charger les paiements',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const statusLabels: Record<string, string> = {
-    FREE: 'Gratuit',
-    EN_ATTENTE: 'En attente',
-    CONFIRME: 'Confirmé',
-    NORMAL: 'Normal',
-    VIP: 'VIP',
+  const loadStatistics = async () => {
+    try {
+      const data = await getPaymentStatistics();
+      console.log('📈 Stats reçues du backend:', data);
+      setStats(data || {
+        totalUsersCreated: 0,
+        confirmedUsers: 0,
+        pendingUsers: 0,
+        normalUsers: 0,
+        vipUsers: 0,
+        freeUsers: 0,
+        promoCode: '',
+        promoCodeUsageCount: 0,
+        promoCodeConversions: 0,
+        totalRevenue: 0,
+        monthlyRevenue: 0,
+      });
+    } catch (error) {
+      console.error('❌ Erreur chargement stats:', error);
+    }
+  };
+
+  const loadPromoUsers = async () => {
+    try {
+      const data = await getPromoUsers();
+      console.log('👥 Utilisateurs avec code promo reçus:', data);
+      console.log('👥 Nombre d\'utilisateurs:', Array.isArray(data) ? data.length : 'pas un array');
+      setPromoUsers(data || []);
+    } catch (error) {
+      console.error('❌ Erreur chargement utilisateurs promo:', error);
+    }
+  };
+
+  const validateForm = (form: CreatePaymentForm): boolean => {
+    if (!form.planName || !["NORMAL", "VIP"].includes(form.planName)) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Plan invalide'
+      });
+      return false;
+    }
+    
+    if (!form.amount || form.amount <= 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Le montant doit être supérieur à 0'
+      });
+      return false;
+    }
+    
+    if (!form.paymentMethod) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Méthode de paiement requise'
+      });
+      return false;
+    }
+    
+    if (!form.paymentDate) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Date de paiement requise'
+      });
+      return false;
+    }
+    
+    if (!form.status || !["EN_ATTENTE", "VALIDE", "REJETE"].includes(form.status)) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Statut invalide'
+      });
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleCreatePayment = async () => {
+    if (!selectedUserId) return;
+
+    if (!validateForm(formData)) {
+      return;
+    }
+
+    try {
+      const paymentData = {
+        planName: formData.planName,
+        amount: Number(formData.amount),
+        paymentMethod: formData.paymentMethod,
+        paymentDate: formData.paymentDate + ':00',
+        status: formData.status
+      };
+      
+      await createPayment(selectedUserId, paymentData);
+      toast({
+        title: 'Succès',
+        description: "Paiement créé avec succès!"
+      });
+      setIsCreateModalOpen(false);
+      setFormData({
+        planName: 'NORMAL',
+        amount: 350,
+        paymentMethod: 'VIREMENT',
+        paymentDate: new Date().toISOString().slice(0, 16),
+        status: 'EN_ATTENTE'
+      });
+      await loadPayments();
+      await loadStatistics();
+    } catch (error: any) {
+      console.error('❌ Erreur création paiement:', error);
+      if (error.response?.status === 400) {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: error.response?.data?.message || "Données invalides"
+        });
+      } else if (error.response?.status === 403) {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: "Vous n'avez pas accès à cet utilisateur"
+        });
+      } else if (error.response?.status === 404) {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: "Utilisateur ou plan non trouvé"
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: "Erreur lors de la création du paiement"
+        });
+      }
+    }
+  };
+
+  const openCreateModal = (userId: number) => {
+    setSelectedUserId(userId);
+    setFormData({
+      planName: 'NORMAL',
+      amount: 350,
+      paymentMethod: 'VIREMENT',
+      paymentDate: new Date().toISOString().slice(0, 16),
+      status: 'EN_ATTENTE'
+    });
+    setIsCreateModalOpen(true);
+  };
+
+  const handleMarkPending = async (paymentId: number) => {
+    try {
+      setLoading(true);
+      await markPaymentAsPending(paymentId);
+      
+      toast({
+        title: '✅ Paiement marqué en attente',
+        description: 'Le paiement a été marqué en attente avec succès',
+      });
+      
+      // Recharger les données
+      await loadPayments();
+      await loadStatistics();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de modifier le paiement',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: number) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) return;
+    
+    try {
+      setLoading(true);
+      await deletePayment(paymentId);
+      toast({
+        title: 'Succès',
+        description: 'Paiement supprimé avec succès'
+      });
+      await loadPayments();
+      await loadStatistics();
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Vous ne pouvez supprimer que vos propres paiements'
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Erreur',
+          description: 'Erreur lors de la suppression'
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      'PENDING': 'En Attente',
+      'VALIDATED': 'Accepté',
+      'REJECTED': 'Refusé',
+      'CANCELLED': 'Annulé',
+    };
+    return labels[status] || status;
+  };
+
+  const getStatusVariant = (status: string) => {
+    const variants: Record<string, string> = {
+      'PENDING': 'bg-warning text-white',
+      'VALIDATED': 'bg-success text-white',
+      'REJECTED': 'bg-destructive text-white',
+      'CANCELLED': 'bg-muted text-muted-foreground',
+    };
+    return variants[status] || 'bg-muted';
+  };
+
+  const getMethodLabel = (method: string) => {
+    const labels: Record<string, string> = {
+      'BANK_TRANSFER': 'Virement',
+      'CASH': 'Espèces',
+      'CHECK': 'Chèque',
+      'MOBILE': 'Mobile',
+    };
+    return labels[method] || method;
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">Bienvenue, {user?.prenom}</h1>
-        <p className="text-muted-foreground">Gérez les utilisateurs inscrits avec votre code promo</p>
+        <h1 className="text-3xl font-bold mb-2">Tableau de Bord Commercial</h1>
+        <p className="text-muted-foreground">Gérez les paiements de vos utilisateurs</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Utilisateurs</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
-            <p className="text-xs text-muted-foreground">Tous inscrits avec votre code</p>
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Utilisateurs</p>
+                <p className="text-3xl font-bold text-primary">{stats.totalUsersCreated || 0}</p>
+              </div>
+              <UsersIcon className="h-10 w-10 text-primary/20" />
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenus Totaux</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalRevenue} DH</div>
-            <p className="text-xs text-muted-foreground">De tous les abonnés</p>
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Revenus Totaux</p>
+                <p className="text-3xl font-bold text-success">DH {stats.totalRevenue || 0}</p>
+              </div>
+              <DollarSign className="h-10 w-10 text-success/20" />
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Utilisateurs Confirmés</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{confirmedUsers}</div>
-            <p className="text-xs text-muted-foreground">Clients actifs</p>
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Utilisateurs Confirmés</p>
+                <p className="text-3xl font-bold text-warning">{stats.confirmedUsers || 0}</p>
+              </div>
+              <CheckCircle className="h-10 w-10 text-warning/20" />
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">En Attente</CardTitle>
-            <UserPlus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingUsers}</div>
-            <p className="text-xs text-muted-foreground">{freeUsers} gratuit</p>
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">En Attente</p>
+                <p className="text-3xl font-bold text-secondary">{stats.pendingUsers || 0}</p>
+              </div>
+              <Clock className="h-10 w-10 text-secondary/20" />
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Promo Code Display */}
-      <Card className="bg-gradient-to-br from-primary/10 to-secondary/10">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Votre code promo</p>
-              <p className="text-3xl font-bold text-primary">{promoCode}</p>
-            </div>
-            <Button onClick={() => navigator.clipboard.writeText(promoCode)}>
-              Copier le code
-            </Button>
+      {/* Payments Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Historique des Paiements</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Actions</TableHead>
+                  <TableHead>Date Paiement</TableHead>
+                  <TableHead>Référence</TableHead>
+                  <TableHead>Méthode Paiement</TableHead>
+                  <TableHead>Statut Paiement</TableHead>
+                  <TableHead>Montant</TableHead>
+                  <TableHead>Plan</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Utilisateur</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <div className="flex items-center justify-center gap-2">
+                        <Clock className="w-5 h-5 animate-spin" />
+                        <span>Chargement...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : payments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8">
+                      <div className="space-y-2">
+                        <p className="text-muted-foreground">Aucun paiement trouvé</p>
+                        <p className="text-xs text-muted-foreground">
+                          Vérifiez la console du navigateur (F12) pour plus de détails
+                        </p>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            loadPayments();
+                            loadStatistics();
+                          }}
+                        >
+                          Recharger
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  payments.map((payment) => (
+                    <TableRow key={payment.id || payment.paymentId}>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleMarkPending(payment.id || payment.paymentId)}
+                            disabled={loading || payment.status === 'PENDING'}
+                          >
+                            Marquer en attente
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeletePayment(payment.id || payment.paymentId)}
+                            disabled={loading}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {payment.paidAt
+                          ? new Date(payment.paidAt).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '-'}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">{payment.reference}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{getMethodLabel(payment.paymentMethod)}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusVariant(payment.status)}>
+                          {getStatusLabel(payment.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">DH {payment.amount}</TableCell>
+                      <TableCell>
+                        <Badge>{payment.planName}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{payment.userEmail}</TableCell>
+                      <TableCell className="font-medium">{payment.userName}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
 
-      {/* Filters */}
+      {/* Utilisateurs Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Utilisateurs Inscrits</CardTitle>
+          <CardTitle>Utilisateurs</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher par nom ou email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[200px]">
-                <SelectValue placeholder="Filtrer par statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="FREE">Gratuit</SelectItem>
-                <SelectItem value="EN_ATTENTE">En attente</SelectItem>
-                <SelectItem value="CONFIRME">Confirmé</SelectItem>
-                <SelectItem value="NORMAL">Normal</SelectItem>
-                <SelectItem value="VIP">VIP</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Users Table */}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]">Utilisateur</TableHead>
-                  <TableHead className="w-[150px]">Coordonnées</TableHead>
-                  <TableHead className="w-[100px]">Revenus</TableHead>
-                  <TableHead className="w-[120px]">Date d'inscription</TableHead>
-                  <TableHead className="w-[120px]">Statut</TableHead>
+                  <TableHead>Nom complet</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Plan actuel</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Date d'inscription</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.length === 0 ? (
+                {promoUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Aucun utilisateur trouvé
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user) => (
+                  promoUsers.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{user.name}</div>
-                          <div className="text-sm text-muted-foreground">{user.email}</div>
-                        </div>
+                      <TableCell className="font-medium">
+                        {user.firstName} {user.lastName}
                       </TableCell>
+                      <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        <div className="text-sm">{user.phone}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">{user.revenue} DH</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">{new Date(user.registeredDate).toLocaleDateString('fr-FR')}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={statusColors[user.status]}>
-                          {statusLabels[user.status]}
+                        <Badge variant={user.planName === 'VIP' ? 'default' : 'secondary'}>
+                          {user.planName}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center justify-end gap-2">
-                          {(user.status === 'FREE' || user.status === 'EN_ATTENTE') && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleStatusChange(user.id, user.status)}
-                              className="gap-1"
-                            >
-                              {user.status === 'FREE' ? 'En attente' : 'Confirmer'}
-                              <ArrowLeft className="h-3 w-3 rotate-180" />
-                            </Button>
-                          )}
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => openPasswordDialog(user)}
-                            title="Changer le mot de passe"
-                          >
-                            <Key className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => openDeleteDialog(user)}
-                            title="Supprimer l'utilisateur"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Badge
+                          variant={
+                            user.status === 'EN_ATTENTE'
+                              ? 'outline'
+                              : user.status === 'VALIDE'
+                              ? 'default'
+                              : 'destructive'
+                          }
+                        >
+                          {user.status === 'EN_ATTENTE'
+                            ? 'En attente'
+                            : user.status === 'VALIDE'
+                            ? 'Validé'
+                            : 'Rejeté'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(user.createdAt).toLocaleDateString('fr-FR')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          onClick={() => openCreateModal(user.id)}
+                        >
+                          Créer Paiement
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -378,55 +603,92 @@ const CommercialDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Password Change Dialog */}
-      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
-        <DialogContent>
+      {/* Create Payment Modal */}
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Changer le mot de passe</DialogTitle>
-            <DialogDescription>
-              Changer le mot de passe de {selectedUser?.name}
-            </DialogDescription>
+            <DialogTitle>Créer un Paiement</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="new-password">Nouveau mot de passe</Label>
-              <Input
-                id="new-password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Entrez le nouveau mot de passe"
+              <label className="text-sm font-medium">Plan <span className="text-red-500">*</span></label>
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={formData.planName}
+                onChange={(e) => setFormData({ ...formData, planName: e.target.value })}
+                required
+              >
+                <option value="NORMAL">Normal</option>
+                <option value="VIP">VIP</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Montant <span className="text-red-500">*</span></label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="350"
+                className="w-full px-3 py-2 border rounded-md"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
+                required
               />
+              <span className="text-xs text-muted-foreground">DH</span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Méthode de paiement <span className="text-red-500">*</span></label>
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={formData.paymentMethod}
+                onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                required
+              >
+                <option value="VIREMENT">Virement</option>
+                <option value="ESPECES">Espèces</option>
+                <option value="CARTE">Carte bancaire</option>
+                <option value="CHEQUE">Chèque</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Date de paiement <span className="text-red-500">*</span></label>
+              <input
+                type="datetime-local"
+                className="w-full px-3 py-2 border rounded-md"
+                value={formData.paymentDate}
+                onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Statut <span className="text-red-500">*</span></label>
+              <select
+                className="w-full px-3 py-2 border rounded-md"
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                required
+              >
+                <option value="EN_ATTENTE">En attente</option>
+                <option value="VALIDE">Validé</option>
+                <option value="REJETE">Rejeté</option>
+              </select>
+              <p className="text-xs text-muted-foreground">Statut par défaut : "EN_ATTENTE"</p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
               Annuler
             </Button>
-            <Button onClick={handlePasswordChange} disabled={!newPassword}>
-              Mettre à jour le mot de passe
+            <Button onClick={handleCreatePayment}>
+              Créer le paiement
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              L'utilisateur {selectedUser?.name} sera supprimé définitivement. Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

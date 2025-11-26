@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import {
   Table,
   TableBody,
@@ -29,83 +30,80 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Bell, Send, Users, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Bell, Send, Users, CheckCircle, Clock, AlertCircle, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getNotificationHistory, getNotificationStatistics, sendNotification } from '@/services/notificationService';
 
 interface Notification {
-  id: string;
-  titre: string;
+  id: number;
+  title: string;
   message: string;
-  cible: 'TOUS' | 'NORMAL' | 'VIP' | 'COMMERCIAL' | 'ADMIN';
-  statut: 'ENVOYE' | 'PROGRAMMEE' | 'ECHEC';
-  dateEnvoi: string;
-  destinataires: number;
-  lus: number;
+  targetRole: 'TOUS' | 'NORMAL' | 'VIP' | 'COMMERCIAL' | 'ADMIN' | null;
+  status: 'ENVOYE' | 'PROGRAMME';
+  sentAt: string;
+  recipientsCount: number;
+  readCount: number;
+  readRate: number;
+}
+
+interface NotificationStats {
+  totalSent: number;
+  totalRead: number;
+  totalUnread: number;
+  readRate: number;
+  scheduled: number;
 }
 
 export default function AdminNotifications() {
   const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [stats, setStats] = useState<NotificationStats>({
+    totalSent: 0,
+    totalRead: 0,
+    totalUnread: 0,
+    readRate: 0,
+    scheduled: 0,
+  });
+  
   const [newNotification, setNewNotification] = useState({
-    titre: '',
+    title: '',
     message: '',
-    cible: 'TOUS',
+    targetRole: 'TOUS',
+    targetUserId: '',
+    deepLink: '',
+    urgent: false,
   });
 
-  const [notifications] = useState<Notification[]>([
-    {
-      id: '1',
-      titre: 'Nouvelle fonctionnalité IA disponible',
-      message: 'Découvrez notre nouvel assistant vocal amélioré avec Alibaba Cloud Speech',
-      cible: 'TOUS',
-      statut: 'ENVOYE',
-      dateEnvoi: '2024-11-01T10:00:00',
-      destinataires: 1250,
-      lus: 845,
-    },
-    {
-      id: '2',
-      titre: 'Offre spéciale VIP',
-      message: 'Profitez de 20% de réduction sur votre renouvellement VIP ce mois-ci',
-      cible: 'VIP',
-      statut: 'ENVOYE',
-      dateEnvoi: '2024-10-28T14:30:00',
-      destinataires: 180,
-      lus: 156,
-    },
-    {
-      id: '3',
-      titre: 'Formation commerciale ce weekend',
-      message: 'Rappel: Session de formation pour tous les commerciaux samedi à 10h',
-      cible: 'COMMERCIAL',
-      statut: 'PROGRAMMEE',
-      dateEnvoi: '2024-11-03T09:00:00',
-      destinataires: 15,
-      lus: 0,
-    },
-    {
-      id: '4',
-      titre: 'Upgrade vers VIP',
-      message: "Passez au plan VIP et obtenez 70 messages IA et 25 vocaux par chapitre",
-      cible: 'NORMAL',
-      statut: 'ENVOYE',
-      dateEnvoi: '2024-10-25T16:00:00',
-      destinataires: 450,
-      lus: 312,
-    },
-  ]);
+  useEffect(() => {
+    loadNotifications();
+    loadStatistics();
+  }, []);
 
-  const stats = {
-    total: notifications.length,
-    envoye: notifications.filter((n) => n.statut === 'ENVOYE').length,
-    programmee: notifications.filter((n) => n.statut === 'PROGRAMMEE').length,
-    tauxLecture: Math.round(
-      (notifications
-        .filter((n) => n.statut === 'ENVOYE')
-        .reduce((sum, n) => sum + (n.lus / n.destinataires) * 100, 0) /
-        notifications.filter((n) => n.statut === 'ENVOYE').length) ||
-        0
-    ),
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      const data = await getNotificationHistory();
+      setNotifications(data);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Impossible de charger les notifications',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadStatistics = async () => {
+    try {
+      const data = await getNotificationStatistics();
+      setStats(data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
+    }
   };
 
   const cibleColors = {
@@ -122,33 +120,76 @@ export default function AdminNotifications() {
     ECHEC: 'bg-destructive text-white',
   };
 
-  const handleCreateNotification = () => {
-    toast({
-      title: 'Notification Envoyée',
-      description: `Notification envoyée avec succès à ${newNotification.cible}`,
-    });
-    setShowCreateDialog(false);
-    setNewNotification({
-      titre: '',
-      message: '',
-      cible: 'TOUS',
-    });
+  const handleCreateNotification = async () => {
+    if (!newNotification.title.trim() || !newNotification.message.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: 'Le titre et le message sont obligatoires',
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await sendNotification({
+        title: newNotification.title,
+        message: newNotification.message,
+        targetRole: newNotification.targetRole === 'TOUS' ? null : newNotification.targetRole,
+        targetUserId: newNotification.targetUserId ? parseInt(newNotification.targetUserId) : null,
+        deepLink: newNotification.deepLink || null,
+        urgent: newNotification.urgent,
+      });
+      
+      toast({
+        title: '✅ Notification Envoyée',
+        description: `Notification envoyée avec succès à ${newNotification.targetRole}`,
+      });
+      
+      setShowCreateDialog(false);
+      setNewNotification({
+        title: '',
+        message: '',
+        targetRole: 'TOUS',
+        targetUserId: '',
+        deepLink: '',
+        urgent: false,
+      });
+      
+      // Recharger les données
+      loadNotifications();
+      loadStatistics();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: "Impossible d'envoyer la notification",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTargetLabel = (targetRole: string | null) => {
+    if (!targetRole) return 'TOUS';
+    return targetRole;
   };
 
   const getTargetCount = (cible: string) => {
+    // Ces valeurs seront dynamiques depuis le backend
     switch (cible) {
       case 'TOUS':
-        return 1250;
+        return 'Tous';
       case 'NORMAL':
-        return 450;
+        return 'Utilisateurs NORMAL';
       case 'VIP':
-        return 180;
+        return 'Utilisateurs VIP';
       case 'COMMERCIAL':
-        return 15;
+        return 'Équipe Commerciale';
       case 'ADMIN':
-        return 3;
+        return 'Administrateurs';
       default:
-        return 0;
+        return 'Tous';
     }
   };
 
@@ -169,62 +210,52 @@ export default function AdminNotifications() {
               Nouvelle Notification
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Créer une Notification Push</DialogTitle>
               <DialogDescription>
                 Envoyez une notification à un groupe spécifique d'utilisateurs
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
+            <div className="space-y-3 py-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="cible">Cible</Label>
                 <Select
-                  value={newNotification.cible}
+                  value={newNotification.targetRole}
                   onValueChange={(value) =>
-                    setNewNotification({ ...newNotification, cible: value })
+                    setNewNotification({ ...newNotification, targetRole: value })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="TOUS">
-                      Tous les utilisateurs ({getTargetCount('TOUS')})
-                    </SelectItem>
-                    <SelectItem value="NORMAL">
-                      Utilisateurs NORMAL ({getTargetCount('NORMAL')})
-                    </SelectItem>
-                    <SelectItem value="VIP">
-                      Utilisateurs VIP ({getTargetCount('VIP')})
-                    </SelectItem>
-                    <SelectItem value="COMMERCIAL">
-                      Équipe Commerciale ({getTargetCount('COMMERCIAL')})
-                    </SelectItem>
-                    <SelectItem value="ADMIN">
-                      Administrateurs ({getTargetCount('ADMIN')})
-                    </SelectItem>
+                    <SelectItem value="TOUS">{getTargetCount('TOUS')}</SelectItem>
+                    <SelectItem value="NORMAL">{getTargetCount('NORMAL')}</SelectItem>
+                    <SelectItem value="VIP">{getTargetCount('VIP')}</SelectItem>
+                    <SelectItem value="COMMERCIAL">{getTargetCount('COMMERCIAL')}</SelectItem>
+                    <SelectItem value="ADMIN">{getTargetCount('ADMIN')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="titre">Titre</Label>
                 <Input
                   id="titre"
-                  value={newNotification.titre}
+                  value={newNotification.title}
                   onChange={(e) =>
-                    setNewNotification({ ...newNotification, titre: e.target.value })
+                    setNewNotification({ ...newNotification, title: e.target.value })
                   }
                   placeholder="Ex: Nouvelle fonctionnalité disponible"
-                  maxLength={60}
+                  maxLength={100}
                 />
                 <p className="text-xs text-muted-foreground">
-                  {newNotification.titre.length}/60 caractères
+                  {newNotification.title.length}/100 caractères
                 </p>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="message">Message</Label>
                 <Textarea
                   id="message"
@@ -233,29 +264,75 @@ export default function AdminNotifications() {
                     setNewNotification({ ...newNotification, message: e.target.value })
                   }
                   placeholder="Écrivez votre message ici..."
-                  rows={4}
-                  maxLength={200}
+                  rows={3}
+                  maxLength={500}
                 />
                 <p className="text-xs text-muted-foreground">
-                  {newNotification.message.length}/200 caractères
+                  {newNotification.message.length}/500 caractères
                 </p>
               </div>
 
-              <div className="bg-muted p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="deepLink">Lien Deep Link (optionnel)</Label>
+                  <Input
+                    id="deepLink"
+                    value={newNotification.deepLink}
+                    onChange={(e) =>
+                      setNewNotification({ ...newNotification, deepLink: e.target.value })
+                    }
+                    placeholder="Ex: /courses/123"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="targetUserId">ID Utilisateur (optionnel)</Label>
+                  <Input
+                    id="targetUserId"
+                    type="number"
+                    value={newNotification.targetUserId}
+                    onChange={(e) =>
+                      setNewNotification({ ...newNotification, targetUserId: e.target.value })
+                    }
+                    placeholder="ID utilisateur"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <Switch
+                  id="urgent"
+                  checked={newNotification.urgent}
+                  onCheckedChange={(checked) =>
+                    setNewNotification({ ...newNotification, urgent: checked })
+                  }
+                />
+                <Label htmlFor="urgent" className="cursor-pointer text-sm">
+                  Notification Urgente (priorité élevée)
+                </Label>
+              </div>
+
+              <div className="bg-muted p-3 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertCircle className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm font-medium">Aperçu</span>
                 </div>
-                <div className="bg-background p-3 rounded border">
-                  <div className="flex items-start gap-3">
-                    <Bell className="w-5 h-5 text-primary mt-0.5" />
+                <div className="bg-background p-2.5 rounded border">
+                  <div className="flex items-start gap-2">
+                    <Bell className={`w-4 h-4 mt-0.5 ${newNotification.urgent ? 'text-destructive' : 'text-primary'}`} />
                     <div className="flex-1">
                       <p className="font-medium text-sm">
-                        {newNotification.titre || 'Titre de la notification'}
+                        {newNotification.title || 'Titre de la notification'}
                       </p>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {newNotification.message || 'Le message apparaîtra ici...'}
                       </p>
+                      {newNotification.deepLink && (
+                        <p className="text-xs text-primary mt-1.5 flex items-center gap-1">
+                          <BookOpen className="w-3 h-3" />
+                          {newNotification.deepLink}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -265,9 +342,9 @@ export default function AdminNotifications() {
               <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleCreateNotification} className="gap-2">
+              <Button onClick={handleCreateNotification} disabled={loading} className="gap-2">
                 <Send className="w-4 h-4" />
-                Envoyer à {getTargetCount(newNotification.cible)} utilisateurs
+                {loading ? 'Envoi en cours...' : `Envoyer la notification`}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -275,15 +352,15 @@ export default function AdminNotifications() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="card-elevated">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-3xl font-bold text-primary">{stats.total}</p>
+                <p className="text-sm text-muted-foreground">Total Envoyées</p>
+                <p className="text-3xl font-bold text-primary">{stats.totalSent}</p>
               </div>
-              <Bell className="h-10 w-10 text-primary/20" />
+              <Send className="h-10 w-10 text-primary/20" />
             </div>
           </CardContent>
         </Card>
@@ -292,8 +369,8 @@ export default function AdminNotifications() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Envoyées</p>
-                <p className="text-3xl font-bold text-success">{stats.envoye}</p>
+                <p className="text-sm text-muted-foreground">Lues</p>
+                <p className="text-3xl font-bold text-success">{stats.totalRead}</p>
               </div>
               <CheckCircle className="h-10 w-10 text-success/20" />
             </div>
@@ -304,10 +381,10 @@ export default function AdminNotifications() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Programmées</p>
-                <p className="text-3xl font-bold text-warning">{stats.programmee}</p>
+                <p className="text-sm text-muted-foreground">Non Lues</p>
+                <p className="text-3xl font-bold text-warning">{stats.totalUnread}</p>
               </div>
-              <Clock className="h-10 w-10 text-warning/20" />
+              <Bell className="h-10 w-10 text-warning/20" />
             </div>
           </CardContent>
         </Card>
@@ -317,9 +394,21 @@ export default function AdminNotifications() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Taux de Lecture</p>
-                <p className="text-3xl font-bold text-secondary">{stats.tauxLecture}%</p>
+                <p className="text-3xl font-bold text-secondary">{stats.readRate}%</p>
               </div>
               <Users className="h-10 w-10 text-secondary/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Programmées</p>
+                <p className="text-3xl font-bold text-blue-600">{stats.scheduled}</p>
+              </div>
+              <Clock className="h-10 w-10 text-blue-600/20" />
             </div>
           </CardContent>
         </Card>
@@ -345,60 +434,77 @@ export default function AdminNotifications() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {notifications.map((notification) => (
-                  <TableRow key={notification.id}>
-                    <TableCell className="font-medium max-w-[200px]">
-                      <div className="flex items-center gap-2">
-                        <Bell className="w-4 h-4 text-primary" />
-                        <span className="truncate">{notification.titre}</span>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <div className="flex items-center justify-center gap-2">
+                        <Clock className="w-5 h-5 animate-spin" />
+                        <span>Chargement...</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="max-w-[300px]">
-                      <p className="text-sm text-muted-foreground truncate">
-                        {notification.message}
-                      </p>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={cibleColors[notification.cible]}>
-                        {notification.cible}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <span className="font-medium">{notification.destinataires}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {notification.statut === 'ENVOYE' ? (
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium">
-                            {notification.lus}/{notification.destinataires}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {Math.round((notification.lus / notification.destinataires) * 100)}%
-                          </p>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(notification.dateEnvoi).toLocaleDateString('fr-FR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={statutColors[notification.statut]}>
-                        {notification.statut}
-                      </Badge>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : notifications.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      Aucune notification trouvée
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  notifications.map((notification) => (
+                    <TableRow key={notification.id}>
+                      <TableCell className="font-medium max-w-[200px]">
+                        <div className="flex items-center gap-2">
+                          <Bell className="w-4 h-4 text-primary" />
+                          <span className="truncate">{notification.title}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-[300px]">
+                        <p className="text-sm text-muted-foreground truncate">
+                          {notification.message}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={cibleColors[getTargetLabel(notification.targetRole) as keyof typeof cibleColors]}>
+                          {getTargetLabel(notification.targetRole)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-medium">{notification.recipientsCount}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {notification.status === 'ENVOYE' ? (
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">
+                              {notification.readCount}/{notification.recipientsCount}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {notification.readRate}%
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {notification.sentAt ? new Date(notification.sentAt).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }) : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={statutColors[notification.status]}>
+                          {notification.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

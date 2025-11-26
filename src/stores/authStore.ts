@@ -86,13 +86,18 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true, error: null });
           
-          const registerData = {
+          const registerData: any = {
             email: data.email,
             password: data.password,
             firstName: data.prenom,
             lastName: data.nom,
             phoneNumber: data.telephone,
           };
+          
+          // Ajouter le code promo s'il est fourni
+          if (data.promoCode && data.promoCode.trim() !== '') {
+            registerData.promoCode = data.promoCode.toUpperCase();
+          }
           
           const response = await authService.register(registerData);
           

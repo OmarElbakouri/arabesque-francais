@@ -83,7 +83,7 @@ export const adminService = {
         });
       }
       
-      // Update plan last, only for USER/NORMAL roles
+      // Update plan - correct endpoint
       if (data.plan !== undefined) {
         await api.put(`/admin/users/${userId}/plan`, null, {
           params: { planName: data.plan }
@@ -186,7 +186,27 @@ export const adminService = {
   },
 
   getPaymentStatistics: async () => {
-    const response = await api.get('/admin/payments/statistics');
+    try {
+      console.log('🔄 Appel API: GET /admin/payments/statistics');
+      const response = await api.get('/admin/payments/statistics');
+      console.log('🔍 Response complète:', response);
+      console.log('🔍 Response.data:', response.data);
+      console.log('🔍 Response.data.data:', response.data.data);
+      
+      const stats = response.data.data || response.data;
+      console.log('📊 pendingCount:', stats.pendingCount);
+      console.log('📊 validatedCount:', stats.validatedCount);
+      console.log('📊 rejectedCount:', stats.rejectedCount);
+      
+      return stats;
+    } catch (error) {
+      console.error('❌ Erreur stats:', error);
+      throw error;
+    }
+  },
+
+  deletePayment: async (paymentId: number) => {
+    const response = await api.delete(`/admin/payments/${paymentId}`);
     return response.data;
   },
 
@@ -518,11 +538,41 @@ export const adminService = {
   },
   
   // Update both status and method at once
-  updatePayment: async (paymentId: number, updates: { status?: string; paymentMethod?: string; amount?: number }) => {
-    const response = await api.put('/admin/payments/update', {
+  updatePayment: async (paymentId: number, updates: { status?: string; paymentMethod?: string; amount?: number; paidAt?: string }) => {
+    console.log('📤 adminService.updatePayment called with:', { paymentId, updates });
+    const payload = {
       paymentId,
       ...updates
-    });
+    };
+    console.log('📤 Sending payload to /admin/payments/update:', payload);
+    const response = await api.put('/admin/payments/update', payload);
+    console.log('📥 Response from backend:', response.data);
+    return response.data.data;
+  },
+
+  // ==================== COMMERCIAL TEAM MANAGEMENT ====================
+  
+  // Récupérer les statistiques de l'équipe commerciale
+  getCommercialTeamStatistics: async () => {
+    const response = await api.get('/admin/commercial-team/statistics');
+    return response.data.data;
+  },
+
+  // Récupérer la liste des commerciaux
+  getCommercialTeam: async () => {
+    const response = await api.get('/admin/commercial-team');
+    return response.data.data;
+  },
+
+  // Créer un nouveau commercial
+  createCommercial: async (data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+  }) => {
+    const response = await api.post('/admin/commercial-team', data);
     return response.data.data;
   },
 };

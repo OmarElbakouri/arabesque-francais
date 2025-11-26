@@ -6,6 +6,7 @@ export interface RegisterRequest {
   firstName: string;
   lastName: string;
   phoneNumber: string;
+  promoCode?: string; // Optional - codes actifs: OMAR2025, SALES2025
 }
 
 export interface LoginRequest {

@@ -28,7 +28,13 @@ export default function Register() {
 
     try {
       setError('');
-      await registerUser(data);
+      // Si le code promo est vide, ne pas l'envoyer
+      const payload = { ...data };
+      if (!payload.promoCode || payload.promoCode.trim() === '') {
+        delete payload.promoCode;
+      }
+      
+      await registerUser(payload);
       toast({
         title: 'مرحباً بك!',
         description: 'تم إنشاء حسابك بنجاح',
@@ -140,10 +146,15 @@ export default function Register() {
                   id="promoCode"
                   type="text"
                   placeholder="أدخل كود البرومو"
-                  className="pr-10 transition-all duration-300 focus:ring-2 focus:ring-secondary/20 border-border hover:border-secondary/50"
+                  className="pr-10 transition-all duration-300 focus:ring-2 focus:ring-secondary/20 border-border hover:border-secondary/50 uppercase"
                   {...register('promoCode')}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase();
+                    e.target.value = value;
+                  }}
                 />
               </div>
+              <p className="text-xs text-muted-foreground">Codes actifs : OMAR2025, SALES2025</p>
             </div>
 
             <div className="space-y-2">
