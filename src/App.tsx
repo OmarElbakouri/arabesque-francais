@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
+import StudentCourseDetail from "./pages/StudentCourseDetail";
 import Profile from "./pages/Profile";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
@@ -29,6 +30,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSales from "./pages/admin/AdminSales";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminChapters from "./pages/admin/AdminChapters";
+import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminAICredits from "./pages/admin/AdminAICredits";
 import AdminNotifications from "./pages/admin/AdminNotifications";
@@ -40,7 +42,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           {/* Subject Selection - Entry Point */}
           <Route path="/" element={<SubjectSelection />} />
@@ -51,7 +53,9 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<ProtectedRoute><Navbar /><Dashboard /></ProtectedRoute>} />
           <Route path="/courses" element={<ProtectedRoute><Navbar /><Courses /></ProtectedRoute>} />
+          <Route path="/courses/:id" element={<ProtectedRoute><Navbar /><CourseDetail /></ProtectedRoute>} />
           <Route path="/course/:id" element={<ProtectedRoute><Navbar /><CourseDetail /></ProtectedRoute>} />
+          <Route path="/learn/:courseId" element={<ProtectedRoute><Navbar /><StudentCourseDetail /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Navbar /><Profile /></ProtectedRoute>} />
           <Route path="/blog" element={<><Navbar /><Blog /></>} />
           <Route path="/contact" element={<><Navbar /><Contact /></>} />
@@ -63,8 +67,9 @@ const App = () => (
             <Route path="users" element={<AdminUsers />} />
             <Route path="sales" element={<AdminSales />} />
             <Route path="courses" element={<AdminCourses />} />
+            <Route path="courses/:courseId/chapters" element={<AdminChapters />} />
             <Route path="chapters" element={<AdminChapters />} />
-            <Route path="documents" element={<AdminCourses />} />
+            <Route path="documents" element={<AdminDocuments />} />
             <Route path="payments" element={<AdminPayments />} />
             <Route path="ai-credits" element={<AdminAICredits />} />
             <Route path="notifications" element={<AdminNotifications />} />

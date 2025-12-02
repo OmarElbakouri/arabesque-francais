@@ -1,5 +1,6 @@
 import api from '@/lib/api';
 
+// Admin service for all admin API calls
 export const adminService = {
   // Dashboard
   getDashboardStats: async () => {
@@ -83,11 +84,9 @@ export const adminService = {
         });
       }
       
-      // Update plan - correct endpoint
+      // Update plan - sends planName in request body (synchronises with last validated payment)
       if (data.plan !== undefined) {
-        await api.put(`/admin/users/${userId}/plan`, null, {
-          params: { planName: data.plan }
-        });
+        await api.put(`/admin/users/${userId}/plan`, { planName: data.plan });
       }
 
       // Update payment status
@@ -116,6 +115,12 @@ export const adminService = {
       params: { adminId }
     });
     return response.data;
+  },
+
+  // Mettre à jour le plan d'un utilisateur (synchronise automatiquement le dernier paiement validé)
+  updateUserPlan: async (userId: number, planName: 'FREE' | 'NORMAL' | 'VIP') => {
+    const response = await api.put(`/admin/users/${userId}/plan`, { planName });
+    return response.data.data;
   },
 
   // Commercial Users Management
@@ -537,15 +542,15 @@ export const adminService = {
     return response.data.data;
   },
   
-  // Update both status and method at once
-  updatePayment: async (paymentId: number, updates: { status?: string; paymentMethod?: string; amount?: number; paidAt?: string }) => {
+  // Update both status and method at once (synchronise avec le plan utilisateur)
+  updatePayment: async (paymentId: number, updates: { status?: string; paymentMethod?: string; amount?: number; paidAt?: string; planName?: string }) => {
     console.log('📤 adminService.updatePayment called with:', { paymentId, updates });
     const payload = {
       paymentId,
       ...updates
     };
-    console.log('📤 Sending payload to /admin/payments/update:', payload);
-    const response = await api.put('/admin/payments/update', payload);
+    console.log('📤 Sending payload to /admin/payments:', payload);
+    const response = await api.put('/admin/payments', payload);
     console.log('📥 Response from backend:', response.data);
     return response.data.data;
   },
@@ -570,9 +575,391 @@ export const adminService = {
     password: string;
     firstName: string;
     lastName: string;
-    phone: string;
+    phone?: string;
+    commissionPercentage?: number;
   }) => {
-    const response = await api.post('/admin/commercial-team', data);
+    const response = await api.post('/admin/users/commercial', data);
+    return response.data.data;
+  },
+
+  // ==================== DOCUMENTS MANAGEMENT ====================
+  
+  // Récupérer tous les documents
+  getAllDocuments: async () => {
+    const response = await api.get('/admin/documents');
+    return response.data.data;
+  },
+
+  // Récupérer un document par ID
+  getDocumentById: async (id: number) => {
+    const response = await api.get(`/admin/documents/${id}`);
+    return response.data.data;
+  },
+
+  // Récupérer les documents publiés
+  getPublishedDocuments: async () => {
+    const response = await api.get('/admin/documents/published');
+    return response.data.data;
+  },
+
+  // Récupérer les documents par visibilité
+  getDocumentsByVisibility: async (visibility: 'NORMAL_AND_VIP' | 'ALL') => {
+    const response = await api.get(`/admin/documents/visibility/${visibility}`);
+    return response.data.data;
+  },
+
+  // Créer un nouveau document
+  createDocument: async (data: {
+    title: string;
+    description: string;
+    level: string;
+    visibility: 'NORMAL_AND_VIP' | 'ALL';
+    imageUrl?: string;
+    pdfUrl?: string;
+    durationHours?: number;
+  }) => {
+    const response = await api.post('/admin/documents', data);
+    return response.data.data;
+  },
+
+  // Mettre à jour un document
+  updateDocument: async (id: number, data: {
+    title?: string;
+    description?: string;
+    level?: string;
+    imageUrl?: string;
+    pdfUrl?: string;
+    visibility?: 'NORMAL_AND_VIP' | 'ALL';
+    status?: 'DRAFT' | 'PUBLISHED';
+    durationHours?: number;
+  }) => {
+    const response = await api.put(`/admin/documents/${id}`, data);
+    return response.data.data;
+  },
+
+  // Supprimer un document
+  deleteDocument: async (id: number) => {
+    const response = await api.delete(`/admin/documents/${id}`);
+    return response.data;
+  },
+
+  // Publier un document
+  publishDocument: async (id: number) => {
+    const response = await api.put(`/admin/documents/${id}/publish`);
+    return response.data.data;
+  },
+
+  // Dépublier un document
+  unpublishDocument: async (id: number) => {
+    const response = await api.put(`/admin/documents/${id}/unpublish`);
+    return response.data.data;
+  },
+
+  // Mettre à jour la visibilité d'un document
+  updateDocumentVisibility: async (id: number, visibility: 'NORMAL_AND_VIP' | 'ALL') => {
+    const response = await api.put(`/admin/documents/${id}/visibility`, { visibility });
+    return response.data.data;
+  },
+
+  // Upload PDF
+  uploadDocumentPdf: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/admin/documents/upload/pdf', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data; // Returns { pdfPath, pdfUrl }
+  },
+
+  // Upload Image
+  uploadDocumentImage: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/admin/documents/upload/image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data; // Returns { imagePath, imageUrl }
+  },
+
+  // ==================== COURSES MANAGEMENT ====================
+
+  // Get course statistics
+  getCourseStats: async () => {
+    const response = await api.get('/admin/courses/stats');
+    return response.data.data;
+  },
+
+  // Get all courses
+  getAllCourses: async () => {
+    const response = await api.get('/admin/courses');
+    return response.data.data;
+  },
+
+  // Get course by ID
+  getCourseById: async (id: number) => {
+    const response = await api.get(`/admin/courses/${id}`);
+    return response.data.data;
+  },
+
+  // Search courses
+  searchCourses: async (keyword: string) => {
+    const response = await api.get('/admin/courses/search', {
+      params: { keyword }
+    });
+    return response.data.data;
+  },
+
+  // Create a new course
+  createCourse: async (data: {
+    name: string;
+    description: string;
+    level: string;
+    durationHours?: number;
+    price?: number;
+    visibility?: string;
+    status?: string;
+  }) => {
+    const response = await api.post('/admin/courses', data);
+    return response.data.data;
+  },
+
+  // Update a course
+  updateCourse: async (id: number, data: {
+    name?: string;
+    description?: string;
+    level?: string;
+    durationHours?: number;
+    price?: number;
+    visibility?: string;
+    status?: string;
+    imageUrl?: string;
+    pdfUrl?: string;
+  }) => {
+    const response = await api.put(`/admin/courses/${id}`, data);
+    return response.data.data;
+  },
+
+  // Delete a course
+  deleteCourse: async (id: number) => {
+    const response = await api.delete(`/admin/courses/${id}`);
+    return response.data;
+  },
+
+  // Publish a course
+  publishCourse: async (id: number) => {
+    const response = await api.post(`/admin/courses/${id}/publish`);
+    return response.data.data;
+  },
+
+  // Unpublish a course
+  unpublishCourse: async (id: number) => {
+    const response = await api.post(`/admin/courses/${id}/unpublish`);
+    return response.data.data;
+  },
+
+  // Upload course PDF (requires courseId)
+  uploadCoursePdf: async (courseId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(`/admin/courses/${courseId}/pdf`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data;
+  },
+
+  // Upload course image (requires courseId)
+  uploadCourseImage: async (courseId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(`/admin/courses/${courseId}/image`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data;
+  },
+
+  // Upload course PDF with ID (alias)
+  uploadCoursePdfById: async (courseId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(`/admin/courses/${courseId}/pdf`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data;
+  },
+
+  // Upload course image
+  uploadCourseImage: async (courseId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(`/admin/courses/${courseId}/image`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data;
+  },
+
+  // ==================== CHAPTERS MANAGEMENT ====================
+
+  // Get chapter statistics
+  getChapterStats: async () => {
+    const response = await api.get('/admin/chapters/stats');
+    return response.data.data;
+  },
+
+  // Get courses dropdown list
+  getCoursesDropdown: async () => {
+    const response = await api.get('/admin/courses/dropdown');
+    return response.data.data;
+  },
+
+  // Get chapters by course (alias for getCourseChapters)
+  getChaptersByCourse: async (courseId: number) => {
+    const response = await api.get(`/admin/courses/${courseId}/chapters`);
+    return response.data.data;
+  },
+
+  // Get course chapters
+  getCourseChapters: async (courseId: number) => {
+    const response = await api.get(`/admin/courses/${courseId}/chapters`);
+    return response.data.data;
+  },
+
+  // Create a new chapter (with courseId parameter for convenience)
+  createChapter: async (courseId: number, data: {
+    title: string;
+    description?: string;
+    videoUrl?: string;
+    pdfUrl?: string;
+    audioUrl?: string;
+    durationMinutes?: number;
+    isLocked?: boolean;
+  }) => {
+    const response = await api.post(`/admin/courses/${courseId}/chapters`, data);
+    return response.data.data;
+  },
+
+  // Update a chapter
+  updateChapter: async (id: number, data: {
+    title?: string;
+    description?: string;
+    videoUrl?: string;
+    pdfUrl?: string;
+    audioUrl?: string;
+    durationMinutes?: number;
+    isLocked?: boolean;
+    orderIndex?: number;
+  }) => {
+    const response = await api.put(`/admin/chapters/${id}`, data);
+    return response.data.data;
+  },
+
+  // Delete a chapter
+  deleteChapter: async (id: number) => {
+    const response = await api.delete(`/admin/chapters/${id}`);
+    return response.data;
+  },
+
+  // Reorder chapters
+  reorderChapters: async (courseId: number, chapterIds: number[]) => {
+    const response = await api.put(`/admin/courses/${courseId}/chapters/reorder`, { chapterIds });
+    return response.data.data;
+  },
+
+  // Upload chapter PDF (without ID - for creating new chapters)
+  uploadChapterPdf: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/admin/chapters/upload/pdf', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data;
+  },
+
+  // Upload chapter audio (without ID - for creating new chapters)
+  uploadChapterAudio: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/admin/chapters/upload/audio', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data;
+  },
+
+  // ==================== LESSONS (VIDEOS) MANAGEMENT ====================
+
+  // Get lessons by chapter
+  getLessonsByChapter: async (chapterId: number) => {
+    const response = await api.get(`/admin/chapters/${chapterId}/lessons`);
+    return response.data.data;
+  },
+
+  // Create a new lesson/video
+  createLesson: async (data: {
+    chapterId: number;
+    title: string;
+    description?: string;
+    videoUrl?: string;
+    duration?: string;
+    displayOrder: number;
+  }) => {
+    const response = await api.post('/admin/chapters/lessons', data);
+    return response.data.data;
+  },
+
+  // Update a lesson/video
+  updateLesson: async (id: number, data: {
+    title?: string;
+    description?: string;
+    videoUrl?: string;
+    duration?: string;
+    displayOrder?: number;
+  }) => {
+    const response = await api.put(`/admin/chapters/lessons/${id}`, data);
+    return response.data.data;
+  },
+
+  // Delete a lesson/video
+  deleteLesson: async (id: number) => {
+    const response = await api.delete(`/admin/chapters/lessons/${id}`);
+    return response.data;
+  },
+
+  // Upload lesson PDF
+  uploadLessonPdf: async (lessonId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(`/admin/chapters/lessons/${lessonId}/pdf`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data;
+  },
+
+  // Upload lesson video
+  uploadLessonVideo: async (lessonId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(`/admin/chapters/lessons/${lessonId}/video`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data.data;
   },
 };

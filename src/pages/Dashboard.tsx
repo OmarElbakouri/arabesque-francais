@@ -96,32 +96,32 @@ export default function Dashboard() {
     USER: { 
       className: 'bg-gray-500 text-white',
       icon: User,
-      label: 'مستخدم'
+      label: 'Utilisateur'
     },
     FREE: { 
       className: 'bg-gray-500 text-white',
       icon: User,
-      label: 'مجاني'
+      label: 'Gratuit'
     },
     NORMAL: { 
-      className: 'bg-muted text-muted-foreground',
+      className: 'bg-primary text-white',
       icon: User,
-      label: 'عضو'
+      label: 'Membre'
     },
     VIP: { 
-      className: 'bg-warning text-warning-foreground',
+      className: 'bg-secondary text-white',
       icon: Crown,
       label: 'VIP ⭐'
     },
     COMMERCIAL: { 
-      className: 'bg-info text-info-foreground',
+      className: 'bg-primary text-white',
       icon: Briefcase,
-      label: 'تجاري 💼'
+      label: 'Commercial 💼'
     },
     ADMIN: { 
       className: 'bg-destructive text-destructive-foreground',
       icon: Crown,
-      label: 'مدير 👑'
+      label: 'Admin 👑'
     },
   };
 
@@ -194,20 +194,20 @@ export default function Dashboard() {
   const shouldShowCredits = userInfo.role === 'NORMAL' || userInfo.role === 'VIP';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div dir="ltr" className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
-        <div className="bg-gradient-hero rounded-2xl p-8 mb-8 text-white shadow-custom-lg">
+        <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-8 mb-8 text-white shadow-xl">
           <div className="flex justify-between items-start flex-wrap gap-4">
             <div>
-              <h1 className="text-3xl font-bold mb-2">مرحباً بك، {userInfo.firstName} {userInfo.lastName}!</h1>
-              <p className="text-white/90 mb-4">استمر في رحلتك التعليمية</p>
+              <h1 className="text-3xl font-bold mb-2">Bienvenue, {userInfo.firstName} {userInfo.lastName}!</h1>
+              <p className="text-white/80 mb-4">Continuez votre parcours d'apprentissage</p>
               <Badge className={currentRole.className}>
                 {currentRole.label}
               </Badge>
             </div>
-            <div className="text-left">
-              <div className="text-sm text-white/80">إجمالي التقدم</div>
+            <div className="text-right">
+              <div className="text-sm text-white/70">Progression globale</div>
               <div className="text-4xl font-bold">{Math.round(stats.overallProgress)}%</div>
             </div>
           </div>
@@ -215,11 +215,11 @@ export default function Dashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="card-elevated">
+          <Card className="border border-gray-100 shadow-sm">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">الدورات المسجلة</p>
+                  <p className="text-sm text-gray-500">Cours inscrits</p>
                   <p className="text-3xl font-bold text-primary">{stats.enrolledCoursesCount}</p>
                 </div>
                 <BookOpen className="h-12 w-12 text-primary/20" />
@@ -227,11 +227,11 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="card-elevated">
+          <Card className="border border-gray-100 shadow-sm">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">الدروس المكتملة</p>
+                  <p className="text-sm text-gray-500">Leçons terminées</p>
                   <p className="text-3xl font-bold text-secondary">{stats.completedLessons}/{stats.totalLessons}</p>
                 </div>
                 <Target className="h-12 w-12 text-secondary/20" />
@@ -239,26 +239,26 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="card-elevated">
+          <Card className="border border-gray-100 shadow-sm">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">وقت التعلم</p>
-                  <p className="text-3xl font-bold text-info">{stats.totalLearningHours} ساعة</p>
+                  <p className="text-sm text-gray-500">Temps d'apprentissage</p>
+                  <p className="text-3xl font-bold text-primary">{stats.totalLearningHours} heures</p>
                 </div>
-                <Clock className="h-12 w-12 text-info/20" />
+                <Clock className="h-12 w-12 text-primary/20" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="card-elevated">
+          <Card className="border border-gray-100 shadow-sm">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">الشارات</p>
-                  <p className="text-3xl font-bold text-warning">{stats.totalBadges}</p>
+                  <p className="text-sm text-gray-500">Badges</p>
+                  <p className="text-3xl font-bold text-secondary">{stats.totalBadges}</p>
                 </div>
-                <Award className="h-12 w-12 text-warning/20" />
+                <Award className="h-12 w-12 text-secondary/20" />
               </div>
             </CardContent>
           </Card>
@@ -266,17 +266,17 @@ export default function Dashboard() {
 
         {/* Credits Section - Only for NORMAL and VIP users */}
         {shouldShowCredits && (
-          <Card className="mb-8">
+          <Card className="mb-8 border border-gray-100">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Coins className="h-5 w-5" />
-                الرصيد المتاح
+                Crédits disponibles
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">الرصيد الحالي</span>
+                  <span className="text-sm text-gray-500">Crédits actuels</span>
                   <span className="text-2xl font-bold text-primary">{credits.currentCredits}</span>
                 </div>
                 {credits.monthlyLimit && (
@@ -286,8 +286,8 @@ export default function Dashboard() {
                       className="h-2"
                     />
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">مستخدم: {credits.usedCredits}</span>
-                      <span className="text-muted-foreground">الحد الشهري: {credits.monthlyLimit}</span>
+                      <span className="text-gray-500">Utilisés: {credits.usedCredits}</span>
+                      <span className="text-gray-500">Limite mensuelle: {credits.monthlyLimit}</span>
                     </div>
                   </>
                 )}
@@ -297,9 +297,9 @@ export default function Dashboard() {
         )}
 
         {/* Continue Learning */}
-        <Card className="mb-8">
+        <Card className="mb-8 border border-gray-100">
           <CardHeader>
-            <CardTitle>استمر في التعلم</CardTitle>
+            <CardTitle>Continuez votre apprentissage</CardTitle>
           </CardHeader>
           <CardContent>
             {enrolledCourses.length > 0 ? (
@@ -307,7 +307,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* For FREE users, only show the first course */}
                   {(isFreeUser ? [enrolledCourses[0]] : enrolledCourses).map((course) => (
-                    <div key={course.courseId} className="card-feature">
+                    <div key={course.courseId} className="border border-gray-100 rounded-xl p-4">
                       <div className="flex gap-4">
                         <img
                           src={course.courseImage}
@@ -316,14 +316,14 @@ export default function Dashboard() {
                         />
                         <div className="flex-1">
                           <h3 className="font-bold mb-1">{course.courseName}</h3>
-                          <p className="text-sm text-muted-foreground mb-2">{course.courseLevel}</p>
+                          <p className="text-sm text-gray-500 mb-2">{course.courseLevel}</p>
                           <Progress value={course.progressPercentage} className="mb-2" />
                           <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">
-                              {course.completedLessons}/{course.totalLessons} دروس • {Math.round(course.progressPercentage)}%
+                            <span className="text-sm text-gray-500">
+                              {course.completedLessons}/{course.totalLessons} leçons • {Math.round(course.progressPercentage)}%
                             </span>
-                            <Link to={`/course/${course.courseId}`}>
-                              <Button size="sm">{isFreeUser && course.completedLessons > 0 ? 'مقفل' : 'متابعة'}</Button>
+                            <Link to={`/learn/${course.courseId}`}>
+                              <Button size="sm" className="bg-primary hover:bg-primary/90">{isFreeUser && course.completedLessons > 0 ? 'Verrouillé' : 'Continuer'}</Button>
                             </Link>
                           </div>
                         </div>
@@ -333,15 +333,15 @@ export default function Dashboard() {
                 </div>
                 {/* Show restriction message for FREE users */}
                 {isFreeUser && enrolledCourses.length > 1 && (
-                  <FreeUserRestriction featureName="الدورات الإضافية" />
+                  <FreeUserRestriction featureName="les cours supplémentaires" />
                 )}
               </div>
             ) : (
               <div className="text-center py-8">
-                <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">لم تسجل في أي دورة بعد</p>
+                <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 mb-4">Vous n'êtes inscrit à aucun cours</p>
                 <Link to="/courses">
-                  <Button>تصفح الدورات</Button>
+                  <Button className="bg-primary hover:bg-primary/90">Parcourir les cours</Button>
                 </Link>
               </div>
             )}
@@ -350,45 +350,45 @@ export default function Dashboard() {
 
         {/* Additional Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
+          <Card className="border border-gray-100">
             <CardHeader>
-              <CardTitle className="text-lg">الشهادات</CardTitle>
+              <CardTitle className="text-lg">Certificats</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
-                <Award className="h-8 w-8 text-warning" />
+                <Award className="h-8 w-8 text-secondary" />
                 <div>
                   <p className="text-3xl font-bold">{stats.totalCertificates}</p>
-                  <p className="text-sm text-muted-foreground">شهادة مكتسبة</p>
+                  <p className="text-sm text-gray-500">certificats obtenus</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-100">
             <CardHeader>
-              <CardTitle className="text-lg">نقاط الخبرة</CardTitle>
+              <CardTitle className="text-lg">Points d'expérience</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4">
                 <TrendingUp className="h-8 w-8 text-primary" />
                 <div>
                   <p className="text-3xl font-bold">{stats.totalXp}</p>
-                  <p className="text-sm text-muted-foreground">XP نقطة</p>
+                  <p className="text-sm text-gray-500">points XP</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-100">
             <CardHeader>
-              <CardTitle className="text-lg">التقدم العام</CardTitle>
+              <CardTitle className="text-lg">Progression globale</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <Progress value={stats.overallProgress} className="h-3" />
-                <p className="text-sm text-muted-foreground text-center">
-                  {Math.round(stats.overallProgress)}% من إجمالي الدورات
+                <p className="text-sm text-gray-500 text-center">
+                  {Math.round(stats.overallProgress)}% de tous les cours
                 </p>
               </div>
             </CardContent>

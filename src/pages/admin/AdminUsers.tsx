@@ -39,6 +39,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Search, Edit, Trash2, Mail, Phone } from 'lucide-react';
 import { adminService } from '@/services/adminService';
+import { useAuthStore } from '@/stores/authStore';
 import { toast } from '@/hooks/use-toast';
 
 interface User {
@@ -54,6 +55,7 @@ interface User {
 }
 
 export default function AdminUsers() {
+  const currentUser = useAuthStore((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -165,10 +167,10 @@ export default function AdminUsers() {
   };
 
   const handleConfirmDelete = async () => {
-    if (!selectedUser) return;
+    if (!selectedUser || !currentUser) return;
 
     try {
-      await adminService.deleteUser(selectedUser.id);
+      await adminService.deleteUser(selectedUser.id, currentUser.id);
       toast({
         title: 'Succès',
         description: 'Utilisateur supprimé avec succès',

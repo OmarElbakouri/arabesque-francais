@@ -79,6 +79,7 @@ export default function AdminSales() {
     firstName: '',
     lastName: '',
     email: '',
+    password: '',
     phone: '',
     commissionPercentage: 10,
   });
@@ -137,6 +138,12 @@ export default function AdminSales() {
       errors.email = "L'email n'est pas valide";
     }
 
+    if (!formData.password) {
+      errors.password = 'Le mot de passe est requis';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+    }
+
     if (formData.phone && !/^\+?[0-9]{10,15}$/.test(formData.phone.replace(/\s/g, ''))) {
       errors.phone = "Le numéro de téléphone n'est pas valide";
     }
@@ -167,6 +174,7 @@ export default function AdminSales() {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         email: formData.email.trim().toLowerCase(),
+        password: formData.password,
         phone: formData.phone.trim() || undefined,
         commissionPercentage: parseInt(formData.commissionPercentage.toString()),
       });
@@ -189,6 +197,7 @@ export default function AdminSales() {
         firstName: '',
         lastName: '',
         email: '',
+        password: '',
         phone: '',
         commissionPercentage: 10,
       });
@@ -421,6 +430,25 @@ export default function AdminSales() {
                 {formErrors.email && (
                   <p className="text-sm text-destructive">{formErrors.email}</p>
                 )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Mot de passe</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => handleFormChange('password', e.target.value)}
+                  placeholder="••••••••"
+                  minLength={6}
+                  disabled={isSubmitting}
+                  required
+                />
+                {formErrors.password && (
+                  <p className="text-sm text-destructive">{formErrors.password}</p>
+                )}
+                <p className="text-sm text-gray-500 mt-1">
+                  Communiquez ce mot de passe au commercial
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Téléphone</Label>

@@ -640,11 +640,25 @@ export default function AdminPayments() {
           <DialogHeader>
             <DialogTitle>Modifier le paiement</DialogTitle>
             <DialogDescription>
-              Paiement de {editingUser?.userName || "Utilisateur"} {editingUser?.userEmail && `(${editingUser.userEmail})`}
+              Modifiez les détails du paiement. Le plan sera synchronisé avec l'abonnement de l'utilisateur.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* Champ Plan - NOUVEAU */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Plan</label>
+              <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NORMAL">NORMAL</SelectItem>
+                  <SelectItem value="VIP">VIP</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Champ Statut */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Statut de Paiement</label>
@@ -681,24 +695,10 @@ export default function AdminPayments() {
               </Select>
             </div>
 
-            {/* Champ Plan */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Plan</label>
-              <Select value={selectedPlan} onValueChange={setSelectedPlan}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un plan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NORMAL">Normal</SelectItem>
-                  <SelectItem value="VIP">VIP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Champ Méthode */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Méthode de Paiement</label>
-              <Select value={selectedMethod || 'UNDEFINED'} onValueChange={setSelectedMethod} id="method">
+              <Select value={selectedMethod || 'UNDEFINED'} onValueChange={setSelectedMethod}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner une méthode" />
                 </SelectTrigger>

@@ -2,8 +2,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService } from '@/services/authService';
 import { creditsService } from '@/services/creditsService';
+import { courseService } from '@/services/courseService';
 
-export type UserRole = 'FREE' | 'NORMAL' | 'PREMIUM' | 'VIP' | 'COMMERCIAL' | 'ADMIN';
+export type UserRole = 'USER' | 'COMMERCIAL' | 'ADMIN';
+export type UserPlan = 'FREE' | 'NORMAL' | 'VIP';
 export type UserStatus = 'ACTIF' | 'EXPIRE' | 'EN_ATTENTE' | 'SUSPENDU';
 
 interface User {
@@ -13,6 +15,7 @@ interface User {
   email: string;
   telephone: string;
   role: UserRole;
+  plan: UserPlan;
   status: UserStatus;
   avatar?: string;
   dateInscription: string;
@@ -30,6 +33,7 @@ interface AuthState {
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
   fetchUserCredits: () => Promise<void>;
+  fetchUserPlan: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -50,25 +54,36 @@ export const useAuthStore = create<AuthState>()(
             // Clear all localStorage data before storing new login data
             localStorage.clear();
             
-            // Store JWT token and role
+            // Store JWT token, role and plan
             localStorage.setItem('jwt_token', response.data.token);
-            localStorage.setItem('role', response.data.role || 'NORMAL');
+            localStorage.setItem('role', response.data.role || 'USER');
+            localStorage.setItem('plan', response.data.plan || 'FREE');
             
-            // Create user object with role from backend
+            // Determine role - ADMIN/COMMERCIAL have special roles, others are USER
+            let role: UserRole = 'USER';
+            if (response.data.role === 'ADMIN') {
+              role = 'ADMIN';
+            } else if (response.data.role === 'COMMERCIAL') {
+              role = 'COMMERCIAL';
+            }
+            
+            // Create user object with role and plan from backend
             const user: User = {
               id: response.data.userId,
               nom: response.data.lastName,
               prenom: response.data.firstName,
               email: response.data.email,
               telephone: '',
-              role: (response.data.role as UserRole) || 'NORMAL',
+              role: role,
+              plan: (response.data.plan as UserPlan) || 'FREE',
               status: 'ACTIF',
               dateInscription: new Date().toISOString(),
             };
             
             set({ user, isAuthenticated: true, isLoading: false });
             
-            // Fetch credits after login
+            // Fetch plan and credits after login
+            get().fetchUserPlan();
             get().fetchUserCredits();
           } else {
             throw new Error(response.message);
@@ -106,20 +121,24 @@ export const useAuthStore = create<AuthState>()(
             localStorage.setItem('jwt_token', response.data.token);
             
             // Create user object
-            // New registrations always get NORMAL role from backend
+            // New registrations - plan will be fetched from dashboard
             const user: User = {
               id: response.data.userId,
               nom: response.data.lastName,
               prenom: response.data.firstName,
               email: response.data.email,
               telephone: data.telephone,
-              role: (response.data.role as UserRole) || 'NORMAL',
+              role: 'USER',
+              plan: 'FREE', // Will be updated by fetchUserPlan
               status: 'ACTIF',
               dateInscription: new Date().toISOString(),
               credits: 30, // Default credits for new users
             };
             
             set({ user, isAuthenticated: true, isLoading: false });
+            
+            // Fetch actual plan from dashboard
+            get().fetchUserPlan();
           } else {
             throw new Error(response.message);
           }
@@ -156,6 +175,35 @@ export const useAuthStore = create<AuthState>()(
           }
         } catch (error) {
           console.error('Failed to fetch credits:', error);
+        }
+      },
+
+      fetchUserPlan: async () => {
+        try {
+          const planData = await courseService.getStudentPlan();
+          if (planData && planData.planName) {
+            // Map planName to our plan types
+            let plan: UserPlan = 'FREE';
+            const planName = planData.planName.toUpperCase();
+            if (planName === 'NORMAL' || planName === 'STANDARD') {
+              plan = 'NORMAL';
+            } else if (planName === 'VIP' || planName === 'PREMIUM') {
+              plan = 'VIP';
+            } else if (planName === 'FREE' || planName === 'GRATUIT') {
+              plan = 'FREE';
+            }
+            
+            console.log('Fetched plan from API:', planData.planName, '-> mapped to:', plan);
+            
+            set((state) => ({
+              user: state.user ? { ...state.user, plan } : null,
+            }));
+            
+            // Also update localStorage
+            localStorage.setItem('plan', plan);
+          }
+        } catch (error) {
+          console.error('Failed to fetch user plan:', error);
         }
       },
     }),

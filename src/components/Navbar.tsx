@@ -13,12 +13,37 @@ export function Navbar() {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const roleColors = {
-    NORMAL: 'bg-muted text-muted-foreground',
-    PREMIUM: 'bg-primary text-primary-foreground',
-    VIP: 'bg-secondary text-secondary-foreground',
-    COMMERCIAL: 'bg-accent text-accent-foreground',
-    ADMIN: 'bg-destructive text-destructive-foreground',
+  const planColors: Record<string, string> = {
+    FREE: 'bg-gray-500 text-white',
+    NORMAL: 'bg-blue-500 text-white',
+    VIP: 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white',
+  };
+
+  const planLabels: Record<string, string> = {
+    FREE: 'مجاني',
+    NORMAL: 'عادي',
+    VIP: 'VIP',
+  };
+
+  const roleColors: Record<string, string> = {
+    USER: 'bg-gray-500 text-white',
+    COMMERCIAL: 'bg-green-500 text-white',
+    ADMIN: 'bg-red-500 text-white',
+  };
+
+  const getPlanBadge = () => {
+    // For ADMIN and COMMERCIAL, show their role
+    if (user?.role === 'ADMIN') {
+      return { colorClass: 'bg-red-500 text-white', label: 'مدير' };
+    }
+    if (user?.role === 'COMMERCIAL') {
+      return { colorClass: 'bg-green-500 text-white', label: 'تجاري' };
+    }
+    // For regular users, show their plan
+    const plan = user?.plan || 'FREE';
+    const colorClass = planColors[plan] || planColors.FREE;
+    const label = planLabels[plan] || planLabels.FREE;
+    return { colorClass, label };
   };
 
   return (
@@ -97,7 +122,7 @@ export function Navbar() {
                   </Button>
                 </Link>
                 <Link to="/profile" className="flex items-center gap-2">
-                  {user && <Badge className={roleColors[user.role]}>{user.role}</Badge>}
+                  {user && <Badge className={getPlanBadge().colorClass}>{getPlanBadge().label}</Badge>}
                   <div className="text-right">
                     <div className="text-sm font-medium">{user?.prenom} {user?.nom}</div>
                   </div>
@@ -187,7 +212,7 @@ export function Navbar() {
             {isAuthenticated ? (
               <>
                 <Link to="/profile" className="block py-2" onClick={() => setIsOpen(false)}>
-                  {user && <Badge className={roleColors[user.role]}>{user.prenom} {user.nom} - {user.role}</Badge>}
+                  {user && <Badge className={getPlanBadge().colorClass}>{user.prenom} {user.nom} - {getPlanBadge().label}</Badge>}
                 </Link>
                 <Button variant="destructive" onClick={() => { logout(); setIsOpen(false); }} className="w-full">
                   تسجيل الخروج

@@ -26,11 +26,31 @@ export default function Profile() {
     toast({ title: 'تم حفظ التغييرات بنجاح' });
   };
 
-  const roleColors = {
-    NORMAL: 'bg-muted text-muted-foreground',
-    PREMIUM: 'bg-primary text-primary-foreground',
-    VIP: 'bg-secondary text-secondary-foreground',
-    ADMIN: 'bg-destructive text-destructive-foreground',
+  const planColors: Record<string, string> = {
+    FREE: 'bg-gray-500 text-white',
+    NORMAL: 'bg-blue-500 text-white',
+    VIP: 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white',
+  };
+
+  const planLabels: Record<string, string> = {
+    FREE: 'مجاني',
+    NORMAL: 'عادي',
+    VIP: 'VIP',
+  };
+
+  const getPlanBadge = () => {
+    // For ADMIN and COMMERCIAL, show their role
+    if (user?.role === 'ADMIN') {
+      return { colorClass: 'bg-red-500 text-white', label: 'مدير' };
+    }
+    if (user?.role === 'COMMERCIAL') {
+      return { colorClass: 'bg-green-500 text-white', label: 'تجاري' };
+    }
+    // For regular users, show their plan
+    const plan = user?.plan || 'FREE';
+    const colorClass = planColors[plan] || planColors.FREE;
+    const label = planLabels[plan] || planLabels.FREE;
+    return { colorClass, label };
   };
 
   const achievements = [
@@ -62,7 +82,7 @@ export default function Profile() {
               <div className="flex-1 text-center md:text-right">
                 <div className="flex items-center justify-center md:justify-end gap-3 mb-2">
                   <h1 className="text-3xl font-bold">{user?.prenom} {user?.nom}</h1>
-                  <Badge className={roleColors[user!.role]}>{user?.role}</Badge>
+                  <Badge className={getPlanBadge().colorClass}>{getPlanBadge().label}</Badge>
                 </div>
                 <p className="text-muted-foreground mb-2">{user?.email}</p>
                 <p className="text-sm text-muted-foreground">عضو منذ: {new Date(user!.dateInscription).toLocaleDateString('ar-MA')}</p>
