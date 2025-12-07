@@ -84,6 +84,8 @@ export default function AdminSales() {
     commissionPercentage: 10,
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
+  const [newCredentials, setNewCredentials] = useState<{ email: string, password: string, promoCode: string } | null>(null);
 
   useEffect(() => {
     loadCommercialSales();
@@ -95,7 +97,7 @@ export default function AdminSales() {
       console.log('💼 Chargement des ventes commerciales...');
       const data = await adminService.getCommercialSales();
       console.log('✅ Données commerciales reçues:', data);
-      
+
       // Log each commercial's totalClients for debugging
       if (data && Array.isArray(data)) {
         data.forEach((commercial: Commercial) => {
@@ -106,7 +108,7 @@ export default function AdminSales() {
           });
         });
       }
-      
+
       setCommercials(data || []);
     } catch (error: any) {
       console.error('❌ Erreur lors du chargement des ventes commerciales:', error);
@@ -170,7 +172,7 @@ export default function AdminSales() {
 
     try {
       console.log('🚀 Création du commercial...', formData);
-      const result = await adminService.createCommercial({
+      const response = await adminService.createCommercial({
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         email: formData.email.trim().toLowerCase(),
@@ -179,17 +181,36 @@ export default function AdminSales() {
         commissionPercentage: parseInt(formData.commissionPercentage.toString()),
       });
 
-      console.log('✅ Commercial créé:', result);
+      console.log('✅ Commercial créé:', response);
+
+      // Extract data from response
+      // The service now returns response.data which contains { success: true, data: { ... }, temporaryPassword: "..." }
+      // OR it might be inside the data object depending on backend implementation
+      const result = response.data || response;
+      const tempPassword = result.temporaryPassword || response.temporaryPassword;
 
       // Success notification with promo code
       toast({
         title: 'Commercial créé avec succès!',
-        description: `${result.fullName} a été ajouté avec le code promo ${result.promoCode}`,
+        description: `${result.fullName || formData.firstName} a été ajouté avec le code promo ${result.promoCode}`,
       });
 
       // Copy promo code to clipboard
       if (result.promoCode) {
         navigator.clipboard.writeText(result.promoCode);
+      }
+
+      // Show temporary password if available
+      if (tempPassword) {
+        // We'll use a custom dialog or alert to show this important info
+        // For now, let's use a persistent toast or we can add a state for a "Credentials Dialog"
+        // Let's add a new state for this dialog
+        setNewCredentials({
+          email: result.email || formData.email,
+          password: tempPassword,
+          promoCode: result.promoCode
+        });
+        setShowCredentialsDialog(true);
       }
 
       // Reset form and close modal
@@ -207,9 +228,9 @@ export default function AdminSales() {
       loadCommercialSales();
     } catch (error: any) {
       console.error('❌ Erreur lors de la création du commercial:', error);
-      
+
       const errorMessage = error.response?.data?.message || 'Erreur lors de la création du commercial';
-      
+
       // Check for specific errors
       if (errorMessage.includes('Email already exists') || errorMessage.includes('existe déjà')) {
         setFormErrors({ email: 'Cet email est déjà utilisé' });
@@ -244,7 +265,7 @@ export default function AdminSales() {
     try {
       console.log('🗑️ Suppression du commercial:', commercialToDelete.commercialId);
       await adminService.deleteUser(commercialToDelete.commercialId.toString(), user.id);
-      
+
       toast({
         title: 'Commercial supprimé',
         description: `${commercialToDelete.commercialName} a été supprimé avec succès`,
@@ -273,7 +294,7 @@ export default function AdminSales() {
       setLoadingUsers(true);
       setSelectedCommercial(commercial);
       setUsersDialogOpen(true);
-      
+
       console.log(`👥 Chargement des utilisateurs pour ${commercial.commercialName} (ID: ${commercial.commercialId})...`);
       console.log(`📝 Code promo: ${commercial.promoCode}`);
       const users = await adminService.getCommercialUsers(commercial.commercialId);
@@ -285,7 +306,7 @@ export default function AdminSales() {
       } else {
         console.log('⚠️ Aucun utilisateur retourné par l\'API');
       }
-      
+
       setCommercialUsers(users || []);
     } catch (error: any) {
       console.error('❌ Erreur lors du chargement des utilisateurs:', error);
@@ -482,8 +503,8 @@ export default function AdminSales() {
               </div>
             </div>
             <DialogFooter>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setIsAddDialogOpen(false);
                   setFormErrors({});
@@ -492,7 +513,7 @@ export default function AdminSales() {
               >
                 Annuler
               </Button>
-              <Button 
+              <Button
                 onClick={handleAddCommercial}
                 disabled={isSubmitting}
               >
@@ -639,9 +660,9 @@ export default function AdminSales() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
+                        <Button
+                          size="icon"
+                          variant="ghost"
                           onClick={() => openDeleteDialog(commercial)}
                         >
                           <Trash2 className="w-4 h-4 text-destructive" />
@@ -709,7 +730,7 @@ export default function AdminSales() {
               <p className="text-sm text-muted-foreground">
                 Total: {commercialUsers.length} utilisateur{commercialUsers.length > 1 ? 's' : ''}
               </p>
-              
+
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -752,6 +773,67 @@ export default function AdminSales() {
               </Table>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Credentials Dialog */}
+      <Dialog open={showCredentialsDialog} onOpenChange={setShowCredentialsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Compte Commercial Créé</DialogTitle>
+            <DialogDescription>
+              Veuillez transmettre ces informations de connexion au commercial.
+              <br />
+              <span className="font-bold text-destructive">Le mot de passe ne sera affiché qu'une seule fois.</span>
+            </DialogDescription>
+          </DialogHeader>
+
+          {newCredentials && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-2 bg-muted rounded border">{newCredentials.email}</code>
+                  <Button size="icon" variant="ghost" onClick={() => {
+                    navigator.clipboard.writeText(newCredentials.email);
+                    toast({ title: "Email copié" });
+                  }}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Mot de passe temporaire</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-2 bg-muted rounded border font-bold text-primary">{newCredentials.password}</code>
+                  <Button size="icon" variant="ghost" onClick={() => {
+                    navigator.clipboard.writeText(newCredentials.password);
+                    toast({ title: "Mot de passe copié" });
+                  }}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Code Promo</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-2 bg-muted rounded border font-mono">{newCredentials.promoCode}</code>
+                  <Button size="icon" variant="ghost" onClick={() => {
+                    navigator.clipboard.writeText(newCredentials.promoCode);
+                    toast({ title: "Code promo copié" });
+                  }}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setShowCredentialsDialog(false)}>Fermer</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -34,6 +34,7 @@ import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminAICredits from "./pages/admin/AdminAICredits";
 import AdminNotifications from "./pages/admin/AdminNotifications";
+import { GroupSelection, PracticeSession, Results, ProgressDashboard } from "./pages/quiz";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,12 @@ const App = () => (
           <Route path="/blog" element={<><Navbar /><Blog /></>} />
           <Route path="/contact" element={<><Navbar /><Contact /></>} />
           <Route path="/faq" element={<><Navbar /><FAQ /></>} />
+          
+          {/* Quiz Practice Routes */}
+          <Route path="/quiz" element={<ProtectedRoute><Navbar /><GroupSelection /></ProtectedRoute>} />
+          <Route path="/quiz/practice/:groupId/:chapterId" element={<ProtectedRoute><Navbar /><PracticeSession /></ProtectedRoute>} />
+          <Route path="/quiz/results/:sessionId" element={<ProtectedRoute><Navbar /><Results /></ProtectedRoute>} />
+          <Route path="/quiz/progress" element={<ProtectedRoute><Navbar /><ProgressDashboard /></ProtectedRoute>} />
           
           {/* Admin routes with separate layout */}
           <Route path="/admin" element={<AdminLayout />}>

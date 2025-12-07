@@ -129,10 +129,7 @@ export const adminService = {
     return response.data.data;
   },
 
-  createCommercial: async (data: { firstName: string; lastName: string; email: string; phone?: string; commissionPercentage: number }) => {
-    const response = await api.post('/admin/users/commercial', data);
-    return response.data.data;
-  },
+
 
   getCommercialStats: async (commercialId: string) => {
     const response = await api.get(`/commercial/${commercialId}/dashboard/stats`);
@@ -572,7 +569,7 @@ export const adminService = {
   // Créer un nouveau commercial
   createCommercial: async (data: {
     email: string;
-    password: string;
+    password?: string;
     firstName: string;
     lastName: string;
     phone?: string;
@@ -790,18 +787,6 @@ export const adminService = {
     const formData = new FormData();
     formData.append('file', file);
     const response = await api.post(`/admin/courses/${courseId}/pdf`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data.data;
-  },
-
-  // Upload course image
-  uploadCourseImage: async (courseId: number, file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await api.post(`/admin/courses/${courseId}/image`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

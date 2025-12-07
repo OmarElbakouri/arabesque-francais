@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingCart, User, LogOut, BookOpen, BarChart3, MessageSquare } from 'lucide-react';
+import { Menu, X, ShoppingCart, User, LogOut, BookOpen, BarChart3, MessageSquare, GraduationCap } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -69,6 +69,15 @@ export function Navbar() {
                 className={`link-animated ${isActive('/courses') ? 'text-primary font-bold' : 'text-foreground'}`}
               >
                 الدورات
+              </Link>
+            )}
+            {isAuthenticated && user?.role !== 'COMMERCIAL' && (
+              <Link
+                to="/quiz"
+                className={`link-animated flex items-center gap-1 ${isActive('/quiz') ? 'text-primary font-bold' : 'text-foreground'}`}
+              >
+                <GraduationCap className="h-4 w-4" />
+                التدريب
               </Link>
             )}
             {isAuthenticated && (
@@ -169,6 +178,16 @@ export function Navbar() {
                 onClick={() => setIsOpen(false)}
               >
                 الدورات
+              </Link>
+            )}
+            {isAuthenticated && user?.role !== 'COMMERCIAL' && (
+              <Link
+                to="/quiz"
+                className="block py-2 text-foreground flex items-center gap-2"
+                onClick={() => setIsOpen(false)}
+              >
+                <GraduationCap className="h-4 w-4" />
+                التدريب
               </Link>
             )}
             {isAuthenticated && (

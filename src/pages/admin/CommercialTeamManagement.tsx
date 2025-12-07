@@ -21,12 +21,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { 
-  Users, 
-  DollarSign, 
-  UserPlus, 
-  TrendingUp, 
-  Copy, 
+import {
+  Users,
+  DollarSign,
+  UserPlus,
+  TrendingUp,
+  Copy,
   RefreshCw,
   Trash2
 } from 'lucide-react';
@@ -68,15 +68,16 @@ export default function CommercialTeamManagement() {
     monthlyRevenue: 0,
     totalRevenue: 0,
   });
-  
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newCommercial, setNewCommercial] = useState({
     email: '',
-    password: '',
     firstName: '',
     lastName: '',
     phone: '',
   });
+  const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
+  const [newCredentials, setNewCredentials] = useState<{ email: string, password: string, promoCode: string } | null>(null);
 
   useEffect(() => {
     fetchCommercials();
@@ -109,7 +110,7 @@ export default function CommercialTeamManagement() {
   };
 
   const handleCreateCommercial = async () => {
-    if (!newCommercial.email || !newCommercial.password || !newCommercial.firstName || !newCommercial.lastName) {
+    if (!newCommercial.email || !newCommercial.firstName || !newCommercial.lastName) {
       toast({
         variant: 'destructive',
         title: 'Erreur',
@@ -120,22 +121,36 @@ export default function CommercialTeamManagement() {
 
     try {
       setLoading(true);
-      await adminService.createCommercial(newCommercial);
-      
+      const response = await adminService.createCommercial({
+        ...newCommercial,
+        commissionPercentage: 10 // Default value
+      });
+
+      const result = response.data || response;
+      const tempPassword = result.temporaryPassword || response.temporaryPassword;
+
+      if (tempPassword) {
+        setNewCredentials({
+          email: result.email || newCommercial.email,
+          password: tempPassword,
+          promoCode: result.promoCode
+        });
+        setShowCredentialsDialog(true);
+      }
+
       toast({
         title: '✅ Commercial créé avec succès',
         description: `${newCommercial.firstName} ${newCommercial.lastName} a été ajouté à l'équipe`,
       });
-      
+
       setIsCreateModalOpen(false);
       setNewCommercial({
         email: '',
-        password: '',
         firstName: '',
         lastName: '',
         phone: '',
       });
-      
+
       // Recharger les données
       await fetchCommercials();
       await fetchStatistics();
@@ -231,18 +246,203 @@ export default function CommercialTeamManagement() {
                     placeholder="jean.dupont@example.com"
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="password">Mot de passe *</Label>
+                  <Label htmlFor="phone">Téléphone</Label>
                   <Input
-                    id="password"
-                    type="password"
-                    value={newCommercial.password}
+                    id="phone"
+                    type="tel"
+                    value={newCommercial.phone}
                     onChange={(e) =>
-                      setNewCommercial({ ...newCommercial, password: e.target.value })
+                      setNewCommercial({ ...newCommercial, phone: e.target.value })
                     }
-                    placeholder="••••••••"
+                    placeholder="+212 6XX XXX XXX"
                   />
                 </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                  Annuler
+                </Button>
+                <Button onClick={handleCreateCommercial} disabled={loading}>
+                  {loading ? 'Création...' : 'Créer le commercial'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-4 gap-4">
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Revenus du mois</p>
+                <p className="text-3xl font-bold text-primary">
+                  DH {stats.monthlyRevenue}
+                </p>
+              </div>
+              <DollarSign className="h-10 w-10 text-primary/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Revenus Totaux</p>
+                <p className="text-3xl font-bold text-success">
+                  DH {stats.totalRevenue}
+                </p>
+              </div>
+              <TrendingUp className="h-10 w-10 text-success/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Clients ce mois</p>
+                <p className="text-3xl font-bold text-warning">
+                  {stats.totalClientsThisMonth}
+                </p>
+              </div>
+              <Users className="h-10 w-10 text-warning/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-elevated">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Clients</p>
+                <p className="text-3xl font-bold text-secondary">
+                  {stats.totalClients}
+                </p>
+              </div>
+              <Users className="h-10 w-10 text-secondary/20" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Commercials Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des Commerciaux</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Actions</TableHead>
+                  <TableHead>Commission</TableHead>
+                  <TableHead>Revenus du mois</TableHead>
+                  <TableHead>Revenus Totaux</TableHead>
+                  <TableHead>Clients du mois</TableHead>
+                  <TableHead>Total Clients</TableHead>
+                  <TableHead>Code Promo</TableHead>
+                  <TableHead>Commercial</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex items-center justify-center gap-2">
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        <span>Chargement...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : commercials.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      Aucun commercial trouvé
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  commercials.map((commercial) => (
+                    <TableRow key={commercial.id}>
+                      <TableCell>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <Badge>{commercial.commission}%</Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        DH {commercial.monthlyRevenue}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        DH {commercial.totalRevenue}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-success text-white">
+                          {commercial.clientsThisMonth}+
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{commercial.clientsCount}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-primary">
+                            {commercial.promoCode}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCopyPromoCode(commercial.promoCode)}
+                            title="Copier le code promo"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{commercial.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {commercial.email}
+                          </span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                    ```
+                      id="lastName"
+                      value={newCommercial.lastName}
+                      onChange={(e) =>
+                        setNewCommercial({ ...newCommercial, lastName: e.target.value })
+                      }
+                      placeholder="Dupont"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newCommercial.email}
+                    onChange={(e) =>
+                      setNewCommercial({ ...newCommercial, email: e.target.value })
+                    }
+                    placeholder="jean.dupont@example.com"
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="phone">Téléphone</Label>
                   <Input
@@ -422,6 +622,68 @@ export default function CommercialTeamManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Credentials Dialog */}
+      <Dialog open={showCredentialsDialog} onOpenChange={setShowCredentialsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Compte Commercial Créé</DialogTitle>
+            <DialogDescription>
+              Veuillez transmettre ces informations de connexion au commercial.
+              <br />
+              <span className="font-bold text-destructive">Le mot de passe ne sera affiché qu'une seule fois.</span>
+            </DialogDescription>
+          </DialogHeader>
+
+          {newCredentials && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-2 bg-muted rounded border">{newCredentials.email}</code>
+                  <Button size="icon" variant="ghost" onClick={() => {
+                    navigator.clipboard.writeText(newCredentials.email);
+                    toast({ title: "Email copié" });
+                  }}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Mot de passe temporaire</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-2 bg-muted rounded border font-bold text-primary">{newCredentials.password}</code>
+                  <Button size="icon" variant="ghost" onClick={() => {
+                    navigator.clipboard.writeText(newCredentials.password);
+                    toast({ title: "Mot de passe copié" });
+                  }}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Code Promo</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-2 bg-muted rounded border font-mono">{newCredentials.promoCode}</code>
+                  <Button size="icon" variant="ghost" onClick={() => {
+                    navigator.clipboard.writeText(newCredentials.promoCode);
+                    toast({ title: "Code promo copié" });
+                  }}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setShowCredentialsDialog(false)}>Fermer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
