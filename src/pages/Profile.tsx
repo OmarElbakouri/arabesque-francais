@@ -1,29 +1,133 @@
-import { useState } from 'react';
-import { Camera, Edit, Save, Shield, Award, CreditCard } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Camera, Edit, Save, Shield, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from '@/hooks/use-toast';
+import api from '@/lib/api';
 
 export default function Profile() {
   const { user, updateUser } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
   const [formData, setFormData] = useState({
-    prenom: user?.prenom || '',
-    nom: user?.nom || '',
-    email: user?.email || '',
-    telephone: user?.telephone || '',
+    firstName: user?.prenom || '',
+    lastName: user?.nom || '',
+    phoneNumber: user?.telephone || '',
   });
 
-  const handleSave = () => {
-    updateUser(formData);
-    setIsEditing(false);
-    toast({ title: 'تم حفظ التغييرات بنجاح' });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: user.prenom || '',
+        lastName: user.nom || '',
+        phoneNumber: user.telephone || '',
+      });
+    }
+  }, [user]);
+
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      const response = await api.put('/profile', {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phoneNumber,
+      });
+
+      if (response.data.success) {
+        // Update local store
+        updateUser({
+          prenom: formData.firstName,
+          nom: formData.lastName,
+          telephone: formData.phoneNumber,
+        });
+        setIsEditing(false);
+        toast({ title: 'تم حفظ التغييرات بنجاح' });
+      }
+    } catch (error: unknown) {
+      console.error('Error updating profile:', error);
+      toast({ 
+        title: 'خطأ', 
+        description: 'حدث خطأ أثناء حفظ التغييرات',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    // Validate passwords
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      toast({ 
+        title: 'خطأ', 
+        description: 'الرجاء ملء جميع الحقول',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({ 
+        title: 'خطأ', 
+        description: 'كلمة المرور الجديدة غير متطابقة',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({ 
+        title: 'خطأ', 
+        description: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      setPasswordLoading(true);
+      const response = await api.put('/profile/change-password', {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+
+      if (response.data.success) {
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        toast({ title: 'تم تغيير كلمة المرور بنجاح' });
+      }
+    } catch (error: unknown) {
+      console.error('Error changing password:', error);
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      const errorMessage = axiosError.response?.data?.message || 'حدث خطأ أثناء تغيير كلمة المرور';
+      toast({ 
+        title: 'خطأ', 
+        description: errorMessage === 'Current password is incorrect' ? 'كلمة المرور الحالية غير صحيحة' : errorMessage,
+        variant: 'destructive'
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
   };
 
   const planColors: Record<string, string> = {
@@ -39,26 +143,17 @@ export default function Profile() {
   };
 
   const getPlanBadge = () => {
-    // For ADMIN and COMMERCIAL, show their role
     if (user?.role === 'ADMIN') {
       return { colorClass: 'bg-red-500 text-white', label: 'مدير' };
     }
     if (user?.role === 'COMMERCIAL') {
       return { colorClass: 'bg-green-500 text-white', label: 'تجاري' };
     }
-    // For regular users, show their plan
     const plan = user?.plan || 'FREE';
     const colorClass = planColors[plan] || planColors.FREE;
     const label = planLabels[plan] || planLabels.FREE;
     return { colorClass, label };
   };
-
-  const achievements = [
-    { title: 'متعلم نشط', description: 'سجل دخول لمدة 7 أيام متتالية', icon: '🔥', earned: true },
-    { title: 'النجم الصاعد', description: 'أكمل 5 فصول', icon: '⭐', earned: true },
-    { title: 'المثابر', description: 'حقق 100% في 3 اختبارات', icon: '🏆', earned: false },
-    { title: 'السريع', description: 'أكمل دورة في أقل من أسبوع', icon: '⚡', earned: false },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,7 +164,7 @@ export default function Profile() {
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative">
                 <div className="w-32 h-32 rounded-full bg-gradient-hero flex items-center justify-center text-white text-4xl font-bold">
-                  {user?.prenom[0]}{user?.nom[0]}
+                  {user?.prenom?.[0]}{user?.nom?.[0]}
                 </div>
                 <Button
                   size="icon"
@@ -85,22 +180,18 @@ export default function Profile() {
                   <Badge className={getPlanBadge().colorClass}>{getPlanBadge().label}</Badge>
                 </div>
                 <p className="text-muted-foreground mb-2">{user?.email}</p>
-                <p className="text-sm text-muted-foreground">عضو منذ: {new Date(user!.dateInscription).toLocaleDateString('ar-MA')}</p>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary mb-1">65%</div>
-                <p className="text-sm text-muted-foreground">معدل الإنجاز</p>
+                <p className="text-sm text-muted-foreground">
+                  عضو منذ: {user?.dateInscription ? new Date(user.dateInscription).toLocaleDateString('ar-MA') : '-'}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Tabs */}
+        {/* Tabs - Only Personal Info and Security */}
         <Tabs defaultValue="info" className="w-full">
           <TabsList className="w-full justify-start mb-6">
             <TabsTrigger value="info">المعلومات الشخصية</TabsTrigger>
-            <TabsTrigger value="subscription">الاشتراك</TabsTrigger>
-            <TabsTrigger value="achievements">الإنجازات</TabsTrigger>
             <TabsTrigger value="security">الأمان</TabsTrigger>
           </TabsList>
 
@@ -110,8 +201,12 @@ export default function Profile() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>المعلومات الشخصية</CardTitle>
                 {isEditing ? (
-                  <Button onClick={handleSave} size="sm">
-                    <Save className="h-4 w-4 ml-2" />
+                  <Button onClick={handleSave} size="sm" disabled={loading}>
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4 ml-2" />
+                    )}
                     حفظ
                   </Button>
                 ) : (
@@ -124,20 +219,20 @@ export default function Profile() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="prenom">الاسم</Label>
+                    <Label htmlFor="firstName">الاسم</Label>
                     <Input
-                      id="prenom"
-                      value={formData.prenom}
-                      onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
+                      id="firstName"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                       disabled={!isEditing}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="nom">اللقب</Label>
+                    <Label htmlFor="lastName">اللقب</Label>
                     <Input
-                      id="nom"
-                      value={formData.nom}
-                      onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                      id="lastName"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                       disabled={!isEditing}
                     />
                   </div>
@@ -146,17 +241,18 @@ export default function Profile() {
                     <Input
                       id="email"
                       type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      disabled={!isEditing}
+                      value={user?.email || ''}
+                      disabled={true}
+                      className="bg-muted"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">لا يمكن تغيير البريد الإلكتروني</p>
                   </div>
                   <div>
-                    <Label htmlFor="telephone">رقم الهاتف</Label>
+                    <Label htmlFor="phoneNumber">رقم الهاتف</Label>
                     <Input
-                      id="telephone"
-                      value={formData.telephone}
-                      onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
+                      id="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                       disabled={!isEditing}
                     />
                   </div>
@@ -165,143 +261,86 @@ export default function Profile() {
             </Card>
           </TabsContent>
 
-          {/* Subscription */}
-          <TabsContent value="subscription">
-            <Card>
-              <CardHeader>
-                <CardTitle>الاشتراك الحالي</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="bg-gradient-hero p-6 rounded-lg text-white">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-2xl font-bold mb-2">حساب {user?.role}</h3>
-                        <p className="text-white/90">
-                          {user?.role === 'PREMIUM' ? 'الوصول إلى جميع الدورات المدفوعة' : 'ترقية لفتح جميع المميزات'}
-                        </p>
-                      </div>
-                      <Badge className="bg-white/20 text-white">نشط</Badge>
-                    </div>
-                    {user?.role !== 'NORMAL' && (
-                      <div>
-                        <p className="text-sm text-white/80 mb-2">التجديد في: 15 يناير 2026</p>
-                        <Progress value={30} className="bg-white/20" />
-                        <p className="text-sm text-white/80 mt-2">30 يوماً متبقية</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {user?.role === 'NORMAL' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Card className="border-2 border-primary">
-                        <CardContent className="pt-6">
-                          <h4 className="text-xl font-bold mb-2">Premium</h4>
-                          <p className="text-3xl font-bold text-primary mb-4">299 درهم/شهر</p>
-                          <ul className="space-y-2 text-sm mb-6">
-                            <li>✓ جميع الدورات</li>
-                            <li>✓ 400 رصيد شهري</li>
-                            <li>✓ شهادات معتمدة</li>
-                          </ul>
-                          <Button className="w-full">الترقية الآن</Button>
-                        </CardContent>
-                      </Card>
-                      <Card className="border-2 border-secondary">
-                        <CardContent className="pt-6">
-                          <h4 className="text-xl font-bold mb-2">VIP</h4>
-                          <p className="text-3xl font-bold text-secondary mb-4">599 درهم/شهر</p>
-                          <ul className="space-y-2 text-sm mb-6">
-                            <li>✓ كل مميزات Premium</li>
-                            <li>✓ 1000 رصيد شهري</li>
-                            <li>✓ مساعد صوتي</li>
-                          </ul>
-                          <Button className="w-full" variant="secondary">الترقية الآن</Button>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  )}
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">سجل المدفوعات</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {[
-                          { date: '2024-12-15', amount: 299, status: 'مكتمل' },
-                          { date: '2024-11-15', amount: 299, status: 'مكتمل' },
-                        ].map((payment, index) => (
-                          <div key={index} className="flex justify-between items-center p-3 border border-border rounded-lg">
-                            <div>
-                              <p className="font-medium">{payment.amount} درهم</p>
-                              <p className="text-sm text-muted-foreground">{payment.date}</p>
-                            </div>
-                            <Badge className="bg-success/10 text-success">{payment.status}</Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Achievements */}
-          <TabsContent value="achievements">
-            <Card>
-              <CardHeader>
-                <CardTitle>الإنجازات والشارات</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {achievements.map((achievement, index) => (
-                    <Card key={index} className={achievement.earned ? 'border-primary' : 'opacity-60'}>
-                      <CardContent className="pt-6">
-                        <div className="flex items-start gap-4">
-                          <div className="text-4xl">{achievement.icon}</div>
-                          <div className="flex-1">
-                            <h4 className="font-bold mb-1">{achievement.title}</h4>
-                            <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                            {achievement.earned && (
-                              <Badge className="mt-2 bg-success text-white">مكتسبة</Badge>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Security */}
+          {/* Security - Password Change Only */}
           <TabsContent value="security">
             <Card>
               <CardHeader>
-                <CardTitle>الأمان والخصوصية</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  تغيير كلمة المرور
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
+                <div className="space-y-4 max-w-md">
                   <div>
-                    <h4 className="font-medium mb-4">تغيير كلمة المرور</h4>
-                    <div className="space-y-4 max-w-md">
-                      <div>
-                        <Label>كلمة المرور الحالية</Label>
-                        <Input type="password" placeholder="••••••••" />
-                      </div>
-                      <div>
-                        <Label>كلمة المرور الجديدة</Label>
-                        <Input type="password" placeholder="••••••••" />
-                      </div>
-                      <div>
-                        <Label>تأكيد كلمة المرور</Label>
-                        <Input type="password" placeholder="••••••••" />
-                      </div>
-                      <Button>تحديث كلمة المرور</Button>
+                    <Label>كلمة المرور الحالية</Label>
+                    <div className="relative">
+                      <Input
+                        type={showCurrentPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={passwordData.currentPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                        className="text-right pl-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-7"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      >
+                        {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
                     </div>
                   </div>
+                  <div>
+                    <Label>كلمة المرور الجديدة</Label>
+                    <div className="relative">
+                      <Input
+                        type={showNewPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                        className="text-right pl-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-7"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                      >
+                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label>تأكيد كلمة المرور</Label>
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                        className="text-right pl-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-7"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button onClick={handleChangePassword} disabled={passwordLoading}>
+                    {passwordLoading ? (
+                      <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                    ) : null}
+                    تحديث كلمة المرور
+                  </Button>
                 </div>
               </CardContent>
             </Card>
