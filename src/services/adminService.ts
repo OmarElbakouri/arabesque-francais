@@ -988,4 +988,15 @@ export const adminService = {
     const response = await api.post(`/admin/credits/${userId}/reset`);
     return response.data.data;
   },
+
+  // Site Settings - Landing Video
+  getLandingVideo: async () => {
+    const response = await api.get('/settings/landing-video');
+    return response.data.data;
+  },
+
+  updateLandingVideo: async (url: string, title?: string, description?: string) => {
+    const response = await api.put('/settings/admin/landing-video', { url, title, description });
+    return response.data.data;
+  },
 };

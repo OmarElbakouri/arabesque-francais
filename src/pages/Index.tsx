@@ -1,14 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, BookOpen, Target, Award, Users, Play, Check, Star, MessageCircle, Lightbulb, Video, UserCheck, CheckCircle2, Clock } from "lucide-react";
+import { ChevronDown, BookOpen, Target, Award, Users, Play, Check, Star, MessageCircle, Lightbulb, Video, UserCheck, CheckCircle2, Clock, Mic, Brain, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import professorImg from "@/assets/professor.jpg";
 import logoImg from "@/assets/logo.jpg";
+import api from "@/lib/api";
 
 const Index = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [landingVideoUrl, setLandingVideoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch landing video URL from site settings
+    const fetchVideoUrl = async () => {
+      try {
+        const response = await api.get('/settings/landing-video');
+        if (response.data?.data?.url) {
+          setLandingVideoUrl(response.data.data.url);
+        }
+      } catch (error) {
+        console.log('No landing video configured');
+      }
+    };
+    fetchVideoUrl();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -48,29 +65,16 @@ const Index = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="animate-slide-up">
               <div className="inline-block mb-4">
-                <span className="badge-secondary">🎓 منصة تعليمية متكاملة</span>
+                <span className="badge-secondary">🎓 أول منصة لتعلم الفرنسية بالذكاء الاصطناعي في المغرب</span>
               </div>
               <h1 className="text-5xl lg:text-6xl font-black mb-6 leading-tight">
                 أتقن اللغة الفرنسية
-                <span className="text-gradient block">من الصفر إلى الاحتراف</span>
+                <span className="text-gradient block">بمساعدة الذكاء الاصطناعي</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                تعلم اللغة الفرنسية بأسلوب عصري وتفاعلي مع أفضل المدربين. دروس فيديو، تمارين تفاعلية، وذكاء اصطناعي لمساعدتك في كل خطوة.
+                تعلم اللغة الفرنسية بأسلوب عصري مدعوم بالذكاء الاصطناعي. دروس فيديو، تمارين تفاعلية، ومساعد ذكي يصحح نطقك ويجيب على أسئلتك في الحين.
               </p>
-              <div className="flex flex-wrap gap-4 mb-8">
-                <Link to="/subject-selection">
-                  <Button size="lg" className="btn-hero">
-                    <Play className="ml-2 h-5 w-5" />
-                    ابدأ التعلم الآن
-                  </Button>
-                </Link>
-                <Link to="/courses">
-                  <Button size="lg" variant="outline" className="border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold">
-                    <BookOpen className="ml-2 h-5 w-5" />
-                    تصفح الدورات
-                  </Button>
-                </Link>
-              </div>
+              
               <div className="flex items-center gap-8 text-sm">
                 <div className="flex items-center gap-2">
                   <Check className="h-5 w-5 text-success" />
@@ -109,6 +113,152 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Video Section */}
+      {landingVideoUrl && (
+        <section className="py-20 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <span className="inline-block py-1 px-3 rounded-full bg-primary/10 text-primary text-sm font-bold mb-4">
+                <Play className="inline-block w-4 h-4 ml-2" />
+                شاهد الفيديو التعريفي
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                اكتشف كيف نساعدك على <span className="text-primary">إتقان الفرنسية</span>
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                شاهد كيف تعمل منصتنا المدعومة بالذكاء الاصطناعي وكيف يمكنها تسريع رحلتك في تعلم اللغة الفرنسية
+              </p>
+            </div>
+            
+            <div className="max-w-4xl mx-auto">
+              <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50">
+                <iframe
+                  src={landingVideoUrl}
+                  title="فيديو تعريفي عن المنصة"
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* AI Demo Section */}
+      <section className="py-20 bg-black text-white overflow-hidden relative">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=2565&auto=format&fit=crop')] bg-cover bg-center opacity-20"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <span className="inline-block py-1 px-3 rounded-full bg-primary/20 border border-primary text-primary text-sm font-bold mb-4">
+              <Sparkles className="inline-block w-4 h-4 ml-2" />
+              تكنولوجيا حصرية
+            </span>
+            <h2 className="text-4xl md:text-5xl font-black mb-6">
+              تجربة تعليمية <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">تسبق عصرها</span>
+            </h2>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+              اكتشف كيف يقوم الذكاء الاصطناعي بتحليل صوتك وتصحيح أخطائك في الوقت الفعلي
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <Mic className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-2">تصحيح النطق الفوري</h3>
+                  <p className="text-gray-400">تحدث بالفرنسية وسيقوم الذكاء الاصطناعي بتحليل نطقك وتصحيحه فوراً بدقة تصل إلى 99%</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                  <Brain className="w-6 h-6 text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-2">مسار تعليمي ذكي</h3>
+                  <p className="text-gray-400">يتكيف المنهج تلقائياً مع مستوى تقدمك ونقاط ضعفك لضمان أسرع نتائج ممكنة</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                  <Zap className="w-6 h-6 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-2">محادثات واقعية</h3>
+                  <p className="text-gray-400">مارس اللغة مع شخصيات افتراضية ذكية في سيناريوهات من الحياة اليومية</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-primary to-purple-600 rounded-3xl blur-2xl opacity-30 animate-pulse"></div>
+              <div className="relative bg-gray-900 rounded-2xl border border-white/10 p-6 shadow-2xl">
+                {/* Chat Interface Mockup */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-purple-600 flex items-center justify-center">
+                        <Brain className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-bold">المساعد الذكي</p>
+                        <p className="text-xs text-green-400 flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                          متصل الآن
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 font-mono text-sm">
+                    <div className="flex gap-3 justify-end">
+                      <div className="bg-primary text-white p-3 rounded-2xl rounded-tr-none max-w-[80%]">
+                        Je veux apprendre à me présenter en français.
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs">You</span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-purple-600 flex items-center justify-center flex-shrink-0">
+                        <Brain className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="bg-white/10 text-gray-200 p-3 rounded-2xl rounded-tl-none max-w-[80%]">
+                        <p className="mb-2">Bien sûr ! Voici une façon simple de vous présenter :</p>
+                        <p className="text-primary font-bold">"Bonjour, je m'appelle [Nom]. J'ai [Âge] ans et je suis [Profession]."</p>
+                        <div className="mt-3 flex gap-2">
+                          <button className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded flex items-center gap-1">
+                            <Play className="w-3 h-3" /> استمع
+                          </button>
+                          <button className="text-xs bg-white/10 hover:bg-white/20 px-2 py-1 rounded flex items-center gap-1">
+                            <Mic className="w-3 h-3" /> جرب النطق
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <div className="h-12 bg-white/5 rounded-xl flex items-center px-4 text-gray-500 justify-between">
+                      <span>اكتب رسالتك هنا...</span>
+                      <Mic className="w-5 h-5 hover:text-primary cursor-pointer transition-colors" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 3 Stages Path */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
@@ -126,8 +276,8 @@ const Index = () => {
                 icon: Lightbulb,
                 title: "ضبط القواعد اللغوية والتدرب على الكتابة",
                 points: [
-                  "عبر دروس بالفيديو بطريقة سلسة و عملية، بالإضافة إلى تمارين و إمتحانات تفاعلية",
-                  "يمكنكم التواصل مع الأستاذ في أي وقت للإجابة على أي تساؤلات",
+                  "عبر دروس بالفيديو بطريقة سلسة و عملية، بالإضافة إلى تمارين و إمتحانات تفاعلية مدعومة بالذكاء الاصطناعي",
+                  "يمكنكم التواصل مع الأستاذ أو المساعد الذكي في أي وقت للإجابة على أي تساؤلات",
                 ],
                 highlight: "75 درس، 120 تمرين و 5 امتحانات، 10 كتب",
                 duration: "من A1 إلى C1 في مدة 4 أشهر و نصف غوض 5 ساعات في مراكز أخرى",
@@ -138,7 +288,7 @@ const Index = () => {
                 icon: Video,
                 title: "التمرن على التكلم باللغة الفرنسية",
                 points: [
-                  "عبر قراءة نصوص و قصص و تلخيصها شفهيا أو إرسالها للأستاذ للتصحيح و ملاحضات و نصائح",
+                  "عبر قراءة نصوص و قصص و تلخيصها شفهيا أو إرسالها للمصحح الآلي للتصحيح الفوري و ملاحضات و نصائح",
                 ],
                 highlight: "لمدة شهر و نصف",
                 color: "bg-secondary/10 text-secondary border-secondary"
@@ -208,13 +358,38 @@ const Index = () => {
               <div className="inline-block bg-gradient-hero text-white px-6 py-3 rounded-full text-xl font-bold mb-6 shadow-lg">
                 خصم 30% لل 50 الأوائل
               </div>
+
+              <div className="flex justify-center gap-4 mb-8 mt-6">
+                <button 
+                  onClick={() => setSelectedPlan('normal')}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
+                    selectedPlan !== 'vip' 
+                      ? 'bg-primary text-white shadow-lg scale-105' 
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  الباقة العادية
+                </button>
+                <button 
+                  onClick={() => setSelectedPlan('vip')}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
+                    selectedPlan === 'vip' 
+                      ? 'bg-gradient-hero text-white shadow-lg scale-105' 
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  باقة VIP
+                </button>
+              </div>
               
-              <div className="flex items-baseline justify-center gap-3 mb-2">
-                <span className="text-6xl md:text-7xl font-black text-gradient">700</span>
+              <div className="flex items-baseline justify-center gap-3 mb-2 animate-fade-in">
+                <span className="text-6xl md:text-7xl font-black text-gradient">
+                  {selectedPlan === 'vip' ? '999' : '749'}
+                </span>
                 <span className="text-3xl font-bold">درهم</span>
               </div>
               <p className="text-xl text-muted-foreground line-through mb-8">
-                عوض <span className="font-bold">1000 درهم</span>
+                عوض <span className="font-bold">{selectedPlan === 'vip' ? '2000' : '1000'} درهم</span>
               </p>
             </div>
 
@@ -268,6 +443,22 @@ const Index = () => {
                     <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
                     <span className="text-sm">المرافقة اليومية من طرف الأستاذ أنس</span>
                   </li>
+                  {selectedPlan === 'vip' && (
+                    <>
+                      <li className="flex items-start gap-2 animate-fade-in">
+                        <Star className="h-5 w-5 text-warning mt-0.5 flex-shrink-0 fill-current" />
+                        <span className="text-sm font-bold text-primary">جلسات خاصة مع الأستاذ</span>
+                      </li>
+                      <li className="flex items-start gap-2 animate-fade-in">
+                        <Star className="h-5 w-5 text-warning mt-0.5 flex-shrink-0 fill-current" />
+                        <span className="text-sm font-bold text-primary">مجموعة خاصة للطلاب VIP</span>
+                      </li>
+                      <li className="flex items-start gap-2 animate-fade-in">
+                        <Star className="h-5 w-5 text-warning mt-0.5 flex-shrink-0 fill-current" />
+                        <span className="text-sm font-bold text-primary">أولوية في الدعم والمتابعة 24/7</span>
+                      </li>
+                    </>
+                  )}
                 </ul>
 
                 <div className="mt-6 pt-6 border-t border-border">
@@ -281,9 +472,9 @@ const Index = () => {
 
             <div className="mt-8 text-center">
               <Link to="/register">
-                <Button size="lg" className="btn-hero text-lg px-8 py-6">
+                <Button size="lg" className={`btn-hero text-lg px-8 py-6 ${selectedPlan === 'vip' ? 'bg-gradient-hero shadow-gold' : ''}`}>
                   <Play className="ml-2 h-5 w-5" />
-                  احجز مكانك الآن بـ 700 درهم فقط
+                  احجز مكانك الآن بـ {selectedPlan === 'vip' ? '999' : '749'} درهم فقط
                 </Button>
               </Link>
               <a 
@@ -317,8 +508,8 @@ const Index = () => {
               {
                 step: "01",
                 icon: BookOpen,
-                title: "اختر مستواك",
-                description: "حدد مستواك الحالي من A1 إلى C2 أو ابدأ باختبار تحديد المستوى",
+                title: "اختر مستواك بدقة",
+                description: "حدد مستواك الحالي من A1 إلى C2 عبر اختبار تحديد المستوى المدعوم بالذكاء الاصطناعي",
                 color: "primary"
               },
               {
@@ -331,8 +522,8 @@ const Index = () => {
               {
                 step: "03",
                 icon: Target,
-                title: "تدرب وطبق",
-                description: "تمارين تفاعلية وأسئلة متنوعة لتثبيت المعلومات",
+                title: "تدرب مع AI",
+                description: "تمارين تفاعلية ذكية تتكيف مع مستواك وتصحح أخطاءك فورياً",
                 color: "info"
               },
               {
@@ -383,14 +574,14 @@ const Index = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: "🎯",
-                title: "محتوى مخصص",
-                description: "دروس مصممة خصيصاً لتناسب احتياجاتك ومستواك اللغوي"
+                icon: "🤖",
+                title: "ذكاء اصطناعي متطور",
+                description: "مساعد AI شخصي لتصحيح النطق، المحادثة، وتوليد تمارين مخصصة لك"
               },
               {
-                icon: "🤖",
-                title: "ذكاء اصطناعي",
-                description: "مساعد AI لتصحيح النطق وتوليد تمارين مخصصة"
+                icon: "⚡",
+                title: "تعلم أسرع 3 مرات",
+                description: "بفضل التخصيص الذكي للمحتوى، ستتعلم ما تحتاجه فقط وفي الوقت المناسب"
               },
               {
                 icon: "📱",
@@ -398,14 +589,14 @@ const Index = () => {
                 description: "منصة متجاوبة تعمل على جميع الأجهزة دون الحاجة لتطبيق"
               },
               {
-                icon: "👥",
-                title: "مجتمع تفاعلي",
-                description: "تواصل مع آلاف الطلاب وشارك تجربتك التعليمية"
+                icon: "🗣️",
+                title: "تصحيح نطق فوري",
+                description: "لا داعي للخجل، تدرب على النطق مع الذكاء الاصطناعي حتى تتقنه"
               },
               {
                 icon: "📊",
-                title: "تتبع التقدم",
-                description: "احصائيات تفصيلية لتتبع تقدمك ونقاط قوتك وضعفك"
+                title: "تتبع ذكي للتقدم",
+                description: "تحليلات دقيقة توضح لك نقاط قوتك وضعفك لتركز على ما يهم"
               },
               {
                 icon: "🎓",
@@ -413,8 +604,8 @@ const Index = () => {
                 description: "احصل على شهادات معترف بها عند إكمال كل مستوى"
               }
             ].map((perk, idx) => (
-              <Card key={idx} className="card-elevated p-6 text-center">
-                <div className="text-5xl mb-4">{perk.icon}</div>
+              <Card key={idx} className="card-elevated p-6 text-center group hover:border-primary/50 transition-colors">
+                <div className="text-5xl mb-4 transform group-hover:scale-110 transition-transform duration-300">{perk.icon}</div>
                 <h3 className="text-xl font-bold mb-3">{perk.title}</h3>
                 <p className="text-muted-foreground">{perk.description}</p>
               </Card>
@@ -428,42 +619,42 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16 animate-fade-in">
             <h2 className="text-4xl font-black mb-4">
-              تعلم بذكاء مع <span className="text-gradient">الذكاء الاصطناعي</span>
+              تقنيات <span className="text-gradient">الذكاء الاصطناعي</span> الحصرية
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              نستخدم تقنيات الذكاء الاصطناعي المتقدمة لتوفير تجربة تعليمية مخصصة وفعالة
+              نحن المنصة الأولى في المغرب التي توفر لك تجربة تعليمية مدعومة بأحدث تقنيات AI
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: MessageCircle,
+                icon: Brain,
                 title: "مساعد ذكي متاح 24/7",
-                description: "احصل على إجابات فورية لأسئلتك حول القواعد والمفردات في أي وقت",
+                description: "احصل على إجابات فورية لأسئلتك حول القواعد والمفردات في أي وقت، كأنك تملك أستاذاً خاصاً في جيبك",
                 color: "primary"
               },
               {
-                icon: Video,
-                title: "تدريب صوتي متقدم",
-                description: "تحليل نطقك وتقديم ملاحظات دقيقة لتحسين طريقة تحدثك بالفرنسية",
+                icon: Mic,
+                title: "تحليل صوتي دقيق",
+                description: "تقنية التعرف على الصوت المتقدمة تحلل نطقك وتعطيك تقييماً فورياً مع نصائح للتحسين",
                 color: "secondary"
               },
               {
-                icon: Target,
-                title: "تمارين مخصصة",
-                description: "توليد تمارين تناسب مستواك ونقاط ضعفك تلقائياً",
+                icon: Sparkles,
+                title: "تمارين مولدة تلقائياً",
+                description: "لا مزيد من التمارين المملة! الذكاء الاصطناعي ينشئ تمارين مخصصة بناءً على مستواك واهتماماتك",
                 color: "info"
               }
             ].map((feature, idx) => {
               const Icon = feature.icon;
               return (
-                <Card key={idx} className="card-feature p-6 text-center hover:scale-105 transition-transform">
-                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-${feature.color}/10 mb-4`}>
-                    <Icon className={`h-8 w-8 text-${feature.color}`} />
+                <Card key={idx} className="card-feature p-8 text-center hover:scale-105 transition-transform border-2 hover:border-primary/50">
+                  <div className={`inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-${feature.color}/10 mb-6 shadow-inner`}>
+                    <Icon className={`h-10 w-10 text-${feature.color}`} />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
+                  <h3 className="text-2xl font-bold mb-4">{feature.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-lg">{feature.description}</p>
                 </Card>
               );
             })}
@@ -472,102 +663,7 @@ const Index = () => {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 bg-gradient-overlay">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-black mb-4">
-              اختر <span className="text-gradient">الخطة المناسبة</span> لك
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              خطط مرنة تناسب جميع الميزانيات مع ضمان استرجاع المال خلال 30 يوم
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {[
-              {
-                name: "عادي",
-                originalPrice: "1500",
-                price: "750",
-                period: "درهم",
-                features: [
-                  "الوصول الكامل لجميع الدروس والمستويات",
-                  "تمارين وامتحانات تفاعلية",
-                  "10 رسائل صوتية بالذكاء الاصطناعي في كل فصل",
-                  "30 رسالة نصية مع الذكاء الاصطناعي في كل فصل",
-                  "شهادات معتمدة لكل مستوى",
-                  "دعم يومي من الأستاذ"
-                ],
-                popular: false,
-                cta: "ابدأ الآن"
-              },
-              {
-                name: "VIP",
-                originalPrice: "2000",
-                price: "1000",
-                period: "درهم",
-                features: [
-                  "جميع مميزات الخطة العادية",
-                  "25 رسالة صوتية بالذكاء الاصطناعي في كل فصل",
-                  "70 رسالة نصية مع الذكاء الاصطناعي في كل فصل",
-                  "أولوية في الدعم والمتابعة",
-                  "جلسات خاصة مع الأستاذ",
-                  "مجموعة خاصة للطلاب VIP",
-                  "دعم 24/7"
-                ],
-                popular: true,
-                cta: "ترقية لـ VIP"
-              }
-            ].map((plan, idx) => (
-              <Card 
-                key={idx}
-                className={`p-8 relative ${
-                  plan.popular 
-                    ? 'border-2 border-primary shadow-gold scale-105' 
-                    : 'card-elevated'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-gradient-hero text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg">
-                      الأكثر شعبية
-                    </span>
-                  </div>
-                )}
-                
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                  <div className="mb-2">
-                    <span className="text-lg text-muted-foreground line-through">{plan.originalPrice} درهم</span>
-                  </div>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-5xl font-black text-gradient">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
-                  </div>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, fidx) => (
-                    <li key={fidx} className="flex items-start gap-2">
-                      <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link to="/register" className="block">
-                  <Button 
-                    className={`w-full ${plan.popular ? 'btn-hero' : 'bg-primary hover:bg-primary-hover text-white'}`}
-                    size="lg"
-                  >
-                    {plan.cta}
-                  </Button>
-                </Link>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Removed Pricing Section as requested */}
 
       {/* Testimonials */}
       <section className="py-20">

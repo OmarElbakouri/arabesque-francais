@@ -252,7 +252,9 @@ const OrientationTest = () => {
   };
 
   const handleContinue = () => {
-    navigate("/courses");
+    // Store completion status locally to prevent redirect loop
+    sessionStorage.setItem('orientationCompleted', 'true');
+    navigate("/courses", { state: { fromOrientationTest: true }, replace: true });
   };
 
   // Result screen

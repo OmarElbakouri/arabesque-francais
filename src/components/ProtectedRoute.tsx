@@ -3,6 +3,11 @@ import { useAuthStore, UserRole } from '@/stores/authStore';
 import { useEffect, useState, useRef } from 'react';
 import api from '@/lib/api';
 
+// Check if orientation was just completed
+const checkLocalOrientationCompleted = () => {
+  return sessionStorage.getItem('orientationCompleted') === 'true';
+};
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: UserRole;
@@ -16,6 +21,16 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   const previousPathRef = useRef<string>('');
 
   useEffect(() => {
+    // Check if user just completed orientation test (from sessionStorage or navigation state)
+    const justCompletedOrientation = checkLocalOrientationCompleted() || 
+      (location.state as any)?.fromOrientationTest;
+    
+    if (justCompletedOrientation) {
+      setNeedsOrientation(false);
+      setOrientationChecked(true);
+      return;
+    }
+    
     // Reset states when coming from orientation test page
     if (previousPathRef.current === '/orientation-test' && location.pathname !== '/orientation-test') {
       setNeedsOrientation(false);

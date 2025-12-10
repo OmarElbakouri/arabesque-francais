@@ -32,6 +32,12 @@ export default function Dashboard() {
           return;
         }
 
+        // Skip if orientation was just completed (from sessionStorage)
+        if (sessionStorage.getItem('orientationCompleted') === 'true') {
+          setCheckingOrientation(false);
+          return;
+        }
+
         const response = await api.get('/orientation-test/status');
         if (!response.data.completed) {
           navigate('/orientation-test', { replace: true });

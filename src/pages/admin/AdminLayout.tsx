@@ -11,7 +11,8 @@ import {
   X,
   MessageSquare,
   Bell,
-  Video
+  Video,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
@@ -37,6 +38,7 @@ export default function AdminLayout() {
     { icon: DollarSign, label: 'Paiements', path: '/admin/payments' },
     { icon: MessageSquare, label: 'Crédits IA', path: '/admin/ai-credits' },
     { icon: Bell, label: 'Notifications', path: '/admin/notifications' },
+    { icon: Settings, label: 'Paramètres', path: '/admin/settings' },
   ];
 
   const isActive = (path: string) => {

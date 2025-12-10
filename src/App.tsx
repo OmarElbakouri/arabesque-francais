@@ -38,6 +38,7 @@ import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminAICredits from "./pages/admin/AdminAICredits";
 import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminSettings from "./pages/admin/AdminSettings";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +81,7 @@ const App = () => (
             <Route path="payments" element={<AdminPayments />} />
             <Route path="ai-credits" element={<AdminAICredits />} />
             <Route path="notifications" element={<AdminNotifications />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
 
           {/* Commercial routes with separate layout */}
