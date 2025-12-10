@@ -37,7 +37,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
-import { Search, Edit, Trash2, Mail, Phone } from 'lucide-react';
+import { Search, Edit, Trash2, Mail, Phone, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminService } from '@/services/adminService';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from '@/hooks/use-toast';
@@ -52,14 +52,19 @@ interface User {
   creditBalance: number;
   currentPlan?: string; // FREE, NORMAL, VIP - from backend
   plan?: string; // For backward compatibility
+  phone?: string; // User phone number
+  usedPromoCode?: string; // Promo code used during registration
 }
 
 export default function AdminUsers() {
   const currentUser = useAuthStore((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all'); // USER type: ADMIN, COMMERCIAL, USER
+  const [planFilter, setPlanFilter] = useState<string>('all'); // Plan: FREE, NORMAL, VIP
+  const [promoFilter, setPromoFilter] = useState<string>('all'); // Promo: all, with, without
   const [users, setUsers] = useState<User[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 10;
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -188,8 +193,7 @@ export default function AdminUsers() {
   };
 
   const roleColors: Record<string, string> = {
-    NORMAL: 'bg-muted/10 text-muted-foreground border border-muted',
-    VIP: 'bg-primary/10 text-primary border border-primary/20',
+    USER: 'bg-muted/10 text-muted-foreground border border-muted',
     COMMERCIAL: 'bg-blue-500/10 text-blue-600 border border-blue-500/20',
     ADMIN: 'bg-destructive/10 text-destructive border border-destructive/20',
   };
@@ -205,17 +209,128 @@ export default function AdminUsers() {
     const matchesSearch =
       (user.fullName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
+    const matchesType = typeFilter === 'all' || user.role === typeFilter;
+    const userPlan = user.currentPlan || user.plan || 'FREE';
+    const matchesPlan = planFilter === 'all' || userPlan === planFilter;
+    
+    // Pour le filtre code promo, on ne considère que les USER (pas ADMIN ni COMMERCIAL)
+    const isRegularUser = user.role === 'USER';
+    const hasPromoCode = user.usedPromoCode && user.usedPromoCode.trim() !== '';
+    const matchesPromo = promoFilter === 'all' || 
+      (promoFilter === 'with' && isRegularUser && hasPromoCode) || 
+      (promoFilter === 'without' && isRegularUser && !hasPromoCode);
+    
+    return matchesSearch && matchesType && matchesPlan && matchesPromo;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const endIndex = startIndex + usersPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, typeFilter, planFilter, promoFilter]);
+
+  // CSV Export function
+  const exportToCSV = (filterType: string) => {
+    let usersToExport = users;
+    let exportLabel = filterType;
+    
+    if (filterType === 'WITHOUT_PROMO') {
+      // Filtrer uniquement les USER (pas ADMIN ni COMMERCIAL) sans code promo
+      usersToExport = users.filter((user) => 
+        user.role === 'USER' && (!user.usedPromoCode || user.usedPromoCode.trim() === '')
+      );
+      exportLabel = 'sans_code_promo';
+    } else if (filterType === 'WITH_PROMO') {
+      // Filtrer uniquement les USER (pas ADMIN ni COMMERCIAL) avec code promo
+      usersToExport = users.filter((user) => 
+        user.role === 'USER' && user.usedPromoCode && user.usedPromoCode.trim() !== ''
+      );
+      exportLabel = 'avec_code_promo';
+    } else if (filterType !== 'all') {
+      usersToExport = users.filter((user) => {
+        const userPlan = user.currentPlan || user.plan || 'FREE';
+        return userPlan === filterType;
+      });
+      exportLabel = filterType.toLowerCase();
+    }
+
+    if (usersToExport.length === 0) {
+      const filterLabels: Record<string, string> = {
+        'all': 'tous',
+        'FREE': 'Free',
+        'NORMAL': 'Normal',
+        'VIP': 'VIP',
+        'WITHOUT_PROMO': 'sans code promo',
+        'WITH_PROMO': 'avec code promo'
+      };
+      toast({
+        title: 'Information',
+        description: `Aucun utilisateur ${filterLabels[filterType] || filterType} à exporter`,
+        variant: 'default',
+      });
+      return;
+    }
+
+    const headers = ['Nom', 'Prénom', 'Email', 'Numéro', 'Plan', 'Code Promo Utilisé'];
+    const csvContent = [
+      headers.join(','),
+      ...usersToExport.map((user) => {
+        const fullNameParts = (user.fullName || '').split(' ');
+        const firstName = fullNameParts[0] || '';
+        const lastName = fullNameParts.slice(1).join(' ') || '';
+        const plan = user.currentPlan || user.plan || 'FREE';
+        // Escape fields that might contain commas
+        const escapeField = (field: string) => {
+          if (field.includes(',') || field.includes('"')) {
+            return `"${field.replace(/"/g, '""')}"`;
+          }
+          return field;
+        };
+        return [
+          escapeField(lastName),
+          escapeField(firstName),
+          escapeField(user.email || ''),
+          escapeField(user.phone || ''),
+          escapeField(plan),
+          escapeField(user.usedPromoCode || '')
+        ].join(',');
+      })
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `utilisateurs_${exportLabel}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: 'Export réussi',
+      description: `${usersToExport.length} utilisateur(s) exporté(s)`,
+    });
+  };
+
+  // Stats pour les USER uniquement (pas ADMIN ni COMMERCIAL) pour les filtres code promo
+  const usersOnly = users.filter((u) => u.role === 'USER');
+  
   const stats = {
     total: users.length,
-    normal: users.filter((u) => u.role === 'NORMAL').length,
-    vip: users.filter((u) => u.role === 'VIP').length,
-    confirme: users.filter((u) => u.status === 'CONFIRME').length,
-    enAttente: users.filter((u) => u.status === 'EN_ATTENTE').length,
+    free: users.filter((u) => (u.currentPlan || u.plan || 'FREE') === 'FREE').length,
+    normal: users.filter((u) => (u.currentPlan || u.plan) === 'NORMAL').length,
+    vip: users.filter((u) => (u.currentPlan || u.plan) === 'VIP').length,
+    admin: users.filter((u) => u.role === 'ADMIN').length,
+    commercial: users.filter((u) => u.role === 'COMMERCIAL').length,
+    // Compter uniquement les USER pour les filtres code promo
+    withPromo: usersOnly.filter((u) => u.usedPromoCode && u.usedPromoCode.trim() !== '').length,
+    withoutPromo: usersOnly.filter((u) => !u.usedPromoCode || u.usedPromoCode.trim() === '').length,
   };
 
   if (loading) {
@@ -235,7 +350,7 @@ export default function AdminUsers() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -247,7 +362,15 @@ export default function AdminUsers() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-2xl font-bold">{stats.normal}</p>
+              <p className="text-2xl font-bold text-gray-600">{stats.free}</p>
+              <p className="text-sm text-muted-foreground">Free</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-blue-600">{stats.normal}</p>
               <p className="text-sm text-muted-foreground">Normal</p>
             </div>
           </CardContent>
@@ -255,7 +378,7 @@ export default function AdminUsers() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-primary">{stats.vip}</p>
+              <p className="text-2xl font-bold text-purple-600">{stats.vip}</p>
               <p className="text-sm text-muted-foreground">VIP</p>
             </div>
           </CardContent>
@@ -263,16 +386,16 @@ export default function AdminUsers() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">{stats.confirme}</p>
-              <p className="text-sm text-muted-foreground">Confirmé</p>
+              <p className="text-2xl font-bold text-orange-600">{stats.admin}</p>
+              <p className="text-sm text-muted-foreground">Admin</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-2xl font-bold text-yellow-600">{stats.enAttente}</p>
-              <p className="text-sm text-muted-foreground">En Attente</p>
+              <p className="text-2xl font-bold text-cyan-600">{stats.commercial}</p>
+              <p className="text-sm text-muted-foreground">Commercial</p>
             </div>
           </CardContent>
         </Card>
@@ -281,7 +404,25 @@ export default function AdminUsers() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Recherche et Filtres</CardTitle>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <CardTitle>Recherche et Filtres</CardTitle>
+            <div className="flex gap-2">
+              <Select onValueChange={(value) => exportToCSV(value)}>
+                <SelectTrigger className="w-[180px]">
+                  <Download className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Exporter CSV" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les utilisateurs</SelectItem>
+                  <SelectItem value="FREE">Plan Free</SelectItem>
+                  <SelectItem value="NORMAL">Plan Normal</SelectItem>
+                  <SelectItem value="VIP">Plan VIP</SelectItem>
+                  <SelectItem value="WITHOUT_PROMO">Sans code promo</SelectItem>
+                  <SelectItem value="WITH_PROMO">Avec code promo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
@@ -294,28 +435,36 @@ export default function AdminUsers() {
                 className="pl-10"
               />
             </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Type d'abonnement" />
+                <SelectValue placeholder="Type d'utilisateur" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les types</SelectItem>
-                <SelectItem value="NORMAL">Normal</SelectItem>
-                <SelectItem value="VIP">VIP</SelectItem>
-                <SelectItem value="COMMERCIAL">Commercial</SelectItem>
                 <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="COMMERCIAL">Commercial</SelectItem>
+                <SelectItem value="USER">User</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={planFilter} onValueChange={setPlanFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Statut" />
+                <SelectValue placeholder="Plan" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="CONFIRME">Confirmé</SelectItem>
-                <SelectItem value="EN_ATTENTE">En attente</SelectItem>
-                <SelectItem value="EXPIRED">Expiré</SelectItem>
-                <SelectItem value="SUSPENDED">Suspendu</SelectItem>
+                <SelectItem value="all">Tous les plans</SelectItem>
+                <SelectItem value="FREE">Free</SelectItem>
+                <SelectItem value="NORMAL">Normal</SelectItem>
+                <SelectItem value="VIP">VIP</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={promoFilter} onValueChange={setPromoFilter}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Code promo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous (code promo)</SelectItem>
+                <SelectItem value="with">Avec code promo ({stats.withPromo})</SelectItem>
+                <SelectItem value="without">Sans code promo ({stats.withoutPromo})</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -340,14 +489,14 @@ export default function AdminUsers() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.length === 0 ? (
+                {paginatedUsers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Aucun utilisateur trouvé
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user) => (
+                  paginatedUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>
                         <p className="font-medium">{user.fullName || 'N/A'}</p>
@@ -369,7 +518,7 @@ export default function AdminUsers() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {(user.role === 'USER' || user.role === 'NORMAL') ? (
+                        {user.role === 'USER' ? (
                           <Badge 
                             variant="outline" 
                             className={
@@ -420,6 +569,59 @@ export default function AdminUsers() {
               </TableBody>
             </Table>
           </div>
+          {/* Pagination */}
+          {filteredUsers.length > usersPerPage && (
+            <div className="flex items-center justify-between px-4 py-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Affichage de {startIndex + 1} à {Math.min(endIndex, filteredUsers.length)} sur {filteredUsers.length} utilisateurs
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Précédent
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Suivant
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -434,7 +636,7 @@ export default function AdminUsers() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="role">Type</Label>
+              <Label htmlFor="role">Type d'utilisateur</Label>
               <Select
                 value={editForm.role}
                 onValueChange={(value) => setEditForm({ ...editForm, role: value })}
@@ -443,8 +645,7 @@ export default function AdminUsers() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="NORMAL">Normal</SelectItem>
-                  <SelectItem value="VIP">VIP</SelectItem>
+                  <SelectItem value="USER">User</SelectItem>
                   <SelectItem value="COMMERCIAL">Commercial</SelectItem>
                   <SelectItem value="ADMIN">Admin</SelectItem>
                 </SelectContent>
@@ -467,8 +668,8 @@ export default function AdminUsers() {
                 </SelectContent>
               </Select>
             </div>
-            {/* Only show plan field for USER/NORMAL role, not for COMMERCIAL or ADMIN */}
-            {(editForm.role === 'USER' || editForm.role === 'NORMAL') && (
+            {/* Only show plan field for USER role, not for COMMERCIAL or ADMIN */}
+            {editForm.role === 'USER' && (
               <div className="space-y-2">
                 <Label htmlFor="plan">Type de Plan</Label>
                 <Select

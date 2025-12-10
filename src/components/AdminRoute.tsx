@@ -13,7 +13,7 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
   }
 
   if (user?.role !== 'ADMIN') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/courses" replace />;
   }
 
   return <>{children}</>;

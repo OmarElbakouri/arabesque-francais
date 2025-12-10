@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, Award, Target, TrendingUp, Coins, Crown, Briefcase, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -10,13 +10,46 @@ import { dashboardService, DashboardResponse } from '@/services/dashboardService
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { FreeUserRestriction } from '@/components/FreeUserRestriction';
+import { SecureImage } from '@/components/SecureImage';
+import api from '@/lib/api';
 
 export default function Dashboard() {
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState<DashboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [checkingOrientation, setCheckingOrientation] = useState(true);
+
+  // Check orientation test completion
+  useEffect(() => {
+    const checkOrientation = async () => {
+      try {
+        // Skip for ADMIN and COMMERCIAL
+        if (user?.role === 'ADMIN' || user?.role === 'COMMERCIAL') {
+          setCheckingOrientation(false);
+          return;
+        }
+
+        const response = await api.get('/orientation-test/status');
+        if (!response.data.completed) {
+          navigate('/orientation-test', { replace: true });
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to check orientation status:', error);
+      } finally {
+        setCheckingOrientation(false);
+      }
+    };
+
+    if (user) {
+      checkOrientation();
+    } else {
+      setCheckingOrientation(false);
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -125,7 +158,8 @@ export default function Dashboard() {
     },
   };
 
-  if (isLoading) {
+  // Show loading while checking orientation
+  if (checkingOrientation || isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
@@ -309,7 +343,7 @@ export default function Dashboard() {
                   {(isFreeUser ? [enrolledCourses[0]] : enrolledCourses).map((course) => (
                     <div key={course.courseId} className="border border-gray-100 rounded-xl p-4">
                       <div className="flex gap-4">
-                        <img
+                        <SecureImage
                           src={course.courseImage}
                           alt={course.courseName}
                           className="w-24 h-24 rounded-lg object-cover"

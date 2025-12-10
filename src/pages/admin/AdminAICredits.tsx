@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,185 +12,235 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Search, MessageSquare, Mic, TrendingUp, AlertCircle, Plus } from 'lucide-react';
+
+import { Search, MessageSquare, Mic, TrendingUp, RefreshCw, RotateCcw, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { adminService } from '@/services/adminService';
 
 interface UserCredits {
-  id: string;
-  utilisateur: string;
+  userId: number;
+  userName: string;
   email: string;
-  plan: 'NORMAL' | 'VIP';
-  creditsMessages: number;
-  maxMessages: number;
-  creditsVocaux: number;
-  maxVocaux: number;
-  utilisation: number;
-  dateReset: string;
-  statut: 'ACTIF' | 'LIMITE_ATTEINTE';
+  planName: string;
+  quizIaUsed: number;
+  quizIaLimit: number; // -1 means unlimited
+  voiceQuizUsed: number;
+  voiceQuizLimit: number; // -1 means unlimited
+  utilizationPercent: number;
+  lastUpdated: string | null;
+  yearMonth: string;
+  status: 'ACTIF' | 'LIMITE_ATTEINTE';
+}
+
+interface CreditsStats {
+  totalUsers: number;
+  freeUsers: number;
+  normalUsers: number;
+  vipUsers: number;
+  avgUtilizationPercent: number;
+  usersAtLimit: number;
+  totalQuizIaUsed: number;
+  totalVoiceQuizUsed: number;
+  currentMonth: string;
 }
 
 export default function AdminAICredits() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<UserCredits | null>(null);
-  const [showAdjustDialog, setShowAdjustDialog] = useState(false);
-  const [adjustAmount, setAdjustAmount] = useState(0);
 
-  const [users] = useState<UserCredits[]>([
-    {
-      id: '1',
-      utilisateur: 'محمد الإدريسي',
-      email: 'mohamed@example.com',
-      plan: 'NORMAL',
-      creditsMessages: 18,
-      maxMessages: 30,
-      creditsVocaux: 6,
-      maxVocaux: 10,
-      utilisation: 60,
-      dateReset: '2024-12-01',
-      statut: 'ACTIF',
-    },
-    {
-      id: '2',
-      utilisateur: 'فاطمة الزهراء',
-      email: 'fatima@example.com',
-      plan: 'VIP',
-      creditsMessages: 45,
-      maxMessages: 70,
-      creditsVocaux: 15,
-      maxVocaux: 25,
-      utilisation: 64,
-      dateReset: '2024-12-01',
-      statut: 'ACTIF',
-    },
-    {
-      id: '3',
-      utilisateur: 'يوسف الحسني',
-      email: 'youssef@example.com',
-      plan: 'NORMAL',
-      creditsMessages: 2,
-      maxMessages: 30,
-      creditsVocaux: 0,
-      maxVocaux: 10,
-      utilisation: 93,
-      dateReset: '2024-12-01',
-      statut: 'LIMITE_ATTEINTE',
-    },
-    {
-      id: '4',
-      utilisateur: 'سارة المنصوري',
-      email: 'sara@example.com',
-      plan: 'VIP',
-      creditsMessages: 62,
-      maxMessages: 70,
-      creditsVocaux: 20,
-      maxVocaux: 25,
-      utilisation: 11,
-      dateReset: '2024-12-01',
-      statut: 'ACTIF',
-    },
-  ]);
+  
+  const [users, setUsers] = useState<UserCredits[]>([]);
+  const [stats, setStats] = useState<CreditsStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isResetting, setIsResetting] = useState(false);
+
+  // Load data on mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const [usersData, statsData] = await Promise.all([
+        adminService.getAICredits(),
+        adminService.getAICreditsStats()
+      ]);
+      setUsers(usersData || []);
+      setStats(statsData);
+    } catch (error) {
+      console.error('Error loading AI credits data:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les données des crédits IA',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredUsers = users.filter((user) =>
-    user.utilisateur.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const stats = {
-    totalUsers: users.length,
-    normalUsers: users.filter((u) => u.plan === 'NORMAL').length,
-    vipUsers: users.filter((u) => u.plan === 'VIP').length,
-    avgUtilisation: Math.round(
-      users.reduce((sum, u) => sum + u.utilisation, 0) / users.length
-    ),
-    limitesAtteintes: users.filter((u) => u.statut === 'LIMITE_ATTEINTE').length,
+  const handleResetCredits = async (user: UserCredits) => {
+    setIsResetting(true);
+    try {
+      await adminService.resetAICredits(user.userId);
+      
+      toast({
+        title: 'Crédits Réinitialisés',
+        description: `Les crédits de ${user.userName} ont été remis à zéro`,
+      });
+      
+      // Reload data
+      await loadData();
+    } catch (error) {
+      console.error('Error resetting credits:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de réinitialiser les crédits',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResetting(false);
+    }
   };
 
-  const handleAdjustCredits = () => {
-    if (!selectedUser) return;
-    
-    toast({
-      title: 'Crédits Ajustés',
-      description: `${adjustAmount > 0 ? 'Ajouté' : 'Retiré'} ${Math.abs(adjustAmount)} crédits pour ${selectedUser.utilisateur}`,
-    });
-    setShowAdjustDialog(false);
-    setSelectedUser(null);
-    setAdjustAmount(0);
+  const formatLimit = (limit: number) => {
+    return limit === -1 ? '∞' : limit.toString();
   };
+
+  const getProgressValue = (used: number, limit: number) => {
+    if (limit === -1) return 0; // Unlimited
+    if (limit === 0) return 100;
+    return Math.min((used / limit) * 100, 100);
+  };
+
+  const getPlanBadgeClass = (plan: string) => {
+    switch (plan) {
+      case 'VIP':
+        return 'bg-secondary text-secondary-foreground';
+      case 'NORMAL':
+        return 'bg-primary text-primary-foreground';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2">Chargement des crédits IA...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Gestion des Crédits IA</h1>
-        <p className="text-muted-foreground mt-1">
-          Suivre et gérer l'utilisation des crédits IA (Chat DeepSeek & Alibaba Cloud Speech)
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Gestion des Crédits IA</h1>
+          <p className="text-muted-foreground mt-1">
+            Suivre et gérer l'utilisation des crédits IA (Quiz IA & Voice Quiz) - {stats?.currentMonth}
+          </p>
+        </div>
+        <Button onClick={loadData} variant="outline" className="gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Actualiser
+        </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card className="card-elevated">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-primary">{stats.totalUsers}</p>
-              <p className="text-sm text-muted-foreground">Total Utilisateurs</p>
-            </div>
-          </CardContent>
-        </Card>
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+          <Card className="card-elevated">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-primary">{stats.totalUsers}</p>
+                <p className="text-sm text-muted-foreground">Total Utilisateurs</p>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="card-elevated">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold">{stats.normalUsers}</p>
-              <p className="text-sm text-muted-foreground">
-                Normal (30/10)
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="card-elevated">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-muted-foreground">{stats.freeUsers}</p>
+                <p className="text-sm text-muted-foreground">FREE</p>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="card-elevated">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-secondary">{stats.vipUsers}</p>
-              <p className="text-sm text-muted-foreground">
-                VIP (70/25)
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="card-elevated">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-3xl font-bold">{stats.normalUsers}</p>
+                <p className="text-sm text-muted-foreground">NORMAL (50/15)</p>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="card-elevated">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-warning">{stats.avgUtilisation}%</p>
-              <p className="text-sm text-muted-foreground">Utilisation Moy.</p>
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="card-elevated">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-secondary">{stats.vipUsers}</p>
+                <p className="text-sm text-muted-foreground">VIP (Illimité)</p>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="card-elevated">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-destructive">{stats.limitesAtteintes}</p>
-              <p className="text-sm text-muted-foreground">Limites Atteintes</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="card-elevated">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-warning">{stats.avgUtilizationPercent}%</p>
+                <p className="text-sm text-muted-foreground">Utilisation Moy.</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="card-elevated">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-destructive">{stats.usersAtLimit}</p>
+                <p className="text-sm text-muted-foreground">Limites Atteintes</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Credit Plans Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-muted">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Badge className="bg-muted text-muted-foreground">FREE</Badge>
+              <span className="text-lg">0 DH</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm">Quiz IA</span>
+              </div>
+              <span className="font-bold text-destructive">Bloqué</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Mic className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm">Voice Quiz</span>
+              </div>
+              <span className="font-bold text-destructive">Bloqué</span>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="border-primary/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -202,16 +252,16 @@ export default function AdminAICredits() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-primary" />
-                <span className="text-sm">Messages IA par chapitre</span>
+                <span className="text-sm">Quiz IA par mois</span>
               </div>
-              <span className="font-bold">30 messages</span>
+              <span className="font-bold">50 quiz</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mic className="w-4 h-4 text-primary" />
-                <span className="text-sm">Vocaux IA par chapitre</span>
+                <span className="text-sm">Voice Quiz par mois</span>
               </div>
-              <span className="font-bold">10 vocaux</span>
+              <span className="font-bold">15 sessions</span>
             </div>
           </CardContent>
         </Card>
@@ -227,16 +277,16 @@ export default function AdminAICredits() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-secondary" />
-                <span className="text-sm">Messages IA par chapitre</span>
+                <span className="text-sm">Quiz IA par mois</span>
               </div>
-              <span className="font-bold">70 messages</span>
+              <span className="font-bold">Illimité ∞</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mic className="w-4 h-4 text-secondary" />
-                <span className="text-sm">Vocaux IA par chapitre</span>
+                <span className="text-sm">Voice Quiz par mois</span>
               </div>
-              <span className="font-bold">25 vocaux</span>
+              <span className="font-bold">Illimité ∞</span>
             </div>
           </CardContent>
         </Card>
@@ -266,166 +316,108 @@ export default function AdminAICredits() {
                 <TableRow>
                   <TableHead>Utilisateur</TableHead>
                   <TableHead>Plan</TableHead>
-                  <TableHead>Messages IA</TableHead>
-                  <TableHead>Vocaux IA</TableHead>
+                  <TableHead>Quiz IA</TableHead>
+                  <TableHead>Voice Quiz</TableHead>
                   <TableHead>Utilisation</TableHead>
-                  <TableHead>Reset Date</TableHead>
+                  <TableHead>Mois</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{user.utilisateur}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                      </div>
+                {filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      {searchTerm ? 'Aucun utilisateur trouvé' : 'Aucun utilisateur avec des crédits IA'}
                     </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          user.plan === 'VIP'
-                            ? 'bg-secondary text-secondary-foreground'
-                            : 'bg-primary text-primary-foreground'
-                        }
-                      >
-                        {user.plan}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium">
-                            {user.creditsMessages}/{user.maxMessages}
-                          </span>
-                          <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                  </TableRow>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <TableRow key={user.userId}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{user.userName}</p>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
-                        <Progress
-                          value={(user.creditsMessages / user.maxMessages) * 100}
-                          className="h-1"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium">
-                            {user.creditsVocaux}/{user.maxVocaux}
-                          </span>
-                          <Mic className="w-4 h-4 text-muted-foreground" />
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getPlanBadgeClass(user.planName)}>
+                          {user.planName}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1 min-w-[100px]">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="font-medium">
+                              {user.quizIaUsed}/{formatLimit(user.quizIaLimit)}
+                            </span>
+                            <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <Progress
+                            value={getProgressValue(user.quizIaUsed, user.quizIaLimit)}
+                            className="h-1"
+                          />
                         </div>
-                        <Progress
-                          value={(user.creditsVocaux / user.maxVocaux) * 100}
-                          className="h-1"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1 min-w-[100px]">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="font-medium">
+                              {user.voiceQuizUsed}/{formatLimit(user.voiceQuizLimit)}
+                            </span>
+                            <Mic className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <Progress
+                            value={getProgressValue(user.voiceQuizUsed, user.voiceQuizLimit)}
+                            className="h-1"
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{user.utilisation}%</span>
+                          <span className="text-sm font-medium">{user.utilizationPercent}%</span>
                           <TrendingUp
                             className={`w-4 h-4 ${
-                              user.utilisation > 80 ? 'text-warning' : 'text-success'
+                              user.utilizationPercent > 80 ? 'text-warning' : 'text-success'
                             }`}
                           />
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(user.dateReset).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          user.statut === 'ACTIF'
-                            ? 'bg-success text-white'
-                            : 'bg-destructive text-white'
-                        }
-                      >
-                        {user.statut === 'ACTIF' ? 'Actif' : 'Limite'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowAdjustDialog(true);
-                        }}
-                      >
-                        <Plus className="w-3 h-3" />
-                        Ajuster
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {user.yearMonth}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            user.status === 'ACTIF'
+                              ? 'bg-success text-white'
+                              : 'bg-destructive text-white'
+                          }
+                        >
+                          {user.status === 'ACTIF' ? 'Actif' : 'Limite'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="gap-1 text-destructive"
+                          disabled={isResetting}
+                          onClick={() => handleResetCredits(user)}
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          Reset
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
 
-      {/* Adjust Credits Dialog */}
-      <Dialog open={showAdjustDialog} onOpenChange={setShowAdjustDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Ajuster les Crédits IA</DialogTitle>
-            <DialogDescription>
-              Ajouter ou retirer des crédits pour cet utilisateur
-            </DialogDescription>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="space-y-4 py-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Utilisateur</p>
-                <p className="font-medium">{selectedUser.utilisateur}</p>
-                <Badge className="mt-2">{selectedUser.plan}</Badge>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Messages actuels</p>
-                  <p className="text-lg font-bold">
-                    {selectedUser.creditsMessages}/{selectedUser.maxMessages}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Vocaux actuels</p>
-                  <p className="text-lg font-bold">
-                    {selectedUser.creditsVocaux}/{selectedUser.maxVocaux}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="adjust">Nombre de crédits (+ pour ajouter, - pour retirer)</Label>
-                <Input
-                  id="adjust"
-                  type="number"
-                  value={adjustAmount}
-                  onChange={(e) => setAdjustAmount(parseInt(e.target.value) || 0)}
-                  placeholder="Ex: +10 ou -5"
-                />
-                <p className="text-xs text-muted-foreground">
-                  <AlertCircle className="w-3 h-3 inline mr-1" />
-                  Ceci ajustera les crédits messages de l'utilisateur
-                </p>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAdjustDialog(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleAdjustCredits}>Ajuster les Crédits</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

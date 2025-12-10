@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/adminService';
+import { SecureImage } from '@/components/SecureImage';
 
 // Interfaces TypeScript
 interface Course {
@@ -547,7 +548,7 @@ export default function AdminCourses() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         {course.imageUrl ? (
-                          <img
+                          <SecureImage
                             src={course.imageUrl}
                             alt={course.title || course.name || 'Course'}
                             className="w-12 h-12 rounded object-cover"

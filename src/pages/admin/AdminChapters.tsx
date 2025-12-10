@@ -59,6 +59,7 @@ import {
 } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/adminService';
+import HLSVideoPlayer from '@/components/HLSVideoPlayer';
 
 // Interfaces TypeScript
 interface Course {
@@ -97,6 +98,8 @@ interface Chapter {
   status?: 'DRAFT' | 'PUBLISHED';
   published?: boolean;
   totalLessons?: number;
+  quizPrompt?: string;
+  voiceQuizPrompt?: string;
   lessons?: Lesson[];
   createdAt?: string;
   updatedAt?: string;
@@ -110,6 +113,8 @@ interface ChapterFormData {
   audioUrl: string;
   durationMinutes: number;
   isLocked: boolean;
+  quizPrompt: string;
+  voiceQuizPrompt: string;
 }
 
 interface LessonFormData {
@@ -143,6 +148,8 @@ export default function AdminChapters() {
     audioUrl: '',
     durationMinutes: 0,
     isLocked: false,
+    quizPrompt: '',
+    voiceQuizPrompt: '',
   });
 
   // États pour les leçons
@@ -238,6 +245,8 @@ export default function AdminChapters() {
         audioUrl: formData.audioUrl || undefined,
         durationMinutes: formData.durationMinutes,
         isLocked: formData.isLocked,
+        quizPrompt: formData.quizPrompt || undefined,
+        voiceQuizPrompt: formData.voiceQuizPrompt || undefined,
       });
 
       toast({
@@ -270,6 +279,8 @@ export default function AdminChapters() {
         audioUrl: formData.audioUrl || undefined,
         durationMinutes: formData.durationMinutes,
         isLocked: formData.isLocked,
+        quizPrompt: formData.quizPrompt || undefined,
+        voiceQuizPrompt: formData.voiceQuizPrompt || undefined,
       });
 
       toast({
@@ -351,6 +362,8 @@ export default function AdminChapters() {
       audioUrl: chapter.audioUrl || '',
       durationMinutes: chapter.durationMinutes || 0,
       isLocked: chapter.isLocked,
+      quizPrompt: chapter.quizPrompt || '',
+      voiceQuizPrompt: chapter.voiceQuizPrompt || '',
     });
     setIsEditModalOpen(true);
   };
@@ -364,6 +377,8 @@ export default function AdminChapters() {
       audioUrl: '',
       durationMinutes: 0,
       isLocked: false,
+      quizPrompt: '',
+      voiceQuizPrompt: '',
     });
   };
 
@@ -585,11 +600,17 @@ export default function AdminChapters() {
   // ==================== VIDEO PLAYER FUNCTIONS ====================
 
   // Détecter le type de vidéo (Bunny Stream, direct, YouTube)
-  const getVideoType = (url: string): 'bunny-stream' | 'direct' | 'youtube' => {
+  const getVideoType = (url: string): 'bunny-stream' | 'bunny-cdn' | 'direct' | 'youtube' => {
     if (!url) return 'direct';
     
+    // Bunny Stream embed or play URLs
     if (url.includes('iframe.mediadelivery.net') || url.includes('video.bunnycdn.com')) {
       return 'bunny-stream';
+    }
+    
+    // Bunny CDN direct video URLs (HLS streams or direct files)
+    if (url.includes('.b-cdn.net') || (url.includes('vz-') && url.includes('.b-cdn.net'))) {
+      return 'bunny-cdn';
     }
     
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
@@ -601,14 +622,20 @@ export default function AdminChapters() {
 
   // Formater l'URL pour l'embed Bunny Stream
   const getBunnyEmbedUrl = (url: string): string => {
+    // Already an embed URL - just ensure proper params
     if (url.includes('iframe.mediadelivery.net/embed/')) {
+      const separator = url.includes('?') ? '&' : '?';
+      if (!url.includes('responsive=true')) {
+        return `${url}${separator}responsive=true&preload=metadata`;
+      }
       return url;
     }
     
+    // Convert video.bunnycdn.com/play/ to embed format
     if (url.includes('video.bunnycdn.com/play/')) {
       const parts = url.split('video.bunnycdn.com/play/')[1];
       if (parts) {
-        return `https://iframe.mediadelivery.net/embed/${parts}`;
+        return `https://iframe.mediadelivery.net/embed/${parts}?responsive=true&preload=metadata`;
       }
     }
     
@@ -1051,6 +1078,51 @@ export default function AdminChapters() {
               />
             </div>
 
+            {/* AI Quiz Prompts Section */}
+            <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
+              <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
+                🤖 Prompts IA pour les Quiz
+              </h4>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="quizPrompt">📝 Prompt Quiz Normal</Label>
+                    <span className="text-xs text-muted-foreground">(Optionnel)</span>
+                  </div>
+                  <Textarea
+                    id="quizPrompt"
+                    value={formData.quizPrompt}
+                    onChange={(e) => setFormData({ ...formData, quizPrompt: e.target.value })}
+                    placeholder="Ex: Génère des questions sur la conjugaison des verbes être et avoir au présent et au passé composé..."
+                    rows={3}
+                    maxLength={2000}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Instructions personnalisées pour l'IA. Si vide, l'IA utilisera le titre du chapitre.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="voiceQuizPrompt">🎤 Prompt Quiz Vocal</Label>
+                    <span className="text-xs text-muted-foreground">(Optionnel)</span>
+                  </div>
+                  <Textarea
+                    id="voiceQuizPrompt"
+                    value={formData.voiceQuizPrompt}
+                    onChange={(e) => setFormData({ ...formData, voiceQuizPrompt: e.target.value })}
+                    placeholder="Ex: Crée des exercices de prononciation pour les formes conjuguées..."
+                    rows={3}
+                    maxLength={2000}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Instructions pour les exercices de prononciation et d'écoute.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="duration">Durée (minutes)</Label>
@@ -1180,6 +1252,51 @@ export default function AdminChapters() {
                 placeholder="Description du chapitre"
                 rows={3}
               />
+            </div>
+
+            {/* AI Quiz Prompts Section */}
+            <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
+              <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
+                🤖 Prompts IA pour les Quiz
+              </h4>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="edit-quizPrompt">📝 Prompt Quiz Normal</Label>
+                    <span className="text-xs text-muted-foreground">(Optionnel)</span>
+                  </div>
+                  <Textarea
+                    id="edit-quizPrompt"
+                    value={formData.quizPrompt}
+                    onChange={(e) => setFormData({ ...formData, quizPrompt: e.target.value })}
+                    placeholder="Ex: Génère des questions sur la conjugaison des verbes être et avoir au présent et au passé composé..."
+                    rows={3}
+                    maxLength={2000}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Instructions personnalisées pour l'IA. Si vide, l'IA utilisera le titre du chapitre.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="edit-voiceQuizPrompt">🎤 Prompt Quiz Vocal</Label>
+                    <span className="text-xs text-muted-foreground">(Optionnel)</span>
+                  </div>
+                  <Textarea
+                    id="edit-voiceQuizPrompt"
+                    value={formData.voiceQuizPrompt}
+                    onChange={(e) => setFormData({ ...formData, voiceQuizPrompt: e.target.value })}
+                    placeholder="Ex: Crée des exercices de prononciation pour les formes conjuguées..."
+                    rows={3}
+                    maxLength={2000}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Instructions pour les exercices de prononciation et d'écoute.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -1455,24 +1572,31 @@ export default function AdminChapters() {
                   <iframe
                     src={getBunnyEmbedUrl(selectedVideoLesson.videoUrl)}
                     title={selectedVideoLesson.title}
-                    className="w-full h-full"
-                    frameBorder={0}
-                    loading="lazy"
-                    allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+                    className="w-full h-full border-0"
+                    style={{ border: 'none' }}
+                    allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
                     allowFullScreen
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                ) : getVideoType(selectedVideoLesson.videoUrl) === 'bunny-cdn' ? (
+                  // Bunny CDN HLS streams (.m3u8)
+                  <HLSVideoPlayer
+                    src={selectedVideoLesson.videoUrl}
+                    title={selectedVideoLesson.title}
+                    className="w-full h-full"
                   />
                 ) : getVideoType(selectedVideoLesson.videoUrl) === 'youtube' ? (
                   // YouTube
                   <iframe
                     src={getYouTubeEmbedUrl(selectedVideoLesson.videoUrl)}
                     title={selectedVideoLesson.title}
-                    className="w-full h-full"
-                    frameBorder={0}
+                    className="w-full h-full border-0"
+                    style={{ border: 'none' }}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
                 ) : (
-                  // Bunny CDN ou autre - lecteur HTML5 natif
+                  // Other direct video files
                   <video
                     src={selectedVideoLesson.videoUrl}
                     title={selectedVideoLesson.title}

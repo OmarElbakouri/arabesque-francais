@@ -30,7 +30,7 @@ export default function Login() {
       if (authState.user?.role === 'ADMIN') {
         navigate('/admin');
       } else {
-        navigate('/dashboard');
+        navigate('/courses');
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'البريد الإلكتروني أو كلمة المرور غير صحيحة';

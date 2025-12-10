@@ -51,7 +51,7 @@ interface Document {
   description: string;
   level: string;
   imageUrl?: string;
-  pdfUrl?: string;
+  fileUrl?: string;
   visibility: 'NORMAL_AND_VIP' | 'ALL';
   status: 'DRAFT' | 'PUBLISHED';
   durationHours: number;
@@ -68,7 +68,7 @@ interface DocumentFormData {
   level: string;
   visibility: 'NORMAL_AND_VIP' | 'ALL';
   imageUrl: string;
-  pdfUrl: string;
+  fileUrl: string;
   durationHours: number;
 }
 
@@ -88,7 +88,7 @@ export default function AdminDocuments() {
     level: '',
     visibility: 'NORMAL_AND_VIP',
     imageUrl: '',
-    pdfUrl: '',
+    fileUrl: '',
     durationHours: 0,
   });
 
@@ -133,7 +133,7 @@ export default function AdminDocuments() {
         level: formData.level,
         visibility: formData.visibility,
         imageUrl: formData.imageUrl || undefined,
-        pdfUrl: formData.pdfUrl || undefined,
+        fileUrl: formData.fileUrl || undefined,
         durationHours: formData.durationHours,
       });
 
@@ -164,8 +164,9 @@ export default function AdminDocuments() {
         description: formData.description,
         level: formData.level,
         visibility: formData.visibility,
-        imageUrl: formData.imageUrl || undefined,
-        pdfUrl: formData.pdfUrl || undefined,
+        // Send null to clear the field, or the value if set
+        imageUrl: formData.imageUrl === '' ? null : formData.imageUrl,
+        fileUrl: formData.fileUrl === '' ? null : formData.fileUrl,
         durationHours: formData.durationHours,
       });
 
@@ -272,7 +273,7 @@ export default function AdminDocuments() {
       level: document.level,
       visibility: document.visibility,
       imageUrl: document.imageUrl || '',
-      pdfUrl: document.pdfUrl || '',
+      fileUrl: document.fileUrl || '',
       durationHours: document.durationHours,
     });
     setIsEditModalOpen(true);
@@ -285,7 +286,7 @@ export default function AdminDocuments() {
       level: '',
       visibility: 'NORMAL_AND_VIP',
       imageUrl: '',
-      pdfUrl: '',
+      fileUrl: '',
       durationHours: 0,
     });
   };
@@ -321,7 +322,7 @@ export default function AdminDocuments() {
     try {
       setUploading(true);
       const result = await adminService.uploadDocumentPdf(file);
-      setFormData({ ...formData, pdfUrl: result.pdfPath });
+      setFormData({ ...formData, fileUrl: result.pdfPath });
       toast({
         title: 'Succès',
         description: 'PDF uploadé avec succès',
@@ -513,7 +514,7 @@ export default function AdminDocuments() {
 
       {/* Create Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Créer un nouveau document</DialogTitle>
             <DialogDescription>
@@ -521,12 +522,12 @@ export default function AdminDocuments() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 overflow-y-auto flex-1 pr-2">
             <div className="space-y-2">
               <Label htmlFor="title">Titre *</Label>
               <Input
                 id="title"
-                value={formData.title}
+                value={formData.title || ''}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Formation en français"
               />
@@ -536,7 +537,7 @@ export default function AdminDocuments() {
               <Label htmlFor="description">Description *</Label>
               <Textarea
                 id="description"
-                value={formData.description}
+                value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Description complète du document..."
                 rows={3}
@@ -548,7 +549,7 @@ export default function AdminDocuments() {
                 <Label htmlFor="level">Niveau *</Label>
                 <Input
                   id="level"
-                  value={formData.level}
+                  value={formData.level || ''}
                   onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                   placeholder="Débutant, Intermédiaire, Avancé..."
                 />
@@ -560,7 +561,7 @@ export default function AdminDocuments() {
                   id="durationHours"
                   type="number"
                   min="0"
-                  value={formData.durationHours}
+                  value={formData.durationHours || 0}
                   onChange={(e) =>
                     setFormData({ ...formData, durationHours: parseInt(e.target.value) || 0 })
                   }
@@ -620,14 +621,14 @@ export default function AdminDocuments() {
                 onChange={handlePdfUpload}
                 disabled={uploading}
               />
-              {formData.pdfUrl && (
+              {formData.fileUrl && (
                 <div className="mt-2 p-2 bg-gray-100 rounded flex items-center justify-between">
-                  <span className="text-sm text-gray-600">✓ PDF: {formData.pdfUrl}</span>
+                  <span className="text-sm text-gray-600">✓ PDF: {formData.fileUrl}</span>
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
-                    onClick={() => setFormData({ ...formData, pdfUrl: '' })}
+                    onClick={() => setFormData({ ...formData, fileUrl: '' })}
                   >
                     Supprimer
                   </Button>
@@ -663,7 +664,7 @@ export default function AdminDocuments() {
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Modifier le document</DialogTitle>
             <DialogDescription>
@@ -671,12 +672,12 @@ export default function AdminDocuments() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 overflow-y-auto flex-1 pr-2">
             <div className="space-y-2">
               <Label htmlFor="edit-title">Titre *</Label>
               <Input
                 id="edit-title"
-                value={formData.title}
+                value={formData.title || ''}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               />
             </div>
@@ -685,7 +686,7 @@ export default function AdminDocuments() {
               <Label htmlFor="edit-description">Description *</Label>
               <Textarea
                 id="edit-description"
-                value={formData.description}
+                value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
               />
@@ -696,7 +697,7 @@ export default function AdminDocuments() {
                 <Label htmlFor="edit-level">Niveau *</Label>
                 <Input
                   id="edit-level"
-                  value={formData.level}
+                  value={formData.level || ''}
                   onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                 />
               </div>
@@ -707,7 +708,7 @@ export default function AdminDocuments() {
                   id="edit-durationHours"
                   type="number"
                   min="0"
-                  value={formData.durationHours}
+                  value={formData.durationHours || 0}
                   onChange={(e) =>
                     setFormData({ ...formData, durationHours: parseInt(e.target.value) || 0 })
                   }
@@ -766,14 +767,14 @@ export default function AdminDocuments() {
                 onChange={handlePdfUpload}
                 disabled={uploading}
               />
-              {formData.pdfUrl && (
+              {formData.fileUrl && (
                 <div className="mt-2 p-2 bg-gray-100 rounded flex items-center justify-between">
-                  <span className="text-sm text-gray-600">✓ PDF: {formData.pdfUrl}</span>
+                  <span className="text-sm text-gray-600">✓ PDF: {formData.fileUrl}</span>
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
-                    onClick={() => setFormData({ ...formData, pdfUrl: '' })}
+                    onClick={() => setFormData({ ...formData, fileUrl: '' })}
                   >
                     Supprimer
                   </Button>

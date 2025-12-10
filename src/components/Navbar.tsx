@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingCart, User, LogOut, BookOpen, BarChart3, MessageSquare, GraduationCap } from 'lucide-react';
+import { Menu, X, ShoppingCart, User, LogOut, BookOpen, BarChart3, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -57,12 +57,6 @@ export function Navbar() {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-6">
-            <Link
-              to="/home"
-              className={`link-animated ${isActive('/home') ? 'text-primary font-bold' : 'text-foreground'}`}
-            >
-              الرئيسية
-            </Link>
             {user?.role !== 'COMMERCIAL' && (
               <Link
                 to="/courses"
@@ -71,25 +65,14 @@ export function Navbar() {
                 الدورات
               </Link>
             )}
-            {isAuthenticated && user?.role !== 'COMMERCIAL' && (
-              <Link
-                to="/quiz"
-                className={`link-animated flex items-center gap-1 ${isActive('/quiz') ? 'text-primary font-bold' : 'text-foreground'}`}
-              >
-                <GraduationCap className="h-4 w-4" />
-                التدريب
-              </Link>
-            )}
+            <Link
+              to="/documents"
+              className={`link-animated ${isActive('/documents') ? 'text-primary font-bold' : 'text-foreground'}`}
+            >
+              المستندات
+            </Link>
             {isAuthenticated && (
               <>
-                {user?.role !== 'COMMERCIAL' && (
-                  <Link
-                    to="/dashboard"
-                    className={`link-animated ${isActive('/dashboard') ? 'text-primary font-bold' : 'text-foreground'}`}
-                  >
-                    لوحة التحكم
-                  </Link>
-                )}
                 {user?.role === 'ADMIN' && (
                   <Link
                     to="/admin"
@@ -164,13 +147,6 @@ export function Navbar() {
         {/* Mobile Menu */}
         {isOpen && (
           <div className="md:hidden py-4 space-y-4 animate-fade-in">
-            <Link
-              to="/home"
-              className="block py-2 text-foreground"
-              onClick={() => setIsOpen(false)}
-            >
-              الرئيسية
-            </Link>
             {user?.role !== 'COMMERCIAL' && (
               <Link
                 to="/courses"
@@ -180,27 +156,15 @@ export function Navbar() {
                 الدورات
               </Link>
             )}
-            {isAuthenticated && user?.role !== 'COMMERCIAL' && (
-              <Link
-                to="/quiz"
-                className="block py-2 text-foreground flex items-center gap-2"
-                onClick={() => setIsOpen(false)}
-              >
-                <GraduationCap className="h-4 w-4" />
-                التدريب
-              </Link>
-            )}
+            <Link
+              to="/documents"
+              className="block py-2 text-foreground"
+              onClick={() => setIsOpen(false)}
+            >
+              المستندات
+            </Link>
             {isAuthenticated && (
               <>
-                {user?.role !== 'COMMERCIAL' && (
-                  <Link
-                    to="/dashboard"
-                    className="block py-2 text-foreground"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    لوحة التحكم
-                  </Link>
-                )}
                 {user?.role === 'ADMIN' && (
                   <Link
                     to="/admin"

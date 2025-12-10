@@ -13,7 +13,7 @@ export const CommercialRoute = ({ children }: CommercialRouteProps) => {
   }
 
   if (user?.role !== 'COMMERCIAL') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/courses" replace />;
   }
 
   return <>{children}</>;

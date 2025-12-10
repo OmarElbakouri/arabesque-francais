@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { courseService, CoursePublic } from '@/services/courseService';
 import { useToast } from '@/hooks/use-toast';
+import { SecureImage } from '@/components/SecureImage';
 import logo from '@/assets/logo.jpg';
 import professor from '@/assets/professor.jpg';
 
@@ -261,7 +262,7 @@ export default function Courses() {
                   {/* Image */}
                   <div className="relative h-48 overflow-hidden bg-gray-100">
                     {course.imageUrl ? (
-                      <img
+                      <SecureImage
                         src={course.imageUrl}
                         alt={course.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

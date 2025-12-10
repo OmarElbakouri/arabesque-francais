@@ -22,6 +22,7 @@ import {
   Star,
   GraduationCap,
   Pause,
+  Mic,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,14 +35,22 @@ import {
   StudentChapterDTO,
 } from '@/services/courseService';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/stores/authStore';
 import logo from '@/assets/logo.jpg';
 import professor from '@/assets/professor.jpg';
 import { StudentLessonDTO } from '@/services/courseService';
+import HLSVideoPlayer from '@/components/HLSVideoPlayer';
+import ChapterQuiz from '@/components/ChapterQuiz';
+import VoiceQuiz from '@/components/VoiceQuiz';
 
 export default function StudentCourseDetail() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuthStore();
+  
+  // Check if user has FREE plan (no access to AI Quiz features)
+  const isFreePlan = user?.plan === 'FREE';
 
   const [course, setCourse] = useState<StudentCourseDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -197,10 +206,12 @@ export default function StudentCourseDetail() {
   // Video player functions
   const getVideoType = (url: string): 'bunny-stream' | 'bunny-cdn' | 'youtube' | 'vimeo' | 'direct' => {
     if (!url) return 'direct';
+    // Bunny Stream embed or play URLs
     if (url.includes('iframe.mediadelivery.net') || url.includes('video.bunnycdn.com')) {
       return 'bunny-stream';
     }
-    if (url.includes('.b-cdn.net')) {
+    // Bunny CDN direct video URLs (HLS streams or direct files)
+    if (url.includes('.b-cdn.net') || url.includes('vz-') && url.includes('.b-cdn.net')) {
       return 'bunny-cdn';
     }
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
@@ -213,15 +224,34 @@ export default function StudentCourseDetail() {
   };
 
   const getBunnyEmbedUrl = (url: string): string => {
+    // Already an embed URL - just ensure proper params
     if (url.includes('iframe.mediadelivery.net/embed/')) {
+      // Add responsive and preload params if not present
+      const separator = url.includes('?') ? '&' : '?';
+      if (!url.includes('responsive=true')) {
+        return `${url}${separator}responsive=true&preload=metadata`;
+      }
       return url;
     }
+    
+    // Convert video.bunnycdn.com/play/ to embed format
     if (url.includes('video.bunnycdn.com/play/')) {
       const parts = url.split('video.bunnycdn.com/play/')[1];
       if (parts) {
-        return `https://iframe.mediadelivery.net/embed/${parts}`;
+        return `https://iframe.mediadelivery.net/embed/${parts}?responsive=true&preload=metadata`;
       }
     }
+    
+    // Handle Bunny CDN direct links (vz-xxx.b-cdn.net format) 
+    // These need to be converted to embed format using library ID and video ID
+    const vzMatch = url.match(/vz-([a-zA-Z0-9]+)\.b-cdn\.net\/([a-zA-Z0-9-]+)/);
+    if (vzMatch) {
+      const [, pullZone, videoId] = vzMatch;
+      // Note: This requires knowing the library ID - the URL structure is different
+      // For now, return the direct URL and use native video player
+      return url;
+    }
+    
     return url;
   };
 
@@ -283,9 +313,9 @@ export default function StudentCourseDetail() {
             <BookOpen className="h-12 w-12 text-slate-500" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-4">Cours introuvable</h2>
-          <Button onClick={() => navigate('/dashboard')} className="rounded-xl">
+          <Button onClick={() => navigate('/courses')} className="rounded-xl">
             <ArrowRight className="ml-2 h-4 w-4" />
-            Retour au tableau de bord
+            Retour aux cours
           </Button>
         </div>
       </div>
@@ -337,7 +367,7 @@ export default function StudentCourseDetail() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/courses')}
                 className="rounded-xl border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700"
               >
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -466,7 +496,7 @@ export default function StudentCourseDetail() {
           {(course.chapters || []).some(c => c.locked) && (
             <div className="p-4 border-t border-slate-700/50">
               <div className="p-4 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-2xl">
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
                     <Crown className="h-5 w-5 text-white" />
                   </div>
@@ -475,14 +505,6 @@ export default function StudentCourseDetail() {
                     <p className="text-xs text-yellow-300/60">Débloquez tous les chapitres</p>
                   </div>
                 </div>
-                <Button 
-                  size="sm" 
-                  className="w-full rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:opacity-90 text-white font-bold shadow-lg" 
-                  onClick={() => navigate('/pricing')}
-                >
-                  <Sparkles className="w-4 h-4 ml-2" />
-                  Passer Premium
-                </Button>
               </div>
             </div>
           )}
@@ -581,18 +603,25 @@ export default function StudentCourseDetail() {
                       <iframe
                         src={getBunnyEmbedUrl(getCurrentVideoUrl()!)}
                         title={getCurrentTitle()}
-                        className="w-full h-full"
-                        frameBorder={0}
-                        loading="lazy"
-                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+                        className="w-full h-full border-0"
+                        style={{ border: 'none' }}
+                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
                         allowFullScreen
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    ) : getVideoType(getCurrentVideoUrl()!) === 'bunny-cdn' ? (
+                      // HLS streams from Bunny CDN (.m3u8)
+                      <HLSVideoPlayer
+                        src={getCurrentVideoUrl()!}
+                        title={getCurrentTitle()}
+                        className="w-full h-full"
                       />
                     ) : getVideoType(getCurrentVideoUrl()!) === 'youtube' ? (
                       <iframe
                         src={getYouTubeEmbedUrl(getCurrentVideoUrl()!)}
                         title={getCurrentTitle()}
-                        className="w-full h-full"
-                        frameBorder={0}
+                        className="w-full h-full border-0"
+                        style={{ border: 'none' }}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
@@ -600,8 +629,8 @@ export default function StudentCourseDetail() {
                       <iframe
                         src={getVimeoEmbedUrl(getCurrentVideoUrl()!)}
                         title={getCurrentTitle()}
-                        className="w-full h-full"
-                        frameBorder={0}
+                        className="w-full h-full border-0"
+                        style={{ border: 'none' }}
                         allow="autoplay; fullscreen; picture-in-picture"
                         allowFullScreen
                       />
@@ -659,7 +688,7 @@ export default function StudentCourseDetail() {
               {/* Content Tabs */}
               <Card className="border-0 shadow-xl bg-slate-800/50 backdrop-blur-sm overflow-hidden">
                 <Tabs defaultValue="description" className="w-full">
-                  <TabsList className="w-full justify-start bg-slate-900/50 rounded-none p-0 h-auto border-b border-slate-700/50">
+                  <TabsList className="w-full justify-start bg-slate-900/50 rounded-none p-0 h-auto border-b border-slate-700/50 flex-wrap">
                     <TabsTrigger 
                       value="description"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
@@ -680,6 +709,20 @@ export default function StudentCourseDetail() {
                     >
                       <Download className="w-4 h-4 ml-2" />
                       Ressources
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="quiz"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
+                    >
+                      <Sparkles className="w-4 h-4 ml-2" />
+                      Quiz IA
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="voice-quiz"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
+                    >
+                      <Mic className="w-4 h-4 ml-2" />
+                      Quiz Vocal
                     </TabsTrigger>
                   </TabsList>
 
@@ -823,6 +866,48 @@ export default function StudentCourseDetail() {
                           </div>
                         )}
                       </div>
+                    </TabsContent>
+
+                    {/* Quiz IA Tab */}
+                    <TabsContent value="quiz" className="mt-0">
+                      {isFreePlan ? (
+                        <div className="flex flex-col items-center justify-center py-16 px-8">
+                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/30">
+                            <Crown className="w-10 h-10 text-white" />
+                          </div>
+                          <h3 className="text-2xl font-bold text-white mb-2">Contenu Premium</h3>
+                          <p className="text-slate-400 text-center max-w-md">
+                            Débloquez tous les chapitres et accédez aux Quiz IA en passant à un plan supérieur
+                          </p>
+                        </div>
+                      ) : (
+                        <ChapterQuiz 
+                          chapterId={selectedChapter.id} 
+                          chapterTitle={selectedChapter.title}
+                          thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
+                        />
+                      )}
+                    </TabsContent>
+
+                    {/* Voice Quiz Tab */}
+                    <TabsContent value="voice-quiz" className="mt-0">
+                      {isFreePlan ? (
+                        <div className="flex flex-col items-center justify-center py-16 px-8">
+                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/30">
+                            <Crown className="w-10 h-10 text-white" />
+                          </div>
+                          <h3 className="text-2xl font-bold text-white mb-2">Contenu Premium</h3>
+                          <p className="text-slate-400 text-center max-w-md">
+                            Débloquez tous les chapitres et accédez au Quiz Vocal en passant à un plan supérieur
+                          </p>
+                        </div>
+                      ) : (
+                        <VoiceQuiz 
+                          chapterId={selectedChapter.id} 
+                          chapterTitle={selectedChapter.title}
+                          thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
+                        />
+                      )}
                     </TabsContent>
                   </CardContent>
                 </Tabs>

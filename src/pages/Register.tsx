@@ -39,7 +39,7 @@ export default function Register() {
         title: 'مرحباً بك!',
         description: 'تم إنشاء حسابك بنجاح',
       });
-      navigate('/dashboard');
+      navigate('/courses');
     } catch (err) {
       setError('حدث خطأ أثناء إنشاء الحساب');
     }

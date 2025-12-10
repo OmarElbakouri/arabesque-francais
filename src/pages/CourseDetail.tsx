@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { courseService, CoursePublic } from '@/services/courseService';
 import { useToast } from '@/hooks/use-toast';
+import { SecureImage } from '@/components/SecureImage';
+import { getFullUrl } from '@/lib/utils';
+import { api } from '@/lib/api';
 import logo from '@/assets/logo.jpg';
 import professor from '@/assets/professor.jpg';
 
@@ -202,7 +205,7 @@ export default function CourseDetail() {
                   
                   <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10">
                     {course.imageUrl ? (
-                      <img
+                      <SecureImage
                         src={course.imageUrl}
                         alt={course.name}
                         className="w-full aspect-video object-cover"
@@ -459,7 +462,7 @@ export default function CourseDetail() {
                 <div className={`h-1.5 bg-gradient-to-r ${levelConfig.gradient}`} />
                 {course.imageUrl && (
                   <div className="relative">
-                    <img
+                    <SecureImage
                       src={course.imageUrl}
                       alt={course.name}
                       className="w-full aspect-video object-cover"

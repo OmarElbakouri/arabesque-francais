@@ -612,7 +612,7 @@ export const adminService = {
     level: string;
     visibility: 'NORMAL_AND_VIP' | 'ALL';
     imageUrl?: string;
-    pdfUrl?: string;
+    fileUrl?: string;
     durationHours?: number;
   }) => {
     const response = await api.post('/admin/documents', data);
@@ -624,13 +624,19 @@ export const adminService = {
     title?: string;
     description?: string;
     level?: string;
-    imageUrl?: string;
-    pdfUrl?: string;
+    imageUrl?: string | null;  // null to clear the field
+    fileUrl?: string | null;   // null to clear the field
     visibility?: 'NORMAL_AND_VIP' | 'ALL';
     status?: 'DRAFT' | 'PUBLISHED';
     durationHours?: number;
   }) => {
-    const response = await api.put(`/admin/documents/${id}`, data);
+    // Convert null to empty string for backend
+    const payload = {
+      ...data,
+      imageUrl: data.imageUrl === null ? '' : data.imageUrl,
+      fileUrl: data.fileUrl === null ? '' : data.fileUrl,
+    };
+    const response = await api.put(`/admin/documents/${id}`, payload);
     return response.data.data;
   },
 
@@ -945,6 +951,41 @@ export const adminService = {
         'Content-Type': 'multipart/form-data',
       },
     });
+    return response.data.data;
+  },
+
+  // ========== AI Credits Management ==========
+
+  // Get all users with their AI credits usage
+  getAICredits: async () => {
+    const response = await api.get('/admin/credits');
+    return response.data.data;
+  },
+
+  // Get AI credits statistics
+  getAICreditsStats: async () => {
+    const response = await api.get('/admin/credits/stats');
+    return response.data.data;
+  },
+
+  // Get single user's credits
+  getUserAICredits: async (userId: number) => {
+    const response = await api.get(`/admin/credits/${userId}`);
+    return response.data.data;
+  },
+
+  // Adjust user's AI credits
+  adjustAICredits: async (userId: number, creditType: 'quiz_ia' | 'voice_quiz', adjustment: number) => {
+    const response = await api.put(`/admin/credits/${userId}/adjust`, {
+      creditType,
+      adjustment
+    });
+    return response.data.data;
+  },
+
+  // Reset user's AI credits to zero
+  resetAICredits: async (userId: number) => {
+    const response = await api.post(`/admin/credits/${userId}/reset`);
     return response.data.data;
   },
 };

@@ -8,11 +8,15 @@ import SubjectSelection from "./pages/SubjectSelection";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import OrientationTest from "./pages/OrientationTest";
 import Dashboard from "./pages/Dashboard";
+import Documents from "./pages/Documents";
 import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
 import StudentCourseDetail from "./pages/StudentCourseDetail";
 import Profile from "./pages/Profile";
+import Messages from "./pages/Messages";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
@@ -34,7 +38,6 @@ import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminAICredits from "./pages/admin/AdminAICredits";
 import AdminNotifications from "./pages/admin/AdminNotifications";
-import { GroupSelection, PracticeSession, Results, ProgressDashboard } from "./pages/quiz";
 
 const queryClient = new QueryClient();
 
@@ -52,21 +55,18 @@ const App = () => (
           <Route path="/home" element={<><Navbar /><Index /></>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Navbar /><Dashboard /></ProtectedRoute>} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/orientation-test" element={<ProtectedRoute><OrientationTest /></ProtectedRoute>} />
+          <Route path="/documents" element={<ProtectedRoute><Navbar /><Documents /></ProtectedRoute>} />
           <Route path="/courses" element={<ProtectedRoute><Navbar /><Courses /></ProtectedRoute>} />
           <Route path="/courses/:id" element={<ProtectedRoute><Navbar /><CourseDetail /></ProtectedRoute>} />
           <Route path="/course/:id" element={<ProtectedRoute><Navbar /><CourseDetail /></ProtectedRoute>} />
           <Route path="/learn/:courseId" element={<ProtectedRoute><Navbar /><StudentCourseDetail /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Navbar /><Profile /></ProtectedRoute>} />
+          <Route path="/messages" element={<ProtectedRoute><Navbar /><Messages /></ProtectedRoute>} />
           <Route path="/blog" element={<><Navbar /><Blog /></>} />
           <Route path="/contact" element={<><Navbar /><Contact /></>} />
           <Route path="/faq" element={<><Navbar /><FAQ /></>} />
-          
-          {/* Quiz Practice Routes */}
-          <Route path="/quiz" element={<ProtectedRoute><Navbar /><GroupSelection /></ProtectedRoute>} />
-          <Route path="/quiz/practice/:groupId/:chapterId" element={<ProtectedRoute><Navbar /><PracticeSession /></ProtectedRoute>} />
-          <Route path="/quiz/results/:sessionId" element={<ProtectedRoute><Navbar /><Results /></ProtectedRoute>} />
-          <Route path="/quiz/progress" element={<ProtectedRoute><Navbar /><ProgressDashboard /></ProtectedRoute>} />
           
           {/* Admin routes with separate layout */}
           <Route path="/admin" element={<AdminLayout />}>
