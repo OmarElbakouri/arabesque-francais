@@ -556,10 +556,6 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             </div>
             <p className="text-muted-foreground">échanges dans cette conversation</p>
           </div>
-          
-          {summary?.summaryText && (
-            <p className="text-muted-foreground italic">"{summary.summaryText}"</p>
-          )}
 
           <div className="flex gap-4">
             <Button onClick={handleStart} variant="default" className="flex-1">

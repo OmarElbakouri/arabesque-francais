@@ -74,7 +74,7 @@ const Index = () => {
               <div className="flex items-center gap-8 text-sm">
                 <div className="flex items-center gap-2">
                   <Check className="h-5 w-5 text-success" />
-                  <span className="font-medium">أكثر من 5000 طالب</span>
+                  <span className="font-medium">أكثر من 15000 طالب</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-5 w-5 text-success" />

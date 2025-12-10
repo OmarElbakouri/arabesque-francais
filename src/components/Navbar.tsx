@@ -91,23 +91,12 @@ export function Navbar() {
                 )}
               </>
             )}
-            <Link
-              to="/contact"
-              className={`link-animated ${isActive('/contact') ? 'text-primary font-bold' : 'text-foreground'}`}
-            >
-              اتصل بنا
-            </Link>
           </div>
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <Link to="/cart">
-                  <Button variant="ghost" size="icon">
-                    <ShoppingCart className="h-5 w-5" />
-                  </Button>
-                </Link>
                 <Link to="/messages">
                   <Button variant="ghost" size="icon">
                     <MessageSquare className="h-5 w-5" />

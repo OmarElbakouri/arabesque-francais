@@ -165,7 +165,7 @@ export default function Courses() {
                     <Users className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-white">500+</p>
+                    <p className="text-xl font-bold text-white">15000+</p>
                     <p className="text-xs text-white/60">Étudiants</p>
                   </div>
                 </div>

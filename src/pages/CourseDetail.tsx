@@ -575,7 +575,7 @@ export default function CourseDetail() {
                       <div className="p-3 rounded-xl bg-white/50 dark:bg-slate-800/50">
                         <div className="flex items-center justify-center gap-1 mb-1">
                           <GraduationCap className="w-4 h-4 text-primary" />
-                          <span className="font-bold">500+</span>
+                          <span className="font-bold">15000+</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Étudiants formés</p>
                       </div>
