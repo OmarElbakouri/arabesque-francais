@@ -36,6 +36,7 @@ import AdminCourses from "./pages/admin/AdminCourses";
 import AdminChapters from "./pages/admin/AdminChapters";
 import AdminDocuments from "./pages/admin/AdminDocuments";
 import AdminPayments from "./pages/admin/AdminPayments";
+import AdminDirectPayments from "./pages/admin/AdminDirectPayments";
 import AdminAICredits from "./pages/admin/AdminAICredits";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
@@ -79,6 +80,7 @@ const App = () => (
             <Route path="chapters" element={<AdminChapters />} />
             <Route path="documents" element={<AdminDocuments />} />
             <Route path="payments" element={<AdminPayments />} />
+            <Route path="direct-payments" element={<AdminDirectPayments />} />
             <Route path="ai-credits" element={<AdminAICredits />} />
             <Route path="notifications" element={<AdminNotifications />} />
             <Route path="settings" element={<AdminSettings />} />

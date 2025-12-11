@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -183,6 +183,7 @@ const OrientationTest = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
   const [answers, setAnswers] = useState<Answers>({
     mainObjective: "",
     usageContext: "",
@@ -191,12 +192,60 @@ const OrientationTest = () => {
     sectorInterest: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false); // Prevent double submissions
+  const hasCheckedStatusRef = useRef(false); // Prevent double status checks
+  
+  // Initialize result from sessionStorage if available (prevents re-doing test on re-render)
   const [result, setResult] = useState<{
     completed: boolean;
     learnerType: string;
     learnerTypeLabel: string;
     learnerTypeDescription: string;
-  } | null>(null);
+  } | null>(() => {
+    const savedResult = sessionStorage.getItem('orientationResult');
+    if (savedResult) {
+      try {
+        return JSON.parse(savedResult);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  // Check if orientation is already completed on mount
+  useEffect(() => {
+    // Prevent double checks
+    if (hasCheckedStatusRef.current) {
+      setIsLoading(false);
+      return;
+    }
+    
+    // If we already have a result from sessionStorage, no need to check
+    if (result) {
+      hasCheckedStatusRef.current = true;
+      setIsLoading(false);
+      return;
+    }
+
+    const checkStatus = async () => {
+      hasCheckedStatusRef.current = true;
+      try {
+        const response = await api.get('/orientation-test/status');
+        if (response.data.completed) {
+          // Already completed - redirect to courses immediately
+          sessionStorage.setItem('orientationCompleted', 'true');
+          navigate('/courses', { state: { fromOrientationTest: true }, replace: true });
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to check orientation status:', error);
+      }
+      setIsLoading(false);
+    };
+
+    checkStatus();
+  }, [navigate, result]);
 
   const currentQuestion = questions[currentStep];
   const progress = ((currentStep + 1) / questions.length) * 100;
@@ -209,6 +258,11 @@ const OrientationTest = () => {
   };
 
   const handleNext = () => {
+    // Prevent action if already submitting
+    if (isSubmitting || isSubmittingRef.current) {
+      return;
+    }
+    
     if (!answers[currentQuestion.field as keyof Answers]) {
       toast({
         title: "Sélection requise",
@@ -232,9 +286,22 @@ const OrientationTest = () => {
   };
 
   const handleSubmit = async () => {
+    // Prevent double submissions using ref (synchronous check)
+    if (isSubmittingRef.current) {
+      console.log('Submission already in progress, ignoring duplicate call');
+      return;
+    }
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
+    
     try {
       const response = await api.post("/orientation-test/submit", answers);
+      
+      // Store completion status IMMEDIATELY after successful submission
+      // This prevents re-initialization issues if component re-renders
+      sessionStorage.setItem('orientationCompleted', 'true');
+      sessionStorage.setItem('orientationResult', JSON.stringify(response.data));
+      
       setResult(response.data);
       toast({
         title: "Test terminé !",
@@ -246,16 +313,28 @@ const OrientationTest = () => {
         description: "Une erreur s'est produite. Veuillez réessayer.",
         variant: "destructive"
       });
+      // Reset ref only on error to allow retry
+      isSubmittingRef.current = false;
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleContinue = () => {
-    // Store completion status locally to prevent redirect loop
-    sessionStorage.setItem('orientationCompleted', 'true');
+    // Navigate first, then React will unmount this component
+    // The orientationCompleted flag is already set in handleSubmit
+    // Don't remove orientationResult here - it can cause race condition
     navigate("/courses", { state: { fromOrientationTest: true }, replace: true });
   };
+
+  // Loading screen - checking if already completed
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   // Result screen
   if (result) {

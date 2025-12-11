@@ -21,6 +21,8 @@ export default function Courses() {
   const [hoveredCourse, setHoveredCourse] = useState<number | null>(null);
 
   useEffect(() => {
+    // Clean up orientation result from sessionStorage (no longer needed)
+    sessionStorage.removeItem('orientationResult');
     loadCourses();
   }, []);
 

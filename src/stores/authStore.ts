@@ -153,6 +153,9 @@ export const useAuthStore = create<AuthState>()(
       
       logout: () => {
         localStorage.clear();
+        // Clear orientation-related sessionStorage to avoid issues with next user
+        sessionStorage.removeItem('orientationCompleted');
+        sessionStorage.removeItem('orientationResult');
         set({ user: null, isAuthenticated: false });
       },
       

@@ -999,4 +999,61 @@ export const adminService = {
     const response = await api.put('/settings/admin/landing-video', { url, title, description });
     return response.data.data;
   },
+
+  // ========== Direct Payments (Users without promo code) ==========
+
+  // Get all users without promo code
+  getUsersWithoutPromoCode: async () => {
+    const response = await api.get('/admin/direct-payments/users');
+    return response.data.data;
+  },
+
+  // Get all direct payments
+  getDirectPayments: async () => {
+    const response = await api.get('/admin/direct-payments');
+    return response.data.data;
+  },
+
+  // Create a new direct payment
+  createDirectPayment: async (data: {
+    userId: number;
+    planName: 'NORMAL' | 'VIP';
+    amount: number;
+    paymentMethod: 'TRANSFER' | 'CASH' | 'CHECK' | 'MOBILE';
+    status?: 'PENDING' | 'ACCEPTE' | 'REFUSE';
+    transactionReference?: string;
+    adminNotes?: string;
+    paidAt?: string;
+    activateSubscription?: boolean;
+  }) => {
+    const response = await api.post('/admin/direct-payments', data);
+    return response.data.data;
+  },
+
+  // Update a direct payment
+  updateDirectPayment: async (paymentId: number, data: {
+    planName?: 'NORMAL' | 'VIP';
+    amount?: number;
+    paymentMethod?: 'TRANSFER' | 'CASH' | 'CHECK' | 'MOBILE';
+    status?: 'PENDING' | 'ACCEPTE' | 'REFUSE';
+    transactionReference?: string;
+    adminNotes?: string;
+    paidAt?: string;
+    activateSubscription?: boolean;
+  }) => {
+    const response = await api.put(`/admin/direct-payments/${paymentId}`, data);
+    return response.data.data;
+  },
+
+  // Delete a direct payment
+  deleteDirectPayment: async (paymentId: number) => {
+    const response = await api.delete(`/admin/direct-payments/${paymentId}`);
+    return response.data;
+  },
+
+  // Get direct payment statistics
+  getDirectPaymentStats: async () => {
+    const response = await api.get('/admin/direct-payments/stats');
+    return response.data.data;
+  },
 };
