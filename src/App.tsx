@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
+import { Chatbot } from "./components/Chatbot";
 import SubjectSelection from "./pages/SubjectSelection";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -49,6 +50,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        {/* Global Chatbot - appears on all pages for authenticated users */}
+        <Chatbot />
         <Routes>
           {/* Subject Selection - Entry Point */}
           <Route path="/" element={<SubjectSelection />} />
