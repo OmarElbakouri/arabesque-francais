@@ -58,58 +58,127 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-hero opacity-10"></div>
-        <div className="container mx-auto px-4">
+      {/* Hero Section - Modern Dark Design */}
+      <section className="relative pt-24 pb-20 overflow-hidden min-h-[90vh] flex items-center">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black"></div>
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1456428746267-a1756408f782?q=80&w=2670&auto=format&fit=crop')] bg-cover bg-center opacity-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/50"></div>
+
+        {/* Animated Gradient Orbs */}
+        <div className="absolute top-20 right-20 w-96 h-96 bg-primary/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-primary/10 to-purple-600/10 rounded-full blur-3xl"></div>
+
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="animate-slide-up">
-              <div className="inline-block mb-4">
-                <span className="badge-secondary">🎓 أول منصة لتعلم الفرنسية بالذكاء الاصطناعي في المغرب</span>
+            {/* Text Content */}
+            <div className="animate-slide-up text-white">
+              <div className="inline-block mb-6">
+                <span className="inline-flex items-center gap-2 py-2 px-4 rounded-full bg-primary/20 border border-primary/50 text-primary text-sm font-bold backdrop-blur-sm">
+                  <Sparkles className="w-4 h-4" />
+                  أول منصة لتعلم الفرنسية بالذكاء الاصطناعي في المغرب
+                </span>
               </div>
-              <h1 className="text-5xl lg:text-6xl font-black mb-6 leading-tight">
+
+              <h1 className="text-5xl lg:text-7xl font-black mb-6 leading-tight">
                 أتقن اللغة الفرنسية
-                <span className="text-gradient block">بمساعدة الذكاء الاصطناعي</span>
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-yellow-400 to-orange-500">
+                  بمساعدة الذكاء الاصطناعي
+                </span>
               </h1>
-              <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+
+              <p className="text-xl text-gray-300 mb-8 leading-relaxed max-w-xl">
                 تعلم اللغة الفرنسية بأسلوب عصري مدعوم بالذكاء الاصطناعي. دروس فيديو، تمارين تفاعلية، ومساعد ذكي يصحح نطقك ويجيب على أسئلتك في الحين.
               </p>
-              
-              <div className="flex items-center gap-8 text-sm">
-                <div className="flex items-center gap-2">
-                  <Check className="h-5 w-5 text-success" />
-                  <span className="font-medium">أكثر من 15000 طالب</span>
+
+              {/* Stats Row */}
+              <div className="flex flex-wrap items-center gap-6 mb-8">
+                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-full px-4 py-2 border border-white/10">
+                  <Check className="h-5 w-5 text-green-400" />
+                  <span className="font-medium text-white">أكثر من 15000 طالب</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-5 w-5 text-success" />
-                  <span className="font-medium">شهادات معتمدة</span>
+                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-full px-4 py-2 border border-white/10">
+                  <Check className="h-5 w-5 text-green-400" />
+                  <span className="font-medium text-white">شهادات معتمدة</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-5 w-5 text-success" />
-                  <span className="font-medium">دعم 24/7</span>
+                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-full px-4 py-2 border border-white/10">
+                  <Check className="h-5 w-5 text-green-400" />
+                  <span className="font-medium text-white">دعم 24/7</span>
                 </div>
               </div>
             </div>
-            <div className="relative animate-float">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl blur-3xl"></div>
-              <img 
-                src={professorImg} 
-                alt="Professor" 
-                className="relative rounded-3xl shadow-custom-lg w-full max-w-md mx-auto"
-              />
-              <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-gold p-4 card-elevated">
-                <div className="flex items-center gap-3">
-                  <div className="bg-secondary/10 rounded-full p-3">
-                    <Star className="h-6 w-6 text-secondary fill-current" />
+
+            {/* Professor Image with Creative Frame */}
+            <div className="relative">
+              {/* Glowing Background Effect */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-primary via-purple-500 to-pink-500 rounded-3xl blur-2xl opacity-40 animate-pulse"></div>
+
+              {/* Main Image Container */}
+              <div className="relative">
+                {/* Decorative Frame */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary via-purple-500 to-pink-500 rounded-3xl opacity-75"></div>
+
+                <div className="relative bg-gray-900 rounded-3xl p-2">
+                  <img
+                    src={professorImg}
+                    alt="Professor"
+                    className="rounded-2xl w-full max-w-md mx-auto grayscale-[20%] contrast-110"
+                  />
+
+                  {/* Gradient Overlay on Image */}
+                  <div className="absolute inset-2 rounded-2xl bg-gradient-to-t from-gray-900/80 via-transparent to-transparent pointer-events-none"></div>
+                </div>
+
+                {/* Floating Rating Card */}
+                <div className="absolute -bottom-4 -left-4 bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 border border-white/10 animate-float">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full p-3">
+                      <Star className="h-6 w-6 text-white fill-current" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-2xl text-white">4.9/5</p>
+                      <p className="text-sm text-gray-400">تقييم الطلاب</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-lg">4.9/5</p>
-                    <p className="text-sm text-muted-foreground">تقييم الطلاب</p>
+                </div>
+
+                {/* Floating AI Badge */}
+                <div className="absolute -top-4 -right-4 bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 border border-white/10 animate-float" style={{ animationDelay: '0.5s' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-r from-primary to-purple-600 rounded-full p-3">
+                      <Brain className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-white">AI مساعد</p>
+                      <p className="text-xs text-green-400 flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                        متصل الآن
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Students Count */}
+                <div className="absolute top-1/2 -right-8 bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 border border-white/10 animate-float" style={{ animationDelay: '1s' }}>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full p-3">
+                      <Users className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-xl text-white">+15K</p>
+                      <p className="text-xs text-gray-400">طالب نشط</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <ChevronDown className="h-8 w-8 text-white/50" />
         </div>
       </section>
 
@@ -129,7 +198,7 @@ const Index = () => {
                 شاهد كيف تعمل منصتنا المدعومة بالذكاء الاصطناعي وكيف يمكنها تسريع رحلتك في تعلم اللغة الفرنسية
               </p>
             </div>
-            
+
             <div className="max-w-4xl mx-auto">
               <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-white/50">
                 <iframe
@@ -149,7 +218,7 @@ const Index = () => {
       <section className="py-20 bg-black text-white overflow-hidden relative">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=2565&auto=format&fit=crop')] bg-cover bg-center opacity-20"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
             <span className="inline-block py-1 px-3 rounded-full bg-primary/20 border border-primary text-primary text-sm font-bold mb-4">
@@ -307,8 +376,8 @@ const Index = () => {
             ].map((stage, idx) => {
               const Icon = stage.icon;
               return (
-                <Card 
-                  key={idx} 
+                <Card
+                  key={idx}
                   className={`p-6 border-2 ${stage.color} hover:scale-105 transition-all duration-300`}
                 >
                   <div className="flex items-center justify-between mb-4">
@@ -317,11 +386,11 @@ const Index = () => {
                     </span>
                     <Icon className="h-8 w-8" />
                   </div>
-                  
+
                   <h3 className="text-xl font-bold mb-4 leading-tight">
                     {stage.title}
                   </h3>
-                  
+
                   <ul className="space-y-3 mb-4">
                     {stage.points.map((point, pidx) => (
                       <li key={pidx} className="flex items-start gap-2 text-sm">
@@ -330,7 +399,7 @@ const Index = () => {
                       </li>
                     ))}
                   </ul>
-                  
+
                   <div className="mt-4 pt-4 border-t border-border">
                     <p className="text-secondary font-bold text-center">{stage.highlight}</p>
                     {stage.duration && (
@@ -354,34 +423,32 @@ const Index = () => {
               <h2 className="text-4xl md:text-5xl font-black mb-4">
                 6 أشهر <span className="text-gradient">لإتقان اللغة الفرنسية</span>
               </h2>
-              
+
               <div className="inline-block bg-gradient-hero text-white px-6 py-3 rounded-full text-xl font-bold mb-6 shadow-lg">
                 خصم 30% لل 50 الأوائل
               </div>
 
               <div className="flex justify-center gap-4 mb-8 mt-6">
-                <button 
+                <button
                   onClick={() => setSelectedPlan('normal')}
-                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
-                    selectedPlan !== 'vip' 
-                      ? 'bg-primary text-white shadow-lg scale-105' 
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${selectedPlan !== 'vip'
+                    ? 'bg-primary text-white shadow-lg scale-105'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
                 >
                   الباقة العادية
                 </button>
-                <button 
+                <button
                   onClick={() => setSelectedPlan('vip')}
-                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
-                    selectedPlan === 'vip' 
-                      ? 'bg-gradient-hero text-white shadow-lg scale-105' 
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${selectedPlan === 'vip'
+                    ? 'bg-gradient-hero text-white shadow-lg scale-105'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
                 >
                   باقة VIP
                 </button>
               </div>
-              
+
               <div className="flex items-baseline justify-center gap-3 mb-2 animate-fade-in">
                 <span className="text-6xl md:text-7xl font-black text-gradient">
                   {selectedPlan === 'vip' ? '999' : '749'}
@@ -401,7 +468,7 @@ const Index = () => {
                   المرحلة الأولى
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4 font-semibold">( 4 أشهر و نصف )</p>
-                
+
                 <ul className="space-y-3">
                   <li className="flex items-start gap-2">
                     <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
@@ -433,7 +500,7 @@ const Index = () => {
                   المرحلة الثانية
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4 font-semibold">( شهر و نصف )</p>
-                
+
                 <ul className="space-y-3">
                   <li className="flex items-start gap-2">
                     <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
@@ -477,9 +544,9 @@ const Index = () => {
                   احجز مكانك الآن بـ {selectedPlan === 'vip' ? '999' : '749'} درهم فقط
                 </Button>
               </Link>
-              <a 
-                href="https://wa.me/212612097399" 
-                target="_blank" 
+              <a
+                href="https://wa.me/212612097399"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-muted-foreground mt-4 flex items-center justify-center gap-2 hover:text-primary transition-colors"
               >
@@ -502,7 +569,7 @@ const Index = () => {
               نوفر لك مسار تعليمي متكامل يأخذك من المستوى المبتدئ A1 حتى الاحتراف C2
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
@@ -536,8 +603,8 @@ const Index = () => {
             ].map((step, idx) => {
               const Icon = step.icon;
               return (
-                <Card 
-                  key={idx} 
+                <Card
+                  key={idx}
                   className="card-feature relative overflow-hidden group hover:scale-105 transition-transform duration-300"
                 >
                   <div className="absolute top-0 left-0 text-8xl font-black text-primary/5 leading-none">
@@ -872,7 +939,7 @@ const Index = () => {
                 منصة تعليمية عصرية لتعلم اللغة الفرنسية بأسلوب تفاعلي وممتع
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-bold mb-4">روابط سريعة</h4>
               <ul className="space-y-2 text-sm text-white/70">
@@ -882,7 +949,7 @@ const Index = () => {
                 <li><a href="#faq" className="hover:text-secondary transition-colors">الأسئلة الشائعة</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-bold mb-4">الدعم</h4>
               <ul className="space-y-2 text-sm text-white/70">
@@ -892,14 +959,14 @@ const Index = () => {
                 <li><a href="#" className="hover:text-secondary transition-colors">اتصل بنا</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-bold mb-4">تابعنا</h4>
               <div className="flex gap-3">
                 {['Facebook', 'Instagram', 'Twitter', 'LinkedIn'].map(social => (
-                  <a 
+                  <a
                     key={social}
-                    href="#" 
+                    href="#"
                     className="w-10 h-10 rounded-full bg-white/10 hover:bg-secondary flex items-center justify-center transition-colors"
                   >
                     <span className="sr-only">{social}</span>
@@ -909,7 +976,7 @@ const Index = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="border-t border-white/10 pt-8 text-center text-sm text-white/70">
             <p>© 2025 BCLT. جميع الحقوق محفوظة</p>
           </div>

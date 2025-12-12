@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Camera, Edit, Save, Shield, Loader2, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Camera, Edit, Save, Shield, Loader2, Eye, EyeOff, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 
 export default function Profile() {
+  const navigate = useNavigate();
   const { user, updateUser } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -18,7 +20,7 @@ export default function Profile() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     firstName: user?.prenom || '',
     lastName: user?.nom || '',
@@ -62,8 +64,8 @@ export default function Profile() {
       }
     } catch (error: unknown) {
       console.error('Error updating profile:', error);
-      toast({ 
-        title: 'خطأ', 
+      toast({
+        title: 'خطأ',
         description: 'حدث خطأ أثناء حفظ التغييرات',
         variant: 'destructive'
       });
@@ -75,8 +77,8 @@ export default function Profile() {
   const handleChangePassword = async () => {
     // Validate passwords
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      toast({ 
-        title: 'خطأ', 
+      toast({
+        title: 'خطأ',
         description: 'الرجاء ملء جميع الحقول',
         variant: 'destructive'
       });
@@ -84,8 +86,8 @@ export default function Profile() {
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast({ 
-        title: 'خطأ', 
+      toast({
+        title: 'خطأ',
         description: 'كلمة المرور الجديدة غير متطابقة',
         variant: 'destructive'
       });
@@ -93,8 +95,8 @@ export default function Profile() {
     }
 
     if (passwordData.newPassword.length < 6) {
-      toast({ 
-        title: 'خطأ', 
+      toast({
+        title: 'خطأ',
         description: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
         variant: 'destructive'
       });
@@ -120,8 +122,8 @@ export default function Profile() {
       console.error('Error changing password:', error);
       const axiosError = error as { response?: { data?: { message?: string } } };
       const errorMessage = axiosError.response?.data?.message || 'حدث خطأ أثناء تغيير كلمة المرور';
-      toast({ 
-        title: 'خطأ', 
+      toast({
+        title: 'خطأ',
         description: errorMessage === 'Current password is incorrect' ? 'كلمة المرور الحالية غير صحيحة' : errorMessage,
         variant: 'destructive'
       });
@@ -188,11 +190,15 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* Tabs - Only Personal Info and Security */}
+        {/* Tabs - Personal Info, Security, and Devices */}
         <Tabs defaultValue="info" className="w-full">
           <TabsList className="w-full justify-start mb-6">
             <TabsTrigger value="info">المعلومات الشخصية</TabsTrigger>
             <TabsTrigger value="security">الأمان</TabsTrigger>
+            <TabsTrigger value="devices" onClick={() => navigate('/devices')}>
+              <Smartphone className="h-4 w-4 ml-2" />
+              الأجهزة
+            </TabsTrigger>
           </TabsList>
 
           {/* Personal Info */}
