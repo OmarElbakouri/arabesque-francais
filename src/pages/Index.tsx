@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, BookOpen, Target, Award, Users, Play, Check, Star, MessageCircle, Lightbulb, Video, UserCheck, CheckCircle2, Clock, Mic, Brain, Sparkles, Zap } from "lucide-react";
+import { ChevronDown, BookOpen, Target, Award, Users, Play, Check, Star, MessageCircle, Lightbulb, Video, UserCheck, CheckCircle2, Clock, Mic, Brain, Sparkles, Zap, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -415,146 +415,180 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Special Offer */}
-      <section className="py-20 bg-gradient-to-br from-secondary/20 via-primary/10 to-secondary/20">
-        <div className="container mx-auto px-4">
-          <Card className="max-w-4xl mx-auto p-8 md:p-12 shadow-gold border-2 border-secondary/30">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl md:text-5xl font-black mb-4">
-                6 أشهر <span className="text-gradient">لإتقان اللغة الفرنسية</span>
-              </h2>
+      {/* Pricing Comparison Section */}
+      <section id="pricing" className="py-20 bg-black text-white overflow-hidden relative">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=2565&auto=format&fit=crop')] bg-cover bg-center opacity-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
 
-              <div className="inline-block bg-gradient-hero text-white px-6 py-3 rounded-full text-xl font-bold mb-6 shadow-lg">
-                خصم 30% لل 50 الأوائل
-              </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <span className="inline-block py-1 px-3 rounded-full bg-primary/20 border border-primary text-primary text-sm font-bold mb-4">
+              <Sparkles className="inline-block w-4 h-4 ml-2" />
+              اختر باقتك
+            </span>
+            <h2 className="text-4xl md:text-5xl font-black mb-6">
+              6 أشهر <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">لإتقان اللغة الفرنسية</span>
+            </h2>
+            <div className="inline-block bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-3 rounded-full text-xl font-bold shadow-lg animate-pulse">
+              خصم 30% لل 50 الأوائل
+            </div>
+          </div>
 
-              <div className="flex justify-center gap-4 mb-8 mt-6">
-                <button
-                  onClick={() => setSelectedPlan('normal')}
-                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${selectedPlan !== 'vip'
-                    ? 'bg-primary text-white shadow-lg scale-105'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    }`}
-                >
-                  الباقة العادية
-                </button>
-                <button
-                  onClick={() => setSelectedPlan('vip')}
-                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${selectedPlan === 'vip'
-                    ? 'bg-gradient-hero text-white shadow-lg scale-105'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    }`}
-                >
-                  باقة VIP
-                </button>
-              </div>
+          {/* Pricing Cards */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
 
-              <div className="flex items-baseline justify-center gap-3 mb-2 animate-fade-in">
-                <span className="text-6xl md:text-7xl font-black text-gradient">
-                  {selectedPlan === 'vip' ? '999' : '749'}
-                </span>
-                <span className="text-3xl font-bold">درهم</span>
+            {/* Normal Plan */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-gray-600 to-gray-400 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
+              <div className="relative bg-gray-900/90 backdrop-blur-xl rounded-3xl p-8 border border-white/10 h-full flex flex-col">
+                <div className="text-center mb-8">
+                  <span className="inline-block px-4 py-2 rounded-full bg-white/10 text-white/80 font-bold text-sm mb-4">
+                    الباقة العادية
+                  </span>
+                  <div className="flex items-baseline justify-center gap-2 mb-2">
+                    <span className="text-5xl md:text-6xl font-black text-white">749</span>
+                    <span className="text-2xl font-bold text-gray-400">درهم</span>
+                  </div>
+                  <p className="text-gray-500 line-through">عوض 1000 درهم</p>
+                </div>
+
+                {/* Features List */}
+                <div className="bg-white/5 rounded-2xl p-6 border border-white/10 flex-grow">
+                  <ul className="space-y-4">
+                    {[
+                      "6 أشهر لإتقان اللغة الفرنسية",
+                      "إتقان جميع قواعد اللغة A1 - C1",
+                      "120 تمرين و 5 امتحانات",
+                      "3 كتب بالمجان",
+                      "إتقان كتابة الإيمايل والتقارير",
+                      "المرافقة اليومية من الأستاذ",
+                      "شهادة مستوى B2",
+                      "التمرن على التحدث بالفرنسية"
+                    ].map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-3 text-gray-300">
+                        <Check className="h-5 w-5 text-green-400 flex-shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+
+                    {/* AI Features - Limited */}
+                    <li className="pt-4 border-t border-white/10">
+                      <div className="flex items-center gap-3 text-gray-400">
+                        <Brain className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                        <span>المساعد الذكي (Chatbot) - <span className="text-orange-400 font-bold">محدود</span></span>
+                      </div>
+                    </li>
+                    <li className="flex items-center gap-3 text-gray-400">
+                      <Sparkles className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                      <span>Quiz IA - <span className="text-orange-400 font-bold">محدود</span></span>
+                    </li>
+                    <li className="flex items-center gap-3 text-gray-400">
+                      <Mic className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                      <span>Quiz Vocal - <span className="text-orange-400 font-bold">محدود</span></span>
+                    </li>
+                  </ul>
+                </div>
+
+                <Link to="/register" className="block mt-8">
+                  <Button size="lg" className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 text-lg py-6">
+                    <Play className="ml-2 h-5 w-5" />
+                    ابدأ الآن بـ 749 درهم
+                  </Button>
+                </Link>
               </div>
-              <p className="text-xl text-muted-foreground line-through mb-8">
-                عوض <span className="font-bold">{selectedPlan === 'vip' ? '2000' : '1000'} درهم</span>
-              </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* المرحلة الأولى */}
-              <div className="bg-primary/5 rounded-2xl p-6 border-2 border-primary/20">
-                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <span className="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
-                  المرحلة الأولى
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4 font-semibold">( 4 أشهر و نصف )</p>
-
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">إتقان جميع قواعد اللغة الفرنسية A1 - C1</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">120 تمرين و 5 امتحانات و 3 كتب بالمجان</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">إتقان كتابة الإيمايل و التقارير و الوثائق باللغة الفرنسية</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">المرافقة اليومية من طرف الأستاذ أنس</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">الحصول على شهادة عند نهاية الدورة مستوى B2</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* المرحلة الثانية */}
-              <div className="bg-secondary/5 rounded-2xl p-6 border-2 border-secondary/20">
-                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                  <span className="bg-secondary text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
-                  المرحلة الثانية
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4 font-semibold">( شهر و نصف )</p>
-
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">التمرن على التكلم باللغة الفرنسية عبر قراءة لنصوص و قصص و تلخيصها شفهيا أو إرسالها (شهر و نصف)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">المرافقة اليومية من طرف الأستاذ أنس</span>
-                  </li>
-                  {selectedPlan === 'vip' && (
-                    <>
-                      <li className="flex items-start gap-2 animate-fade-in">
-                        <Star className="h-5 w-5 text-warning mt-0.5 flex-shrink-0 fill-current" />
-                        <span className="text-sm font-bold text-primary">جلسات خاصة مع الأستاذ</span>
-                      </li>
-                      <li className="flex items-start gap-2 animate-fade-in">
-                        <Star className="h-5 w-5 text-warning mt-0.5 flex-shrink-0 fill-current" />
-                        <span className="text-sm font-bold text-primary">مجموعة خاصة للطلاب VIP</span>
-                      </li>
-                      <li className="flex items-start gap-2 animate-fade-in">
-                        <Star className="h-5 w-5 text-warning mt-0.5 flex-shrink-0 fill-current" />
-                        <span className="text-sm font-bold text-primary">أولوية في الدعم والمتابعة 24/7</span>
-                      </li>
-                    </>
-                  )}
-                </ul>
-
-                <div className="mt-6 pt-6 border-t border-border">
-                  <div className="flex items-center gap-2 text-secondary">
-                    <Clock className="h-5 w-5" />
-                    <span className="font-bold">لمدة شهر و نصف</span>
+            {/* VIP Plan */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary via-purple-500 to-pink-500 rounded-3xl blur opacity-50 group-hover:opacity-75 transition duration-500 animate-pulse"></div>
+              <div className="relative bg-gray-900/95 backdrop-blur-xl rounded-3xl p-8 border border-primary/30 h-full flex flex-col">
+                {/* VIP Badge */}
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <div className="bg-gradient-to-r from-primary to-purple-600 px-6 py-2 rounded-full text-white font-bold text-sm shadow-lg flex items-center gap-2">
+                    <Crown className="h-4 w-4" />
+                    الأكثر طلباً
                   </div>
                 </div>
+
+                <div className="text-center mb-8 mt-4">
+                  <span className="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary font-bold text-sm mb-4 border border-primary/30">
+                    باقة VIP
+                  </span>
+                  <div className="flex items-baseline justify-center gap-2 mb-2">
+                    <span className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">999</span>
+                    <span className="text-2xl font-bold text-gray-400">درهم</span>
+                  </div>
+                  <p className="text-gray-500 line-through">عوض 2000 درهم</p>
+                </div>
+
+                {/* Features List */}
+                <div className="bg-primary/5 rounded-2xl p-6 border border-primary/20 flex-grow">
+                  <ul className="space-y-4">
+                    {[
+                      "6 أشهر لإتقان اللغة الفرنسية",
+                      "إتقان جميع قواعد اللغة A1 - C1",
+                      "120 تمرين و 5 امتحانات",
+                      "3 كتب بالمجان",
+                      "إتقان كتابة الإيمايل والتقارير",
+                      "المرافقة اليومية من الأستاذ",
+                      "شهادة مستوى B2",
+                      "التمرن على التحدث بالفرنسية"
+                    ].map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-3 text-gray-300">
+                        <Check className="h-5 w-5 text-green-400 flex-shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+
+                    {/* AI Features - Unlimited */}
+                    <li className="pt-4 border-t border-primary/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center flex-shrink-0">
+                          <Brain className="h-3 w-3 text-white" />
+                        </div>
+                        <span className="text-white">المساعد الذكي (Chatbot) - <span className="text-green-400 font-bold">غير محدود ♾️</span></span>
+                      </div>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="h-3 w-3 text-white" />
+                      </div>
+                      <span className="text-white">Quiz IA - <span className="text-green-400 font-bold">غير محدود ♾️</span></span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center flex-shrink-0">
+                        <Mic className="h-3 w-3 text-white" />
+                      </div>
+                      <span className="text-white">Quiz Vocal - <span className="text-green-400 font-bold">غير محدود ♾️</span></span>
+                    </li>
+                  </ul>
+                </div>
+
+                <Link to="/register" className="block mt-8">
+                  <Button size="lg" className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white text-lg py-6 shadow-lg shadow-primary/25">
+                    <Crown className="ml-2 h-5 w-5" />
+                    انضم لـ VIP بـ 999 درهم
+                  </Button>
+                </Link>
               </div>
             </div>
+          </div>
 
-            <div className="mt-8 text-center">
-              <Link to="/register">
-                <Button size="lg" className={`btn-hero text-lg px-8 py-6 ${selectedPlan === 'vip' ? 'bg-gradient-hero shadow-gold' : ''}`}>
-                  <Play className="ml-2 h-5 w-5" />
-                  احجز مكانك الآن بـ {selectedPlan === 'vip' ? '999' : '749'} درهم فقط
-                </Button>
-              </Link>
-              <a
-                href="https://wa.me/212612097399"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground mt-4 flex items-center justify-center gap-2 hover:text-primary transition-colors"
-              >
-                <MessageCircle className="h-4 w-4" />
-                تواصل معنا عبر الواتساب: +212 612097399
-              </a>
-            </div>
-          </Card>
+          {/* WhatsApp Contact */}
+          <div className="text-center mt-12">
+            <a
+              href="https://wa.me/212612097399"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30 transition-colors"
+            >
+              <MessageCircle className="h-5 w-5" />
+              تواصل معنا عبر الواتساب: +212 612097399
+            </a>
+          </div>
         </div>
       </section>
 
