@@ -82,7 +82,7 @@ export const useAuthStore = create<AuthState>()(
               nom: response.data.lastName,
               prenom: response.data.firstName,
               email: response.data.email,
-              telephone: '',
+              telephone: response.data.phone || '',
               role: role,
               plan: (response.data.plan as UserPlan) || 'FREE',
               status: 'ACTIF',

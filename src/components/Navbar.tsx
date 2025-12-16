@@ -50,10 +50,10 @@ export function Navbar() {
     <nav className="bg-card border-b border-border sticky top-0 z-50 shadow-custom-sm">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <Link to="/home" className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <img src={logo} alt="BCLT" className="h-12 w-auto" />
             <span className="text-xl font-bold text-foreground">BCLT الفرنسية</span>
-          </Link>
+          </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-6">

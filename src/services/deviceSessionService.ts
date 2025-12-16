@@ -45,6 +45,7 @@ export interface LoginWithDeviceResponse {
         email: string;
         firstName: string;
         lastName: string;
+        phone?: string;
         role: string;
         plan: string;
         deviceId: number;

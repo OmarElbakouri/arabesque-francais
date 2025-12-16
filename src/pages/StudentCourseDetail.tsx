@@ -48,7 +48,7 @@ export default function StudentCourseDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuthStore();
-  
+
   // Check if user has FREE plan (no access to AI Quiz features)
   const isFreePlan = user?.plan === 'FREE';
 
@@ -70,12 +70,12 @@ export default function StudentCourseDetail() {
       setLoading(true);
       const data = await courseService.getStudentCourse(id);
       setCourse(data);
-      
+
       // Auto-expand all chapters and select first unlocked chapter
       if (data.chapters && data.chapters.length > 0) {
         const allChapterIds = new Set(data.chapters.map(c => c.id));
         setExpandedChapters(allChapterIds);
-        
+
         // Select first available (unlocked) chapter
         const firstUnlocked = data.chapters.find(c => !c.locked);
         if (firstUnlocked) {
@@ -182,10 +182,10 @@ export default function StudentCourseDetail() {
 
   const navigateToChapter = (direction: 'prev' | 'next') => {
     if (!course || !selectedChapter) return;
-    
+
     const unlockedChapters = (course.chapters || []).filter(c => !c.locked);
     const currentIndex = unlockedChapters.findIndex(c => c.id === selectedChapter.id);
-    
+
     if (direction === 'prev' && currentIndex > 0) {
       setSelectedChapter(unlockedChapters[currentIndex - 1]);
     } else if (direction === 'next' && currentIndex < unlockedChapters.length - 1) {
@@ -195,10 +195,10 @@ export default function StudentCourseDetail() {
 
   const canNavigate = (direction: 'prev' | 'next') => {
     if (!course || !selectedChapter) return false;
-    
+
     const unlockedChapters = (course.chapters || []).filter(c => !c.locked);
     const currentIndex = unlockedChapters.findIndex(c => c.id === selectedChapter.id);
-    
+
     if (direction === 'prev') return currentIndex > 0;
     return currentIndex < unlockedChapters.length - 1;
   };
@@ -233,7 +233,7 @@ export default function StudentCourseDetail() {
       }
       return url;
     }
-    
+
     // Convert video.bunnycdn.com/play/ to embed format
     if (url.includes('video.bunnycdn.com/play/')) {
       const parts = url.split('video.bunnycdn.com/play/')[1];
@@ -241,7 +241,7 @@ export default function StudentCourseDetail() {
         return `https://iframe.mediadelivery.net/embed/${parts}?responsive=true&preload=metadata`;
       }
     }
-    
+
     // Handle Bunny CDN direct links (vz-xxx.b-cdn.net format) 
     // These need to be converted to embed format using library ID and video ID
     const vzMatch = url.match(/vz-([a-zA-Z0-9]+)\.b-cdn\.net\/([a-zA-Z0-9-]+)/);
@@ -251,7 +251,7 @@ export default function StudentCourseDetail() {
       // For now, return the direct URL and use native video player
       return url;
     }
-    
+
     return url;
   };
 
@@ -349,7 +349,7 @@ export default function StudentCourseDetail() {
                 </div>
               </div>
             </div>
-            
+
             {/* Progress Indicator */}
             <div className="flex items-center gap-4">
               <div className="hidden sm:flex items-center gap-3 bg-slate-800/50 rounded-full px-4 py-2">
@@ -358,15 +358,15 @@ export default function StudentCourseDetail() {
                   <p className="text-sm font-bold text-white">{Math.round(progressPercent)}%</p>
                 </div>
                 <div className="w-24 h-2 bg-slate-700 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => navigate('/courses')}
                 className="rounded-xl border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700"
               >
@@ -408,31 +408,29 @@ export default function StudentCourseDetail() {
               <div key={chapter.id} className="mb-2">
                 <div
                   onClick={() => handleChapterClick(chapter)}
-                  className={`group relative overflow-hidden rounded-2xl transition-all duration-300 cursor-pointer ${
-                    chapter.locked 
-                      ? 'opacity-60' 
-                      : selectedChapter?.id === chapter.id
-                        ? 'ring-2 ring-primary shadow-lg shadow-primary/20'
-                        : 'hover:bg-slate-800/50'
-                  }`}
+                  className={`group relative overflow-hidden rounded-2xl transition-all duration-300 cursor-pointer ${chapter.locked
+                    ? 'opacity-60'
+                    : selectedChapter?.id === chapter.id
+                      ? 'ring-2 ring-primary shadow-lg shadow-primary/20'
+                      : 'hover:bg-slate-800/50'
+                    }`}
                 >
                   {/* Active indicator */}
                   {selectedChapter?.id === chapter.id && !chapter.locked && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-secondary rounded-r-full" />
                   )}
-                  
+
                   <div className={`p-4 ${selectedChapter?.id === chapter.id ? 'bg-gradient-to-r from-primary/10 to-transparent' : ''}`}>
                     <div className="flex items-center gap-4">
                       {/* Status Icon */}
-                      <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                        chapter.locked 
-                          ? 'bg-slate-700/50' 
-                          : chapter.completed 
-                            ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30'
-                            : selectedChapter?.id === chapter.id
-                              ? 'bg-gradient-to-br from-primary to-secondary shadow-lg shadow-primary/30'
-                              : 'bg-slate-700/50 group-hover:bg-slate-600/50'
-                      }`}>
+                      <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all ${chapter.locked
+                        ? 'bg-slate-700/50'
+                        : chapter.completed
+                          ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30'
+                          : selectedChapter?.id === chapter.id
+                            ? 'bg-gradient-to-br from-primary to-secondary shadow-lg shadow-primary/30'
+                            : 'bg-slate-700/50 group-hover:bg-slate-600/50'
+                        }`}>
                         {chapter.locked ? (
                           <Lock className="h-5 w-5 text-slate-400" />
                         ) : chapter.completed ? (
@@ -443,7 +441,7 @@ export default function StudentCourseDetail() {
                           <Play className="h-5 w-5 text-slate-300" />
                         )}
                       </div>
-                      
+
                       {/* Chapter info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
@@ -454,9 +452,8 @@ export default function StudentCourseDetail() {
                             </Badge>
                           )}
                         </div>
-                        <h3 className={`font-semibold text-sm truncate ${
-                          selectedChapter?.id === chapter.id ? 'text-white' : 'text-slate-200'
-                        }`}>
+                        <h3 className={`font-semibold text-sm truncate ${selectedChapter?.id === chapter.id ? 'text-white' : 'text-slate-200'
+                          }`}>
                           {chapter.title}
                         </h3>
                         {chapter.duration && (
@@ -516,9 +513,9 @@ export default function StudentCourseDetail() {
                 <div className="relative">
                   <div className="absolute -inset-1 bg-gradient-to-br from-primary to-secondary rounded-full opacity-50 animate-spin" style={{ animationDuration: '10s' }} />
                   <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-primary/50">
-                    <img 
-                      src={professor} 
-                      alt="Votre Formateur" 
+                    <img
+                      src={professor}
+                      alt="Votre Formateur"
                       className="w-full h-full object-cover object-top"
                     />
                   </div>
@@ -576,11 +573,10 @@ export default function StudentCourseDetail() {
                       <button
                         key={lesson.id}
                         onClick={() => handleLessonClick(lesson)}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                          selectedLesson?.id === lesson.id
-                            ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg'
-                            : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-                        }`}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${selectedLesson?.id === lesson.id
+                          ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg'
+                          : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
+                          }`}
                       >
                         <span className="flex items-center gap-2">
                           {lesson.videoUrl && <Play className="w-3 h-3" />}
@@ -597,7 +593,7 @@ export default function StudentCourseDetail() {
                 <div className="relative rounded-3xl overflow-hidden bg-black mb-6 shadow-2xl shadow-black/50">
                   {/* Glow effect */}
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 to-secondary/50 rounded-3xl blur-xl opacity-30" />
-                  
+
                   <div className="relative aspect-video w-full">
                     {getVideoType(getCurrentVideoUrl()!) === 'bunny-stream' ? (
                       <iframe
@@ -689,35 +685,35 @@ export default function StudentCourseDetail() {
               <Card className="border-0 shadow-xl bg-slate-800/50 backdrop-blur-sm overflow-hidden">
                 <Tabs defaultValue="description" className="w-full">
                   <TabsList className="w-full justify-start bg-slate-900/50 rounded-none p-0 h-auto border-b border-slate-700/50 flex-wrap">
-                    <TabsTrigger 
+                    <TabsTrigger
                       value="description"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
                     >
                       <FileText className="w-4 h-4 ml-2" />
                       Description
                     </TabsTrigger>
-                    <TabsTrigger 
+                    <TabsTrigger
                       value="course"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
                     >
                       <BookOpen className="w-4 h-4 ml-2" />
                       Cours
                     </TabsTrigger>
-                    <TabsTrigger 
+                    <TabsTrigger
                       value="resources"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
                     >
                       <Download className="w-4 h-4 ml-2" />
                       Ressources
                     </TabsTrigger>
-                    <TabsTrigger 
+                    <TabsTrigger
                       value="quiz"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
                     >
                       <Sparkles className="w-4 h-4 ml-2" />
                       Quiz IA
                     </TabsTrigger>
-                    <TabsTrigger 
+                    <TabsTrigger
                       value="voice-quiz"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
                     >
@@ -736,35 +732,6 @@ export default function StudentCourseDetail() {
                         )}
                       </div>
 
-                      {/* Mark Complete Button */}
-                      <div className="mt-8 pt-6 border-t border-slate-700/50">
-                        <Button
-                          onClick={() => handleMarkChapterComplete(selectedChapter.id, selectedChapter.completed || false)}
-                          disabled={markingComplete === selectedChapter.id}
-                          className={`w-full sm:w-auto h-12 px-6 rounded-xl font-bold transition-all duration-300 ${
-                            selectedChapter.completed 
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30' 
-                              : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl'
-                          }`}
-                        >
-                          {markingComplete === selectedChapter.id ? (
-                            <>
-                              <div className="w-5 h-5 border-2 border-current rounded-full animate-spin border-t-transparent ml-2" />
-                              Chargement...
-                            </>
-                          ) : selectedChapter.completed ? (
-                            <>
-                              <CheckCircle className="ml-2 h-5 w-5" />
-                              Chapitre terminé !
-                            </>
-                          ) : (
-                            <>
-                              <Circle className="ml-2 h-5 w-5" />
-                              Marquer comme terminé
-                            </>
-                          )}
-                        </Button>
-                      </div>
                     </TabsContent>
 
                     <TabsContent value="course" className="mt-0">
@@ -837,7 +804,7 @@ export default function StudentCourseDetail() {
                             <Download className="h-5 w-5 text-slate-400 group-hover:text-white transition-colors" />
                           </a>
                         )}
-                        
+
                         {selectedChapter.audioUrl && (
                           <a
                             href={selectedChapter.audioUrl}
@@ -870,44 +837,20 @@ export default function StudentCourseDetail() {
 
                     {/* Quiz IA Tab */}
                     <TabsContent value="quiz" className="mt-0">
-                      {isFreePlan ? (
-                        <div className="flex flex-col items-center justify-center py-16 px-8">
-                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/30">
-                            <Crown className="w-10 h-10 text-white" />
-                          </div>
-                          <h3 className="text-2xl font-bold text-white mb-2">Contenu Premium</h3>
-                          <p className="text-slate-400 text-center max-w-md">
-                            Débloquez tous les chapitres et accédez aux Quiz IA en passant à un plan supérieur
-                          </p>
-                        </div>
-                      ) : (
-                        <ChapterQuiz 
-                          chapterId={selectedChapter.id} 
-                          chapterTitle={selectedChapter.title}
-                          thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
-                        />
-                      )}
+                      <ChapterQuiz
+                        chapterId={selectedChapter.id}
+                        chapterTitle={selectedChapter.title}
+                        thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
+                      />
                     </TabsContent>
 
                     {/* Voice Quiz Tab */}
                     <TabsContent value="voice-quiz" className="mt-0">
-                      {isFreePlan ? (
-                        <div className="flex flex-col items-center justify-center py-16 px-8">
-                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-6 shadow-lg shadow-amber-500/30">
-                            <Crown className="w-10 h-10 text-white" />
-                          </div>
-                          <h3 className="text-2xl font-bold text-white mb-2">Contenu Premium</h3>
-                          <p className="text-slate-400 text-center max-w-md">
-                            Débloquez tous les chapitres et accédez au Quiz Vocal en passant à un plan supérieur
-                          </p>
-                        </div>
-                      ) : (
-                        <VoiceQuiz 
-                          chapterId={selectedChapter.id} 
-                          chapterTitle={selectedChapter.title}
-                          thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
-                        />
-                      )}
+                      <VoiceQuiz
+                        chapterId={selectedChapter.id}
+                        chapterTitle={selectedChapter.title}
+                        thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
+                      />
                     </TabsContent>
                   </CardContent>
                 </Tabs>

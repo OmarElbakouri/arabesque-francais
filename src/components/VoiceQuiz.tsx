@@ -59,14 +59,14 @@ const VoiceOrb = ({ mode }: { mode: 'speaking' | 'listening' | 'processing' | 'i
         className={`w-32 h-32 rounded-full bg-gradient-to-br from-primary to-purple-600 shadow-lg z-10 flex items-center justify-center`}
         animate={
           mode === 'speaking' ? { scale: [1, 1.1, 1] } :
-          mode === 'processing' ? { rotate: 360 } :
-          mode === 'listening' ? { scale: 1 } :
-          { scale: 1 }
+            mode === 'processing' ? { rotate: 360 } :
+              mode === 'listening' ? { scale: 1 } :
+                { scale: 1 }
         }
         transition={
           mode === 'speaking' ? { repeat: Infinity, duration: 1.5, ease: "easeInOut" } :
-          mode === 'processing' ? { repeat: Infinity, duration: 2, ease: "linear" } :
-          { duration: 0.5 }
+            mode === 'processing' ? { repeat: Infinity, duration: 2, ease: "linear" } :
+              { duration: 0.5 }
         }
       >
         {mode === 'processing' && (
@@ -129,8 +129,9 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   // Data
   const [session, setSession] = useState<VoiceQuizSessionResponse | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<VoiceQuizQuestion | null>(null);
+  const [displayedText, setDisplayedText] = useState<string>(''); // Text being spoken by AI
   const [summary, setSummary] = useState<SessionSummary | null>(null);
-  
+
   // Filters
   const [selectedThematicGroup, setSelectedThematicGroup] = useState<string>(propThematicGroup?.toString() || '');
   const [chapterNumber, setChapterNumber] = useState<string>(chapterId?.toString() || '');
@@ -221,7 +222,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
     audio.onended = () => {
       playAudioSequence(remainingAudio);
     };
-    
+
     audio.onerror = (e) => {
       console.error("Audio playback error", e);
       playAudioSequence(remainingAudio); // Skip to next
@@ -263,7 +264,10 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       setSession(response);
       setCurrentQuestion(response.question);
       setState('ai_speaking'); // Start conversation
-      
+
+      // Display the question text
+      setDisplayedText(response.question.question || response.question.sentenceWithBlank || '');
+
       // Play initial question
       if (response.question.audioBase64) {
         setTimeout(() => {
@@ -308,7 +312,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   const handleEndConversation = async () => {
     if (audioRef.current) audioRef.current.pause();
     resetRecording();
-    
+
     if (session) {
       try {
         const summaryData = await getSessionSummary(session.sessionId);
@@ -331,13 +335,13 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   useEffect(() => {
     let isCancelled = false;
     let apiTimeout: NodeJS.Timeout;
-    
+
     const processAnswer = async () => {
       console.log('[VoiceQuiz] processAnswer check - state:', state, 'audioBlob:', audioBlob?.size, 'session:', session?.sessionId, 'question:', currentQuestion?.id);
-      
+
       if (state === 'processing' && audioBlob && session && currentQuestion) {
         console.log('[VoiceQuiz] All conditions met, starting API call...');
-        
+
         // Set API timeout (30 seconds for transcription + AI response)
         apiTimeout = setTimeout(() => {
           if (!isCancelled) {
@@ -347,14 +351,14 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             setState('user_turn');
           }
         }, 30000);
-        
+
         try {
           // Determine format
-          const audioFormat = audioBlob.type.includes('webm') ? 'webm' 
+          const audioFormat = audioBlob.type.includes('webm') ? 'webm'
             : audioBlob.type.includes('mp4') ? 'm4a'
-            : audioBlob.type.includes('ogg') ? 'ogg'
-            : audioBlob.type.includes('wav') ? 'wav'
-            : 'webm';
+              : audioBlob.type.includes('ogg') ? 'ogg'
+                : audioBlob.type.includes('wav') ? 'wav'
+                  : 'webm';
 
           console.log('[VoiceQuiz] Submitting audio answer...', { sessionId: session.sessionId, questionId: currentQuestion.id, audioFormat, blobSize: audioBlob.size });
 
@@ -364,10 +368,10 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             audioBlob,
             audioFormat
           );
-          
+
           if (isCancelled) return;
           clearTimeout(apiTimeout);
-          
+
           console.log('[VoiceQuiz] Got response from API:', response);
 
           // Prepare audio sequence: Feedback -> Next Question
@@ -380,22 +384,34 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             console.log('[VoiceQuiz] Moving to next turn in conversation');
             // Seamless transition - conversation continues
             setCurrentQuestion(response.nextQuestion);
+
+            // Display feedback + next question text
+            const feedbackText = response.transcribedText ?
+              `Vous avez dit: "${response.transcribedText}"\n\n${response.feedbackText || ''}` :
+              response.feedbackText || '';
+            setDisplayedText(feedbackText);
+
             if (response.nextQuestion.audioBase64) {
               audioSequence.push(response.nextQuestion.audioBase64);
             }
             resetRecording();
             setState('ai_speaking'); // Loop back
-            
+
+            // After feedback, show next question
+            setTimeout(() => {
+              setDisplayedText(response.nextQuestion?.question || response.nextQuestion?.sentenceWithBlank || '');
+            }, 3000);
+
             // Play the sequence
             playAudioSequence(audioSequence);
           } else {
             console.log('[VoiceQuiz] No next question, playing feedback or returning to user turn');
             // If we have feedback, play it and let user continue
             if (audioSequence.length > 0) {
-               setState('ai_speaking');
-               playAudioSequence(audioSequence);
+              setState('ai_speaking');
+              playAudioSequence(audioSequence);
             } else {
-               setState('user_turn');
+              setState('user_turn');
             }
             resetRecording();
           }
@@ -411,7 +427,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
     };
 
     processAnswer();
-    
+
     return () => {
       isCancelled = true;
       if (apiTimeout) clearTimeout(apiTimeout);
@@ -506,9 +522,9 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             </Alert>
           )}
 
-          <Button 
-            onClick={handleStart} 
-            size="lg" 
+          <Button
+            onClick={handleStart}
+            size="lg"
             className="w-full h-14 text-lg rounded-full"
             disabled={isLoading || !isSupported || (!propThematicGroup && !selectedThematicGroup) || loadingAccess || (accessInfo && !accessInfo.canUse)}
           >
@@ -542,7 +558,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   if (state === 'summary') {
     // Calculer le nombre d'échanges (tours de conversation)
     const totalExchanges = summary ? (summary.correctCount + (summary.partiallyCorrectCount || 0) + (summary.incorrectCount || 0)) : 0;
-    
+
     return (
       <Card className="max-w-md mx-auto border-none shadow-xl">
         <CardHeader className="text-center">
@@ -574,9 +590,9 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   return createPortal(
     <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
       {/* Exit Button */}
-      <Button 
-        variant="ghost" 
-        size="icon" 
+      <Button
+        variant="ghost"
+        size="icon"
         className="absolute top-4 right-4 rounded-full hover:bg-destructive/10 hover:text-destructive"
         onClick={handleExit}
       >
@@ -584,7 +600,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       </Button>
 
       {/* Status Text */}
-      <motion.div 
+      <motion.div
         className="absolute top-20 text-xl font-light tracking-wide text-muted-foreground"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -593,9 +609,24 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
         {getStatusText()}
       </motion.div>
 
-      {/* Central Orb */}
-      <div className="flex-1 flex items-center justify-center">
+      {/* Central Orb + Displayed Text */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-8 px-8 max-w-2xl mx-auto">
         <VoiceOrb mode={getOrbMode()} />
+
+        {/* Subtitle / Speech Text */}
+        {displayedText && (state === 'ai_speaking' || state === 'user_turn') && (
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            key={displayedText.substring(0, 30)}
+          >
+            <p className="text-lg md:text-xl text-foreground font-medium leading-relaxed">
+              {displayedText}
+            </p>
+          </motion.div>
+        )}
       </div>
 
       {/* Controls */}
@@ -621,11 +652,10 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
               exit={{ scale: 0, opacity: 0 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleMicClick}
-              className={`w-20 h-20 rounded-full flex items-center justify-center shadow-lg transition-colors ${
-                state === 'recording' 
-                  ? 'bg-destructive text-destructive-foreground' 
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
-              }`}
+              className={`w-20 h-20 rounded-full flex items-center justify-center shadow-lg transition-colors ${state === 'recording'
+                ? 'bg-destructive text-destructive-foreground'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                }`}
             >
               {state === 'recording' ? (
                 <Square className="w-8 h-8 fill-current" />
