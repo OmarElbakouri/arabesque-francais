@@ -1,21 +1,22 @@
 // Mapping des statuts de paiement (Frontend FR → Backend EN)
+// Note: Le backend utilise maintenant ACCEPTE/REFUSE directement (plus de VALIDATED/REJECTED legacy)
 export const PAYMENT_STATUS_MAP: { [key: string]: string } = {
   'EN_ATTENTE': 'PENDING',
-  'ACCEPTE': 'VALIDATED',
-  'REFUSE': 'REJECTED',
+  'ACCEPTE': 'ACCEPTE',
+  'REFUSE': 'REFUSE',
   'ANNULE': 'CANCELLED'
 };
 
 // Mapping inverse pour l'affichage (Backend EN → Frontend FR)
 export const PAYMENT_STATUS_DISPLAY: { [key: string]: string } = {
   'PENDING': 'EN_ATTENTE',
-  'VALIDATED': 'ACCEPTE',
-  'REJECTED': 'REFUSE',
+  'VALIDATED': 'ACCEPTE',   // Legacy support
+  'ACCEPTE': 'ACCEPTE',     // Standard
+  'REJECTED': 'REFUSE',     // Legacy support
+  'REFUSE': 'REFUSE',       // Standard
   'CANCELLED': 'ANNULE',
   // Garder aussi les valeurs FR au cas où
   'EN_ATTENTE': 'EN_ATTENTE',
-  'ACCEPTE': 'ACCEPTE',
-  'REFUSE': 'REFUSE',
   'ANNULE': 'ANNULE'
 };
 

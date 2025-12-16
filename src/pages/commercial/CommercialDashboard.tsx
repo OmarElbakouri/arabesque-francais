@@ -95,7 +95,7 @@ const CommercialDashboard = () => {
     const token = localStorage.getItem('jwt_token');
     console.log('🔑 Token JWT présent:', token ? 'OUI' : 'NON');
     console.log('🔑 Token (premiers 50 chars):', token?.substring(0, 50));
-    
+
     loadPayments();
     loadStatistics();
     loadPromoUsers();
@@ -162,7 +162,7 @@ const CommercialDashboard = () => {
       });
       return false;
     }
-    
+
     if (!form.amount || form.amount <= 0) {
       toast({
         variant: 'destructive',
@@ -171,7 +171,7 @@ const CommercialDashboard = () => {
       });
       return false;
     }
-    
+
     if (!form.paymentMethod) {
       toast({
         variant: 'destructive',
@@ -180,7 +180,7 @@ const CommercialDashboard = () => {
       });
       return false;
     }
-    
+
     if (!form.paymentDate) {
       toast({
         variant: 'destructive',
@@ -189,7 +189,7 @@ const CommercialDashboard = () => {
       });
       return false;
     }
-    
+
     if (!form.status || !["EN_ATTENTE", "VALIDE", "REJETE"].includes(form.status)) {
       toast({
         variant: 'destructive',
@@ -198,7 +198,7 @@ const CommercialDashboard = () => {
       });
       return false;
     }
-    
+
     return true;
   };
 
@@ -217,7 +217,7 @@ const CommercialDashboard = () => {
         paymentDate: formData.paymentDate + ':00',
         status: formData.status
       };
-      
+
       await createPayment(selectedUserId, paymentData);
       toast({
         title: 'Succès',
@@ -279,12 +279,12 @@ const CommercialDashboard = () => {
     try {
       setLoading(true);
       await markPaymentAsPending(paymentId);
-      
+
       toast({
         title: '✅ Paiement marqué en attente',
         description: 'Le paiement a été marqué en attente avec succès',
       });
-      
+
       // Recharger les données
       await loadPayments();
       await loadStatistics();
@@ -301,7 +301,7 @@ const CommercialDashboard = () => {
 
   const handleDeletePayment = async (paymentId: number) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) return;
-    
+
     try {
       setLoading(true);
       await deletePayment(paymentId);
@@ -334,7 +334,9 @@ const CommercialDashboard = () => {
     const labels: Record<string, string> = {
       'PENDING': 'En Attente',
       'VALIDATED': 'Accepté',
+      'ACCEPTE': 'Accepté',     // Standard - same as VALIDATED
       'REJECTED': 'Refusé',
+      'REFUSE': 'Refusé',       // Standard - same as REJECTED
       'CANCELLED': 'Annulé',
     };
     return labels[status] || status;
@@ -344,7 +346,9 @@ const CommercialDashboard = () => {
     const variants: Record<string, string> = {
       'PENDING': 'bg-warning text-white',
       'VALIDATED': 'bg-success text-white',
+      'ACCEPTE': 'bg-success text-white',   // Standard - same as VALIDATED
       'REJECTED': 'bg-destructive text-white',
+      'REFUSE': 'bg-destructive text-white', // Standard - same as REJECTED
       'CANCELLED': 'bg-muted text-muted-foreground',
     };
     return variants[status] || 'bg-muted';
@@ -458,8 +462,8 @@ const CommercialDashboard = () => {
                         <p className="text-xs text-muted-foreground">
                           Vérifiez la console du navigateur (F12) pour plus de détails
                         </p>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => {
                             loadPayments();
@@ -497,12 +501,12 @@ const CommercialDashboard = () => {
                       <TableCell className="text-sm text-muted-foreground">
                         {payment.paidAt
                           ? new Date(payment.paidAt).toLocaleDateString('fr-FR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
                           : '-'}
                       </TableCell>
                       <TableCell className="font-mono text-sm">{payment.reference}</TableCell>
@@ -572,15 +576,15 @@ const CommercialDashboard = () => {
                             user.status === 'EN_ATTENTE'
                               ? 'outline'
                               : user.status === 'VALIDE'
-                              ? 'default'
-                              : 'destructive'
+                                ? 'default'
+                                : 'destructive'
                           }
                         >
                           {user.status === 'EN_ATTENTE'
                             ? 'En attente'
                             : user.status === 'VALIDE'
-                            ? 'Validé'
-                            : 'Rejeté'}
+                              ? 'Validé'
+                              : 'Rejeté'}
                         </Badge>
                       </TableCell>
                       <TableCell>
