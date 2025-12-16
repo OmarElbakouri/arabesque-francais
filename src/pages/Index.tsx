@@ -946,12 +946,6 @@ const Index = () => {
                   ابدأ التعلم مجاناً
                 </Button>
               </Link>
-              <Link to="/contact">
-                <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-primary">
-                  <MessageCircle className="ml-2 h-5 w-5" />
-                  تحدث معنا
-                </Button>
-              </Link>
             </div>
           </div>
         </div>

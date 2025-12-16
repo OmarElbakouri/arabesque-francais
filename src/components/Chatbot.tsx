@@ -41,7 +41,7 @@ export function Chatbot() {
     try {
       const info = await checkChatbotAccess();
       setAccessInfo(info);
-      
+
       // Add welcome message if no messages
       if (messages.length === 0) {
         const welcomeMessage: Message = {
@@ -81,7 +81,7 @@ export function Chatbot() {
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
-    
+
     if (!accessInfo?.canUse) {
       toast({
         title: "Accès limité",
@@ -127,7 +127,7 @@ export function Chatbot() {
           timestamp: new Date()
         };
         setMessages(prev => [...prev, assistantMessage]);
-        
+
         // Update access info
         setAccessInfo(prev => prev ? {
           ...prev,
@@ -153,7 +153,7 @@ export function Chatbot() {
     if (!accessInfo?.canUse || isLoading) return;
 
     setIsLoading(true);
-    
+
     const requestMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -164,7 +164,7 @@ export function Chatbot() {
 
     try {
       const response = await generateMiniQuiz('general', 'medium');
-      
+
       // Start the quiz
       setActiveQuiz({
         quiz: response.quiz,
@@ -181,7 +181,7 @@ export function Chatbot() {
         quiz: response.quiz
       };
       setMessages(prev => [...prev, quizMessage]);
-      
+
       // Update access info
       setAccessInfo(prev => prev ? {
         ...prev,
@@ -211,7 +211,7 @@ export function Chatbot() {
     const feedbackMessage: Message = {
       id: `feedback-${Date.now()}`,
       role: 'assistant',
-      content: isCorrect 
+      content: isCorrect
         ? `✅ Correct ! ${currentQ.explanation}`
         : `❌ Incorrect. La bonne réponse était : **${currentQ.options[currentQ.correctAnswer]}**\n\n${currentQ.explanation}`,
       timestamp: new Date()
@@ -223,7 +223,7 @@ export function Chatbot() {
       // Next question
       const nextIndex = activeQuiz.currentQuestion + 1;
       const nextQ = activeQuiz.quiz.questions[nextIndex];
-      
+
       setTimeout(() => {
         const nextMessage: Message = {
           id: `question-${Date.now()}`,
@@ -242,7 +242,7 @@ export function Chatbot() {
         const finalScore = newScore;
         const total = activeQuiz.quiz.questions.length;
         const percentage = Math.round((finalScore / total) * 100);
-        
+
         let emoji = '🎉';
         let comment = 'Excellent travail !';
         if (percentage < 50) {
@@ -279,16 +279,18 @@ export function Chatbot() {
   // Don't render if not authenticated
   if (!isAuthenticated) return null;
 
+  // Don't render for ADMIN and COMMERCIAL users
+  if (user?.role === 'ADMIN' || user?.role === 'COMMERCIAL') return null;
+
   return (
     <>
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
-          isOpen 
-            ? 'bg-destructive hover:bg-destructive/90 rotate-90' 
+        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${isOpen
+            ? 'bg-destructive hover:bg-destructive/90 rotate-90'
             : 'bg-primary hover:bg-primary/90 animate-pulse hover:animate-none'
-        }`}
+          }`}
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat'}
       >
         {isOpen ? (
@@ -322,14 +324,14 @@ export function Chatbot() {
                 <ChevronDown className="h-5 w-5" />
               </Button>
             </div>
-            
+
             {/* Usage indicator */}
             {!loadingAccess && accessInfo && (
               <div className={`mt-2 flex items-center gap-2 text-xs ${accessInfo.canUse ? 'text-green-600' : 'text-orange-600'}`}>
                 <Target className="w-3 h-3" />
                 <span>
-                  {accessInfo.limit === -1 
-                    ? 'Accès illimité' 
+                  {accessInfo.limit === -1
+                    ? 'Accès illimité'
                     : `${accessInfo.remaining}/${formatLimit(accessInfo.limit)} messages restants`
                   }
                 </span>
@@ -351,14 +353,13 @@ export function Chatbot() {
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
-                      message.role === 'user'
+                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${message.role === 'user'
                         ? 'bg-primary text-primary-foreground rounded-br-sm'
                         : 'bg-muted rounded-bl-sm'
-                    }`}
+                      }`}
                   >
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    
+
                     {/* Quiz options */}
                     {message.isQuiz && activeQuiz && (message.id.includes('quiz-') || message.id.includes('question-')) ? (
                       <div className="mt-3 space-y-2">
@@ -379,7 +380,7 @@ export function Chatbot() {
                   </div>
                 </div>
               ))}
-              
+
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="bg-muted rounded-2xl rounded-bl-sm px-4 py-3">
@@ -390,7 +391,7 @@ export function Chatbot() {
                   </div>
                 </div>
               )}
-              
+
               <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
@@ -410,7 +411,7 @@ export function Chatbot() {
                 Mini Quiz
               </Button>
             </div>
-            
+
             {/* Message input */}
             <div className="flex gap-2">
               <Input
@@ -434,7 +435,7 @@ export function Chatbot() {
                 )}
               </Button>
             </div>
-            
+
             {/* Access denied message */}
             {accessInfo && !accessInfo.canUse && (
               <div className="mt-2 flex items-center gap-2 text-xs text-orange-600">

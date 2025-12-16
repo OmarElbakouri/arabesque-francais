@@ -408,26 +408,46 @@ const OrientationTest = () => {
             <div className="bg-blue-50 rounded-lg p-4">
               <h4 className="font-medium mb-2">Ce que cela signifie :</h4>
               <ul className="text-sm text-gray-600 space-y-1">
+                {/* Dynamic content based on learner type */}
                 {result.learnerType === "STUDENT" && (
-                  <>
-                    <li>• Quiz IA avec exercices académiques</li>
-                    <li>• Focus sur la grammaire et conjugaison</li>
-                    <li>• Scénarios de classe et exposés oraux</li>
-                  </>
+                  <li>• Quiz IA avec exercices académiques adaptés à votre niveau</li>
                 )}
                 {result.learnerType === "PROFESSIONAL" && (
-                  <>
-                    <li>• Quiz IA avec situations professionnelles</li>
-                    <li>• Vocabulaire business et formel</li>
-                    <li>• Scénarios de réunions et entretiens</li>
-                  </>
+                  <li>• Quiz IA avec situations professionnelles réalistes</li>
                 )}
                 {result.learnerType === "CASUAL" && (
-                  <>
-                    <li>• Quiz IA avec situations du quotidien</li>
-                    <li>• Vocabulaire pratique et conversationnel</li>
-                    <li>• Scénarios de voyage et culture</li>
-                  </>
+                  <li>• Quiz IA avec situations du quotidien et pratiques</li>
+                )}
+
+                {/* Dynamic content based on sector of interest */}
+                {result.sectorInterest === "COMMERCE" && (
+                  <li>• Vocabulaire spécialisé : commerce, négociation, marketing</li>
+                )}
+                {result.sectorInterest === "TOURISM" && (
+                  <li>• Vocabulaire spécialisé : accueil, hôtellerie, voyages</li>
+                )}
+                {result.sectorInterest === "MEDICAL" && (
+                  <li>• Vocabulaire spécialisé : médical, consultations, santé</li>
+                )}
+                {result.sectorInterest === "LEGAL" && (
+                  <li>• Vocabulaire spécialisé : juridique, administratif, procédures</li>
+                )}
+                {result.sectorInterest === "TCF" && (
+                  <li>• Préparation TCF : compréhension et expression écrite/orale</li>
+                )}
+                {result.sectorInterest === "GENERAL" && (
+                  <li>• Vocabulaire polyvalent pour toutes les situations</li>
+                )}
+
+                {/* Dynamic content based on current level */}
+                {result.currentLevel === "BEGINNER" && (
+                  <li>• Progression adaptée niveau débutant (A1-A2)</li>
+                )}
+                {result.currentLevel === "INTERMEDIATE" && (
+                  <li>• Exercices intermédiaires pour consolider vos acquis (B1-B2)</li>
+                )}
+                {result.currentLevel === "ADVANCED" && (
+                  <li>• Défis avancés pour perfectionner votre maîtrise (C1-C2)</li>
                 )}
               </ul>
             </div>
