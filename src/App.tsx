@@ -22,7 +22,6 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
-import Devices from "./pages/Devices";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { CommercialRoute } from "./components/CommercialRoute";
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -56,7 +55,7 @@ const App = () => (
         <Routes>
           {/* Subject Selection - Entry Point */}
           <Route path="/" element={<SubjectSelection />} />
-
+          
           {/* Public routes with Navbar */}
           <Route path="/home" element={<><Navbar /><Index /></>} />
           <Route path="/login" element={<Login />} />
@@ -70,11 +69,10 @@ const App = () => (
           <Route path="/learn/:courseId" element={<ProtectedRoute><Navbar /><StudentCourseDetail /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Navbar /><Profile /></ProtectedRoute>} />
           <Route path="/messages" element={<ProtectedRoute><Navbar /><Messages /></ProtectedRoute>} />
-          <Route path="/devices" element={<ProtectedRoute><Navbar /><Devices /></ProtectedRoute>} />
           <Route path="/blog" element={<><Navbar /><Blog /></>} />
           <Route path="/contact" element={<><Navbar /><Contact /></>} />
           <Route path="/faq" element={<><Navbar /><FAQ /></>} />
-
+          
           {/* Admin routes with separate layout */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
@@ -98,7 +96,7 @@ const App = () => (
             <Route path="my-users" element={<MyUsers />} />
             <Route path="settings" element={<CommercialSettings />} />
           </Route>
-
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -162,6 +162,12 @@ const questions: Question[] = [
         description: "Droit, procédures, documents"
       },
       {
+        value: "TCF",
+        label: "Préparation TCF",
+        icon: <GraduationCap className="w-8 h-8" />,
+        description: "Compréhension et expression écrite et orale"
+      },
+      {
         value: "GENERAL",
         label: "Général",
         icon: <BookOpen className="w-8 h-8" />,
@@ -194,13 +200,23 @@ const OrientationTest = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = useRef(false); // Prevent double submissions
   const hasCheckedStatusRef = useRef(false); // Prevent double status checks
-  
+
   // Initialize result from sessionStorage if available (prevents re-doing test on re-render)
   const [result, setResult] = useState<{
     completed: boolean;
     learnerType: string;
     learnerTypeLabel: string;
     learnerTypeDescription: string;
+    mainObjective?: string;
+    mainObjectiveLabel?: string;
+    usageContext?: string;
+    usageContextLabel?: string;
+    currentLevel?: string;
+    currentLevelLabel?: string;
+    ageRange?: string;
+    ageRangeLabel?: string;
+    sectorInterest?: string;
+    sectorInterestLabel?: string;
   } | null>(() => {
     const savedResult = sessionStorage.getItem('orientationResult');
     if (savedResult) {
@@ -220,7 +236,7 @@ const OrientationTest = () => {
       setIsLoading(false);
       return;
     }
-    
+
     // If we already have a result from sessionStorage, no need to check
     if (result) {
       hasCheckedStatusRef.current = true;
@@ -262,7 +278,7 @@ const OrientationTest = () => {
     if (isSubmitting || isSubmittingRef.current) {
       return;
     }
-    
+
     if (!answers[currentQuestion.field as keyof Answers]) {
       toast({
         title: "Sélection requise",
@@ -293,15 +309,15 @@ const OrientationTest = () => {
     }
     isSubmittingRef.current = true;
     setIsSubmitting(true);
-    
+
     try {
       const response = await api.post("/orientation-test/submit", answers);
-      
+
       // Store completion status IMMEDIATELY after successful submission
       // This prevents re-initialization issues if component re-renders
       sessionStorage.setItem('orientationCompleted', 'true');
       sessionStorage.setItem('orientationResult', JSON.stringify(response.data));
-      
+
       setResult(response.data);
       toast({
         title: "Test terminé !",
@@ -340,7 +356,7 @@ const OrientationTest = () => {
   if (result) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg">
+        <Card className="w-full max-w-2xl">
           <CardHeader className="text-center">
             <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <Check className="w-10 h-10 text-green-600" />
@@ -359,7 +375,37 @@ const OrientationTest = () => {
               {result.learnerTypeDescription}
             </p>
 
-            <div className="bg-gray-50 rounded-lg p-4">
+            {/* Detailed choices overview */}
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-blue-600" />
+                Récapitulatif de vos choix
+              </h4>
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-500 text-sm">Objectif principal</span>
+                  <span className="font-medium text-gray-800">{result.mainObjectiveLabel || answers.mainObjective}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-500 text-sm">Contexte d'utilisation</span>
+                  <span className="font-medium text-gray-800">{result.usageContextLabel || answers.usageContext}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-500 text-sm">Niveau actuel</span>
+                  <span className="font-medium text-gray-800">{result.currentLevelLabel || answers.currentLevel}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-500 text-sm">Tranche d'âge</span>
+                  <span className="font-medium text-gray-800">{result.ageRangeLabel || answers.ageRange}</span>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-gray-500 text-sm">Secteur d'intérêt</span>
+                  <span className="font-medium text-gray-800">{result.sectorInterestLabel || answers.sectorInterest}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 rounded-lg p-4">
               <h4 className="font-medium mb-2">Ce que cela signifie :</h4>
               <ul className="text-sm text-gray-600 space-y-1">
                 {result.learnerType === "STUDENT" && (
@@ -386,8 +432,8 @@ const OrientationTest = () => {
               </ul>
             </div>
 
-            <Button 
-              onClick={handleContinue} 
+            <Button
+              onClick={handleContinue}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
             >
               Continuer vers le tableau de bord
@@ -424,11 +470,10 @@ const OrientationTest = () => {
                 <button
                   key={option.value}
                   onClick={() => handleSelect(option.value)}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${
-                    isSelected
-                      ? "border-blue-500 bg-blue-50 shadow-md"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  }`}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${isSelected
+                    ? "border-blue-500 bg-blue-50 shadow-md"
+                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`flex-shrink-0 ${isSelected ? "text-blue-600" : "text-gray-400"}`}>
