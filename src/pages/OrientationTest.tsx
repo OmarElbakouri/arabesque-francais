@@ -5,82 +5,119 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
-import { GraduationCap, Briefcase, Plane, BookOpen, Users, Globe, Building, Stethoscope, Scale, Check, ArrowRight, ArrowLeft, BookOpenCheck } from "lucide-react";
+import {
+  GraduationCap, Briefcase, BookOpen, Building, Stethoscope, Scale,
+  Check, ArrowRight, ArrowLeft, BookOpenCheck, Users, Globe, Baby,
+  Microscope, FileText, MessageSquare, Mail, UserCheck
+} from "lucide-react";
+
+// ==================== QUESTION DEFINITIONS ====================
+
+interface QuestionOption {
+  value: string;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+}
 
 interface Question {
-  id: number;
+  id: string;
   title: string;
   description: string;
   field: string;
-  options: {
-    value: string;
-    label: string;
-    icon: React.ReactNode;
-    description: string;
-  }[];
+  options: QuestionOption[];
 }
 
-const questions: Question[] = [
+// Question 1: Profile Type (determines the path)
+const profileTypeQuestion: Question = {
+  id: "profileType",
+  title: "Quel est votre profil ?",
+  description: "Cela déterminera le parcours adapté à vos besoins",
+  field: "profileType",
+  options: [
+    {
+      value: "STUDENT",
+      label: "Étudiant",
+      icon: <GraduationCap className="w-8 h-8" />,
+      description: "Je suis étudiant(e) ou je prépare des examens"
+    },
+    {
+      value: "PROFESSIONAL",
+      label: "Professionnel",
+      icon: <Briefcase className="w-8 h-8" />,
+      description: "J'utilise le français pour mon travail"
+    },
+    {
+      value: "PROFESSOR",
+      label: "Professeur",
+      icon: <BookOpenCheck className="w-8 h-8" />,
+      description: "J'enseigne en utilisant le français"
+    },
+    {
+      value: "TCF",
+      label: "Préparation TCF",
+      icon: <FileText className="w-8 h-8" />,
+      description: "Je prépare le Test de Connaissance du Français"
+    }
+  ]
+};
+
+// Student Path Questions
+const studentQuestions: Question[] = [
   {
-    id: 1,
+    id: "educationLevel",
+    title: "Quel est votre niveau d'études ?",
+    description: "Nous adapterons le contenu à votre parcours scolaire",
+    field: "educationLevel",
+    options: [
+      {
+        value: "COLLEGE",
+        label: "Collège",
+        icon: <span className="text-2xl">📚</span>,
+        description: "Classes de 6ème à 3ème"
+      },
+      {
+        value: "LYCEE",
+        label: "Lycée",
+        icon: <span className="text-2xl">🎓</span>,
+        description: "Classes de 2nde à Terminale"
+      },
+      {
+        value: "UNIVERSITE",
+        label: "Université / Études supérieures",
+        icon: <span className="text-2xl">🏛️</span>,
+        description: "Études post-bac"
+      }
+    ]
+  },
+  {
+    id: "studentObjective",
     title: "Quel est votre objectif principal ?",
-    description: "Cela nous aidera à adapter le contenu à vos besoins",
-    field: "mainObjective",
+    description: "Nous personnaliserons les exercices en conséquence",
+    field: "studentObjective",
     options: [
       {
         value: "EXAMS",
-        label: "Réussir mes examens",
+        label: "Réussir mes examens scolaires",
         icon: <GraduationCap className="w-8 h-8" />,
-        description: "Préparation aux tests, diplômes et certifications"
+        description: "Brevet, Bac, partiels, concours"
       },
       {
-        value: "CAREER",
-        label: "Évoluer professionnellement",
-        icon: <Briefcase className="w-8 h-8" />,
-        description: "Améliorer mes compétences pour le travail"
+        value: "TCF_DELF",
+        label: "Préparation TCF/DELF",
+        icon: <FileText className="w-8 h-8" />,
+        description: "Certifications officielles"
       },
       {
-        value: "FRENCH_PROFESSOR",
-        label: "Enseigner le français",
-        icon: <BookOpenCheck className="w-8 h-8" />,
-        description: "Je suis professeur ou futur enseignant de FLE"
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: "Dans quel contexte utiliserez-vous le français ?",
-    description: "Nous adapterons les scénarios de pratique",
-    field: "usageContext",
-    options: [
-      {
-        value: "SCHOOL",
-        label: "École / Université",
+        value: "GENERAL",
+        label: "Améliorer mon niveau général",
         icon: <BookOpen className="w-8 h-8" />,
-        description: "Cours, examens, travaux académiques"
-      },
-      {
-        value: "WORK",
-        label: "Travail",
-        icon: <Building className="w-8 h-8" />,
-        description: "Réunions, emails, présentations"
-      },
-      {
-        value: "TRAVEL",
-        label: "Voyage",
-        icon: <Plane className="w-8 h-8" />,
-        description: "Tourisme, communication quotidienne"
-      },
-      {
-        value: "PERSONAL",
-        label: "Personnel",
-        icon: <Users className="w-8 h-8" />,
-        description: "Culture, loisirs, famille"
+        description: "Progression globale en français"
       }
     ]
   },
   {
-    id: 3,
+    id: "currentLevel",
     title: "Quel est votre niveau actuel en français ?",
     description: "Nous ajusterons la difficulté des exercices",
     field: "currentLevel",
@@ -104,42 +141,14 @@ const questions: Question[] = [
         description: "Je suis à l'aise dans la plupart des situations"
       }
     ]
-  },
+  }
+];
+
+// Professional Path Questions
+const professionalQuestions: Question[] = [
   {
-    id: 4,
-    title: "Quelle est votre tranche d'âge ?",
-    description: "Pour personnaliser les thèmes et exemples",
-    field: "ageRange",
-    options: [
-      {
-        value: "UNDER_18",
-        label: "Moins de 18 ans",
-        icon: <span className="text-2xl">🎒</span>,
-        description: "Lycéen(ne) ou plus jeune"
-      },
-      {
-        value: "18_25",
-        label: "18 - 25 ans",
-        icon: <span className="text-2xl">🎓</span>,
-        description: "Étudiant(e) ou jeune actif"
-      },
-      {
-        value: "26_40",
-        label: "26 - 40 ans",
-        icon: <span className="text-2xl">💼</span>,
-        description: "Professionnel(le) en activité"
-      },
-      {
-        value: "OVER_40",
-        label: "Plus de 40 ans",
-        icon: <span className="text-2xl">🌟</span>,
-        description: "Expérimenté(e)"
-      }
-    ]
-  },
-  {
-    id: 5,
-    title: "Quel secteur vous intéresse le plus ?",
+    id: "sectorInterest",
+    title: "Quel est votre secteur d'activité ?",
     description: "Nous utiliserons du vocabulaire spécialisé",
     field: "sectorInterest",
     options: [
@@ -168,28 +177,222 @@ const questions: Question[] = [
         description: "Droit, procédures, documents"
       },
       {
-        value: "TCF",
-        label: "Préparation TCF",
-        icon: <GraduationCap className="w-8 h-8" />,
-        description: "Compréhension et expression écrite et orale"
+        value: "OTHER",
+        label: "Autre secteur",
+        icon: <Building className="w-8 h-8" />,
+        description: "Un autre domaine professionnel"
+      }
+    ]
+  },
+  {
+    id: "usageContext",
+    title: "Dans quel contexte utilisez-vous le français ?",
+    description: "Nous adapterons les scénarios de pratique",
+    field: "usageContext",
+    options: [
+      {
+        value: "MEETINGS",
+        label: "Réunions et présentations",
+        icon: <Users className="w-8 h-8" />,
+        description: "Exposés, conférences, discussions"
+      },
+      {
+        value: "EMAILS",
+        label: "Emails et correspondance",
+        icon: <Mail className="w-8 h-8" />,
+        description: "Communication écrite professionnelle"
+      },
+      {
+        value: "CLIENTS",
+        label: "Accueil clients",
+        icon: <UserCheck className="w-8 h-8" />,
+        description: "Service client, vente, conseil"
       },
       {
         value: "GENERAL",
-        label: "Général",
-        icon: <BookOpen className="w-8 h-8" />,
-        description: "Un peu de tout, polyvalent"
+        label: "Usage général",
+        icon: <MessageSquare className="w-8 h-8" />,
+        description: "Un peu de tout"
+      }
+    ]
+  },
+  {
+    id: "currentLevel",
+    title: "Quel est votre niveau actuel en français ?",
+    description: "Nous ajusterons la difficulté des exercices",
+    field: "currentLevel",
+    options: [
+      {
+        value: "BEGINNER",
+        label: "Débutant",
+        icon: <span className="text-2xl font-bold">A1-A2</span>,
+        description: "Je connais les bases, vocabulaire limité"
+      },
+      {
+        value: "INTERMEDIATE",
+        label: "Intermédiaire",
+        icon: <span className="text-2xl font-bold">B1-B2</span>,
+        description: "Je peux tenir une conversation"
+      },
+      {
+        value: "ADVANCED",
+        label: "Avancé",
+        icon: <span className="text-2xl font-bold">C1-C2</span>,
+        description: "Je suis à l'aise dans la plupart des situations"
       }
     ]
   }
 ];
 
+// Professor Path Questions
+const professorQuestions: Question[] = [
+  {
+    id: "teachingType",
+    title: "Quel type d'enseignement exercez-vous ?",
+    description: "Nous adapterons les ressources pédagogiques",
+    field: "teachingType",
+    options: [
+      {
+        value: "MATERNELLE",
+        label: "Maternelle / Primaire",
+        icon: <Baby className="w-8 h-8" />,
+        description: "Enseignement aux jeunes enfants"
+      },
+      {
+        value: "FRENCH_TEACHER",
+        label: "Professeur de français",
+        icon: <BookOpenCheck className="w-8 h-8" />,
+        description: "FLE ou français langue maternelle"
+      },
+      {
+        value: "MATH_TEACHER",
+        label: "Professeur de mathématiques",
+        icon: <span className="text-2xl">➗</span>,
+        description: "Mathématiques enseignées en français"
+      },
+      {
+        value: "PHYSICS_TEACHER",
+        label: "Professeur de physique-chimie",
+        icon: <span className="text-2xl">⚛️</span>,
+        description: "Physique-chimie enseignée en français"
+      },
+      {
+        value: "SVT_TEACHER",
+        label: "Professeur de SVT",
+        icon: <span className="text-2xl">🧬</span>,
+        description: "Sciences de la Vie et de la Terre en français"
+      }
+    ]
+  },
+  {
+    id: "teachingLevel",
+    title: "À quel niveau enseignez-vous ?",
+    description: "Pour adapter le niveau des ressources",
+    field: "teachingLevel",
+    options: [
+      {
+        value: "PRIMAIRE",
+        label: "Primaire",
+        icon: <span className="text-2xl">📚</span>,
+        description: "CP à CM2"
+      },
+      {
+        value: "COLLEGE",
+        label: "Collège",
+        icon: <span className="text-2xl">📖</span>,
+        description: "6ème à 3ème"
+      },
+      {
+        value: "LYCEE",
+        label: "Lycée",
+        icon: <span className="text-2xl">🎓</span>,
+        description: "2nde à Terminale"
+      },
+      {
+        value: "UNIVERSITE",
+        label: "Université / Adultes",
+        icon: <span className="text-2xl">🏛️</span>,
+        description: "Enseignement supérieur ou formation continue"
+      }
+    ]
+  },
+  {
+    id: "professorNeed",
+    title: "Quel est votre besoin principal ?",
+    description: "Nous personnaliserons votre expérience",
+    field: "professorNeed",
+    options: [
+      {
+        value: "EXERCISES",
+        label: "Créer des exercices pédagogiques",
+        icon: <FileText className="w-8 h-8" />,
+        description: "Générer des quiz et activités pour mes élèves"
+      },
+      {
+        value: "IMPROVE_FRENCH",
+        label: "Améliorer mon français professionnel",
+        icon: <BookOpen className="w-8 h-8" />,
+        description: "Perfectionner ma maîtrise de la langue"
+      },
+      {
+        value: "RESOURCES",
+        label: "Ressources pour mes cours",
+        icon: <GraduationCap className="w-8 h-8" />,
+        description: "Trouver du contenu pour enrichir mes leçons"
+      }
+    ]
+  }
+];
+
+// TCF Path Questions
+const tcfQuestions: Question[] = [
+  {
+    id: "currentLevel",
+    title: "Quel est votre niveau actuel en français ?",
+    description: "Nous calibrerons la difficulté des exercices TCF",
+    field: "currentLevel",
+    options: [
+      {
+        value: "BEGINNER",
+        label: "Débutant",
+        icon: <span className="text-2xl font-bold">A1-A2</span>,
+        description: "Je vise un score A1-A2 au TCF"
+      },
+      {
+        value: "INTERMEDIATE",
+        label: "Intermédiaire",
+        icon: <span className="text-2xl font-bold">B1-B2</span>,
+        description: "Je vise un score B1-B2 au TCF"
+      },
+      {
+        value: "ADVANCED",
+        label: "Avancé",
+        icon: <span className="text-2xl font-bold">C1-C2</span>,
+        description: "Je vise un score C1-C2 au TCF"
+      }
+    ]
+  }
+];
+
+// ==================== ANSWERS INTERFACE ====================
+
 interface Answers {
-  mainObjective: string;
-  usageContext: string;
-  currentLevel: string;
-  ageRange: string;
+  profileType: string;
+  // Student fields
+  educationLevel: string;
+  studentObjective: string;
+  // Professional fields
   sectorInterest: string;
+  usageContext: string;
+  // Professor fields
+  teachingType: string;
+  teachingLevel: string;
+  professorNeed: string;
+  // Common fields
+  currentLevel: string;
 }
+
+// ==================== COMPONENT ====================
 
 const OrientationTest = () => {
   const navigate = useNavigate();
@@ -197,33 +400,22 @@ const OrientationTest = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [answers, setAnswers] = useState<Answers>({
-    mainObjective: "",
+    profileType: "",
+    educationLevel: "",
+    studentObjective: "",
+    sectorInterest: "",
     usageContext: "",
-    currentLevel: "",
-    ageRange: "",
-    sectorInterest: ""
+    teachingType: "",
+    teachingLevel: "",
+    professorNeed: "",
+    currentLevel: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isSubmittingRef = useRef(false); // Prevent double submissions
-  const hasCheckedStatusRef = useRef(false); // Prevent double status checks
+  const isSubmittingRef = useRef(false);
+  const hasCheckedStatusRef = useRef(false);
 
-  // Initialize result from sessionStorage if available (prevents re-doing test on re-render)
-  const [result, setResult] = useState<{
-    completed: boolean;
-    learnerType: string;
-    learnerTypeLabel: string;
-    learnerTypeDescription: string;
-    mainObjective?: string;
-    mainObjectiveLabel?: string;
-    usageContext?: string;
-    usageContextLabel?: string;
-    currentLevel?: string;
-    currentLevelLabel?: string;
-    ageRange?: string;
-    ageRangeLabel?: string;
-    sectorInterest?: string;
-    sectorInterestLabel?: string;
-  } | null>(() => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [result, setResult] = useState<any | null>(() => {
     const savedResult = sessionStorage.getItem('orientationResult');
     if (savedResult) {
       try {
@@ -235,15 +427,29 @@ const OrientationTest = () => {
     return null;
   });
 
+  // Get questions based on selected profile type
+  const getQuestionsForPath = (): Question[] => {
+    const pathQuestions = {
+      STUDENT: studentQuestions,
+      PROFESSIONAL: professionalQuestions,
+      PROFESSOR: professorQuestions,
+      TCF: tcfQuestions
+    };
+    return [profileTypeQuestion, ...(pathQuestions[answers.profileType as keyof typeof pathQuestions] || [])];
+  };
+
+  const questions = getQuestionsForPath();
+  const totalQuestions = answers.profileType ? questions.length : 1;
+  const currentQuestion = questions[currentStep];
+  const progress = ((currentStep + 1) / totalQuestions) * 100;
+
   // Check if orientation is already completed on mount
   useEffect(() => {
-    // Prevent double checks
     if (hasCheckedStatusRef.current) {
       setIsLoading(false);
       return;
     }
 
-    // If we already have a result from sessionStorage, no need to check
     if (result) {
       hasCheckedStatusRef.current = true;
       setIsLoading(false);
@@ -255,7 +461,6 @@ const OrientationTest = () => {
       try {
         const response = await api.get('/orientation-test/status');
         if (response.data.completed) {
-          // Already completed - redirect to courses immediately
           sessionStorage.setItem('orientationCompleted', 'true');
           navigate('/courses', { state: { fromOrientationTest: true }, replace: true });
           return;
@@ -269,23 +474,37 @@ const OrientationTest = () => {
     checkStatus();
   }, [navigate, result]);
 
-  const currentQuestion = questions[currentStep];
-  const progress = ((currentStep + 1) / questions.length) * 100;
-
   const handleSelect = (value: string) => {
+    const field = currentQuestion.field;
     setAnswers(prev => ({
       ...prev,
-      [currentQuestion.field]: value
+      [field]: value
     }));
+
+    // If selecting profile type, reset path-specific answers
+    if (field === "profileType") {
+      setAnswers(prev => ({
+        ...prev,
+        profileType: value,
+        educationLevel: "",
+        studentObjective: "",
+        sectorInterest: "",
+        usageContext: "",
+        teachingType: "",
+        teachingLevel: "",
+        professorNeed: "",
+        currentLevel: ""
+      }));
+    }
   };
 
   const handleNext = () => {
-    // Prevent action if already submitting
     if (isSubmitting || isSubmittingRef.current) {
       return;
     }
 
-    if (!answers[currentQuestion.field as keyof Answers]) {
+    const currentField = currentQuestion.field as keyof Answers;
+    if (!answers[currentField]) {
       toast({
         title: "Sélection requise",
         description: "Veuillez choisir une option pour continuer",
@@ -308,9 +527,7 @@ const OrientationTest = () => {
   };
 
   const handleSubmit = async () => {
-    // Prevent double submissions using ref (synchronous check)
     if (isSubmittingRef.current) {
-      console.log('Submission already in progress, ignoring duplicate call');
       return;
     }
     isSubmittingRef.current = true;
@@ -319,8 +536,6 @@ const OrientationTest = () => {
     try {
       const response = await api.post("/orientation-test/submit", answers);
 
-      // Store completion status IMMEDIATELY after successful submission
-      // This prevents re-initialization issues if component re-renders
       sessionStorage.setItem('orientationCompleted', 'true');
       sessionStorage.setItem('orientationResult', JSON.stringify(response.data));
 
@@ -330,12 +545,12 @@ const OrientationTest = () => {
         description: "Votre profil d'apprentissage a été déterminé"
       });
     } catch (error) {
+      console.error('Submit error:', error);
       toast({
         title: "Erreur",
         description: "Une erreur s'est produite. Veuillez réessayer.",
         variant: "destructive"
       });
-      // Reset ref only on error to allow retry
       isSubmittingRef.current = false;
     } finally {
       setIsSubmitting(false);
@@ -343,13 +558,10 @@ const OrientationTest = () => {
   };
 
   const handleContinue = () => {
-    // Navigate first, then React will unmount this component
-    // The orientationCompleted flag is already set in handleSubmit
-    // Don't remove orientationResult here - it can cause race condition
     navigate("/courses", { state: { fromOrientationTest: true }, replace: true });
   };
 
-  // Loading screen - checking if already completed
+  // Loading screen
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -374,7 +586,7 @@ const OrientationTest = () => {
             <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white text-center">
               <p className="text-sm opacity-90 mb-2">Votre profil</p>
               <h2 className="text-3xl font-bold mb-2">{result.learnerTypeLabel}</h2>
-              <p className="text-sm opacity-90">{result.learnerType}</p>
+              <p className="text-sm opacity-90">{result.profileTypeLabel || result.learnerType}</p>
             </div>
 
             <p className="text-gray-600 text-center">
@@ -389,24 +601,57 @@ const OrientationTest = () => {
               </h4>
               <div className="grid gap-3">
                 <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                  <span className="text-gray-500 text-sm">Objectif principal</span>
-                  <span className="font-medium text-gray-800">{result.mainObjectiveLabel || answers.mainObjective}</span>
+                  <span className="text-gray-500 text-sm">Profil</span>
+                  <span className="font-medium text-gray-800">{result.profileTypeLabel || answers.profileType}</span>
                 </div>
-                <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                  <span className="text-gray-500 text-sm">Contexte d'utilisation</span>
-                  <span className="font-medium text-gray-800">{result.usageContextLabel || answers.usageContext}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-gray-200">
+
+                {/* Path-specific fields */}
+                {answers.profileType === "STUDENT" && (
+                  <>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-500 text-sm">Niveau d'études</span>
+                      <span className="font-medium text-gray-800">{result.educationLevelLabel || answers.educationLevel}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-500 text-sm">Objectif</span>
+                      <span className="font-medium text-gray-800">{result.studentObjectiveLabel || answers.studentObjective}</span>
+                    </div>
+                  </>
+                )}
+
+                {answers.profileType === "PROFESSIONAL" && (
+                  <>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-500 text-sm">Secteur d'activité</span>
+                      <span className="font-medium text-gray-800">{result.sectorInterestLabel || answers.sectorInterest}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-500 text-sm">Contexte d'utilisation</span>
+                      <span className="font-medium text-gray-800">{result.usageContextLabel || answers.usageContext}</span>
+                    </div>
+                  </>
+                )}
+
+                {answers.profileType === "PROFESSOR" && (
+                  <>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-500 text-sm">Type d'enseignement</span>
+                      <span className="font-medium text-gray-800">{result.teachingTypeLabel || answers.teachingType}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-500 text-sm">Niveau enseigné</span>
+                      <span className="font-medium text-gray-800">{result.teachingLevelLabel || answers.teachingLevel}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
+                      <span className="text-gray-500 text-sm">Besoin principal</span>
+                      <span className="font-medium text-gray-800">{result.professorNeedLabel || answers.professorNeed}</span>
+                    </div>
+                  </>
+                )}
+
+                <div className="flex items-center justify-between py-2">
                   <span className="text-gray-500 text-sm">Niveau actuel</span>
                   <span className="font-medium text-gray-800">{result.currentLevelLabel || answers.currentLevel}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                  <span className="text-gray-500 text-sm">Tranche d'âge</span>
-                  <span className="font-medium text-gray-800">{result.ageRangeLabel || answers.ageRange}</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-gray-500 text-sm">Secteur d'intérêt</span>
-                  <span className="font-medium text-gray-800">{result.sectorInterestLabel || answers.sectorInterest}</span>
                 </div>
               </div>
             </div>
@@ -414,41 +659,20 @@ const OrientationTest = () => {
             <div className="bg-blue-50 rounded-lg p-4">
               <h4 className="font-medium mb-2">Ce que cela signifie :</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                {/* Dynamic content based on learner type */}
                 {result.learnerType === "STUDENT" && (
                   <li>• Quiz IA avec exercices académiques adaptés à votre niveau</li>
                 )}
                 {result.learnerType === "PROFESSIONAL" && (
                   <li>• Quiz IA avec situations professionnelles réalistes</li>
                 )}
-                {result.learnerType === "CASUAL" && (
-                  <li>• Quiz IA avec situations du quotidien et pratiques</li>
-                )}
                 {result.learnerType === "TEACHER" && (
                   <li>• Quiz IA avec ressources pédagogiques et techniques d'enseignement</li>
                 )}
-
-                {/* Dynamic content based on sector of interest */}
-                {result.sectorInterest === "COMMERCE" && (
-                  <li>• Vocabulaire spécialisé : commerce, négociation, marketing</li>
-                )}
-                {result.sectorInterest === "TOURISM" && (
-                  <li>• Vocabulaire spécialisé : accueil, hôtellerie, voyages</li>
-                )}
-                {result.sectorInterest === "MEDICAL" && (
-                  <li>• Vocabulaire spécialisé : médical, consultations, santé</li>
-                )}
-                {result.sectorInterest === "LEGAL" && (
-                  <li>• Vocabulaire spécialisé : juridique, administratif, procédures</li>
-                )}
-                {result.sectorInterest === "TCF" && (
-                  <li>• Préparation TCF : compréhension et expression écrite/orale</li>
-                )}
-                {result.sectorInterest === "GENERAL" && (
-                  <li>• Vocabulaire polyvalent pour toutes les situations</li>
+                {result.learnerType === "TCF_CANDIDATE" && (
+                  <li>• Quiz IA avec exercices de préparation au TCF</li>
                 )}
 
-                {/* Dynamic content based on current level */}
+                {/* Level-specific content */}
                 {result.currentLevel === "BEGINNER" && (
                   <li>• Progression adaptée niveau débutant (A1-A2)</li>
                 )}
@@ -481,7 +705,7 @@ const OrientationTest = () => {
         <CardHeader>
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm text-gray-500">
-              Question {currentStep + 1} sur {questions.length}
+              Question {currentStep + 1} sur {totalQuestions}
             </span>
             <span className="text-sm font-medium text-blue-600">
               {Math.round(progress)}%
@@ -492,14 +716,14 @@ const OrientationTest = () => {
           <CardDescription>{currentQuestion.description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className={`grid gap-3 ${currentQuestion.options.length <= 3 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
             {currentQuestion.options.map((option) => {
               const isSelected = answers[currentQuestion.field as keyof Answers] === option.value;
               return (
                 <button
                   key={option.value}
                   onClick={() => handleSelect(option.value)}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${isSelected
+                  className={`p-4 rounded-lg border-2 transition-all text-left relative ${isSelected
                     ? "border-blue-500 bg-blue-50 shadow-md"
                     : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                     }`}
