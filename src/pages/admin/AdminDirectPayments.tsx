@@ -102,6 +102,7 @@ export default function AdminDirectPayments() {
   // Create Payment Dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [userSearchTerm, setUserSearchTerm] = useState(''); // Search for users by email/phone
   const [newPlanName, setNewPlanName] = useState<'NORMAL' | 'VIP'>('NORMAL');
   const [newAmount, setNewAmount] = useState<number>(0);
   const [newPaymentMethod, setNewPaymentMethod] = useState<'TRANSFER' | 'CASH' | 'CHECK' | 'MOBILE'>('TRANSFER');
@@ -111,6 +112,17 @@ export default function AdminDirectPayments() {
   const [newPaidAt, setNewPaidAt] = useState('');
   const [activateSubscription, setActivateSubscription] = useState(false);
   const [creating, setCreating] = useState(false);
+
+  // Filtered users based on search (email or phone)
+  const filteredUsers = usersWithoutPromoCode.filter((user) => {
+    if (!userSearchTerm) return true;
+    const search = userSearchTerm.toLowerCase();
+    return (
+      user.email?.toLowerCase().includes(search) ||
+      user.fullName?.toLowerCase().includes(search) ||
+      user.phone?.toLowerCase().includes(search)
+    );
+  });
 
   // Edit Payment Dialog
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -558,7 +570,7 @@ export default function AdminDirectPayments() {
 
       {/* Create Payment Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nouveau Paiement Direct</DialogTitle>
             <DialogDescription>
@@ -569,18 +581,42 @@ export default function AdminDirectPayments() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Utilisateur *</Label>
+              {/* Search Input for Users */}
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher par email ou téléphone..."
+                  value={userSearchTerm}
+                  onChange={(e) => setUserSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
               <Select value={selectedUserId} onValueChange={setSelectedUserId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un utilisateur" />
                 </SelectTrigger>
-                <SelectContent>
-                  {usersWithoutPromoCode.map((user) => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
-                      {user.fullName} ({user.email})
-                    </SelectItem>
-                  ))}
+                <SelectContent className="max-h-60">
+                  {filteredUsers.length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground text-center">
+                      Aucun utilisateur trouvé
+                    </div>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{user.fullName}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {user.email} {user.phone && `• ${user.phone}`}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                {filteredUsers.length} utilisateur(s) trouvé(s)
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

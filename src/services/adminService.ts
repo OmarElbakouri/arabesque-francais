@@ -71,19 +71,19 @@ export const adminService = {
           params: { role: data.role }
         });
       }
-      
+
       if (data.status !== undefined) {
         await api.put(`/admin/users/${userId}/user-status`, null, {
           params: { status: data.status }
         });
       }
-      
+
       if (data.creditBalance !== undefined) {
         await api.put(`/admin/users/${userId}/credits`, null, {
           params: { credits: data.creditBalance }
         });
       }
-      
+
       // Update plan - sends planName in request body (synchronises with last validated payment)
       if (data.plan !== undefined) {
         await api.put(`/admin/users/${userId}/plan`, { planName: data.plan });
@@ -102,7 +102,7 @@ export const adminService = {
           params: { paymentMethod: data.paymentMethod }
         });
       }
-      
+
       return { success: true };
     } catch (error) {
       console.error('Error updating user:', error);
@@ -194,12 +194,12 @@ export const adminService = {
       console.log('🔍 Response complète:', response);
       console.log('🔍 Response.data:', response.data);
       console.log('🔍 Response.data.data:', response.data.data);
-      
+
       const stats = response.data.data || response.data;
       console.log('📊 pendingCount:', stats.pendingCount);
       console.log('📊 validatedCount:', stats.validatedCount);
       console.log('📊 rejectedCount:', stats.rejectedCount);
-      
+
       return stats;
     } catch (error) {
       console.error('❌ Erreur stats:', error);
@@ -263,17 +263,17 @@ export const adminService = {
       const response = await api.get('/admin/payments', {
         transformResponse: [(data) => {
           console.log('🔄 Transform: data type:', typeof data);
-          
+
           // If data is already an object, return it
           if (typeof data === 'object') {
             console.log('✅ Data is already object');
             return data;
           }
-          
+
           // If data is string, handle the backend circular reference bug
           if (typeof data === 'string') {
             console.log('⚠️ Data is string (length:', data.length, ')');
-            
+
             // Try normal parse first
             try {
               const parsed = JSON.parse(data);
@@ -282,26 +282,26 @@ export const adminService = {
             } catch (e) {
               console.log('❌ Direct parse failed, extracting data array...');
             }
-            
+
             // CRITICAL FIX: Extract just the data array from the malformed response
             // Response format: {"success":true,"message":"...","data":[...]}
             // But circular refs break it, so extract the array directly
-            
+
             const dataArrayStart = data.indexOf('"data":[');
             if (dataArrayStart === -1) {
               console.error('❌ Could not find "data":[ in response');
               return { success: true, message: 'No data array found', data: [] };
             }
-            
+
             console.log('🔧 Found "data":[ at position:', dataArrayStart);
-            
+
             // Extract from the [ after "data":
             const arrayStart = dataArrayStart + '"data":'.length;
-            
+
             // Find where the array ends - look for the error message separator
             const errorPattern = ']}{"success":false';
             const errorPos = data.indexOf(errorPattern, arrayStart);
-            
+
             let arrayContent;
             if (errorPos > 0) {
               // Include the ] that closes the array
@@ -312,36 +312,36 @@ export const adminService = {
               arrayContent = data.substring(arrayStart);
               console.log('🔧 Extracted array to end. Length:', arrayContent.length);
             }
-            
+
             console.log('🔧 Array first 300 chars:', arrayContent.substring(0, 300));
             console.log('🔧 Array last 200 chars:', arrayContent.slice(-200));
-            
+
             // AGGRESSIVE FIX: Just take the first 200KB which should be valid
             // The corruption happens at position 238025, so everything before ~200000 should be safe
-            
+
             if (arrayContent.length > 200000) {
               console.log('� Array too large, truncating to first 200KB...');
-              
+
               // Find the last complete object before 200KB
               let truncatePos = 200000;
-              
+
               // Search backwards for },{ or }] pattern
               while (truncatePos > 100000) {
-                if (arrayContent[truncatePos] === '}' && 
-                    (arrayContent[truncatePos + 1] === ',' || arrayContent[truncatePos + 1] === ']')) {
+                if (arrayContent[truncatePos] === '}' &&
+                  (arrayContent[truncatePos + 1] === ',' || arrayContent[truncatePos + 1] === ']')) {
                   break;
                 }
                 truncatePos--;
               }
-              
+
               const truncated = arrayContent.substring(0, truncatePos + 1) + ']';
               console.log('🔧 Truncated at position:', truncatePos, '| New length:', truncated.length);
               console.log('🔧 Truncated last 100 chars:', truncated.slice(-100));
-              
+
               try {
                 const dataArray = JSON.parse(truncated);
                 console.log('✅ Successfully parsed truncated array! Items:', dataArray.length);
-                
+
                 if (dataArray.length > 0) {
                   console.log('📦 Sample payment:', {
                     id: dataArray[0].id,
@@ -351,7 +351,7 @@ export const adminService = {
                     amount: dataArray[0].amount
                   });
                 }
-                
+
                 return {
                   success: true,
                   message: `Extracted ${dataArray.length} payments (truncated to avoid backend bug)`,
@@ -362,12 +362,12 @@ export const adminService = {
                 // Fall through to other strategies
               }
             }
-            
+
             try {
               // Try to parse the array directly
               const dataArray = JSON.parse(arrayContent);
               console.log('✅ Successfully parsed data array! Items:', dataArray.length);
-              
+
               if (dataArray.length > 0) {
                 console.log('📦 First item sample:', {
                   id: dataArray[0].id,
@@ -376,7 +376,7 @@ export const adminService = {
                   hasUser: !!dataArray[0].user
                 });
               }
-              
+
               return {
                 success: true,
                 message: 'Data extracted despite backend bug',
@@ -384,42 +384,42 @@ export const adminService = {
               };
             } catch (parseError: any) {
               console.error('❌ Failed to parse array:', parseError);
-              
+
               // Extract error position if available
               const errorMatch = parseError.message?.match(/position (\d+)|column (\d+)/);
               const errorPos = errorMatch ? parseInt(errorMatch[1] || errorMatch[2]) : null;
-              
+
               if (errorPos && errorPos > 1000) {
                 console.log('🔧 Truncating at error position:', errorPos);
-                
+
                 // Go back from error position to find the last complete object
                 // Look for },{ or }] pattern (object boundary)
                 let truncatePos = errorPos - 1;
                 let foundBoundary = false;
-                
+
                 while (truncatePos > 100) {
                   const char = arrayContent[truncatePos];
                   const nextChar = arrayContent[truncatePos + 1];
-                  
+
                   // Found end of a complete object followed by comma or end of array
                   if (char === '}' && (nextChar === ',' || nextChar === ']')) {
                     foundBoundary = true;
                     break;
                   }
-                  
+
                   truncatePos--;
                 }
-                
+
                 if (foundBoundary && truncatePos > 100) {
                   // Include the } and add closing ]
                   const truncated = arrayContent.substring(0, truncatePos + 1) + ']';
                   console.log('🔧 Found boundary at:', truncatePos, '| Truncated length:', truncated.length);
                   console.log('🔧 Last 150 chars:', truncated.slice(-150));
-                  
+
                   try {
                     const dataArray = JSON.parse(truncated);
                     console.log('✅ Parsed truncated array! Items:', dataArray.length);
-                    
+
                     if (dataArray.length > 0) {
                       console.log('📦 First item:', {
                         id: dataArray[0].id,
@@ -432,7 +432,7 @@ export const adminService = {
                         planName: dataArray[dataArray.length - 1].planName
                       });
                     }
-                    
+
                     return {
                       success: true,
                       message: `Partial data (${dataArray.length} payments extracted, backend has circular refs)`,
@@ -445,22 +445,22 @@ export const adminService = {
                   console.warn('⚠️ Could not find safe truncation boundary');
                 }
               }
-              
+
               console.log('🔧 Attempting to fix unclosed structures...');
-              
+
               // Try to fix by closing unclosed braces/brackets
               let fixed = arrayContent;
               let openBraces = (fixed.match(/{/g) || []).length;
               let closeBraces = (fixed.match(/}/g) || []).length;
               let openBrackets = (fixed.match(/\[/g) || []).length;
               let closeBrackets = (fixed.match(/\]/g) || []).length;
-              
+
               console.log('📊 Braces:', openBraces, 'vs', closeBraces, '| Brackets:', openBrackets, 'vs', closeBrackets);
-              
+
               // Add missing closing characters
               while (closeBraces < openBraces) { fixed += '}'; closeBraces++; }
               while (closeBrackets < openBrackets) { fixed += ']'; closeBrackets++; }
-              
+
               try {
                 const dataArray = JSON.parse(fixed);
                 console.log('✅ Fixed and parsed! Items:', dataArray.length);
@@ -473,48 +473,48 @@ export const adminService = {
                 console.error('❌ Could not fix:', fixError);
               }
             }
-            
+
             // All strategies failed
             console.error('❌ Could not extract valid data. Backend MUST fix circular references.');
             return { success: true, message: 'Backend needs fix', data: [] };
           }
-          
+
           return data;
         }]
       });
-      
+
       console.log('🔍 Final response.data:', response.data);
-      
+
       const responseData = response.data;
-      
+
       // Now access the data array
       if (responseData?.success && Array.isArray(responseData.data)) {
         console.log('✅ Found payments:', responseData.data.length);
-        
+
         if (responseData.data.length > 0) {
           const firstPayment = responseData.data[0];
           console.log('📦 First payment keys:', Object.keys(firstPayment));
-          
+
           // Check for planName field
           const planName = firstPayment.planName || firstPayment.plan || 'N/A';
           console.log('📦 First payment planName:', planName);
           console.log('📦 First payment user.email:', firstPayment.user?.email);
         }
-        
+
         return responseData.data;
       }
-      
+
       // Fallback checks
       if (Array.isArray(responseData)) {
         console.log('✅ Response data is direct array:', responseData.length);
         return responseData;
       }
-      
+
       if (responseData && Array.isArray(responseData.data)) {
         console.log('✅ Found data array without success flag:', responseData.data.length);
         return responseData.data;
       }
-      
+
       console.warn('⚠️ No valid array found in response');
       return [];
     } catch (error) {
@@ -538,7 +538,7 @@ export const adminService = {
     });
     return response.data.data;
   },
-  
+
   // Update both status and method at once (synchronise avec le plan utilisateur)
   updatePayment: async (paymentId: number, updates: { status?: string; paymentMethod?: string; amount?: number; paidAt?: string; planName?: string }) => {
     console.log('📤 adminService.updatePayment called with:', { paymentId, updates });
@@ -553,7 +553,7 @@ export const adminService = {
   },
 
   // ==================== COMMERCIAL TEAM MANAGEMENT ====================
-  
+
   // Récupérer les statistiques de l'équipe commerciale
   getCommercialTeamStatistics: async () => {
     const response = await api.get('/admin/commercial-team/statistics');
@@ -580,7 +580,7 @@ export const adminService = {
   },
 
   // ==================== DOCUMENTS MANAGEMENT ====================
-  
+
   // Récupérer tous les documents
   getAllDocuments: async () => {
     const response = await api.get('/admin/documents');

@@ -19,14 +19,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -36,8 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Label } from '@/components/ui/label';
-import { Search, Edit, Trash2, Mail, Phone, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Trash2, Mail, Phone, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminService } from '@/services/adminService';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from '@/hooks/use-toast';
@@ -66,15 +57,8 @@ export default function AdminUsers() {
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 10;
   const [loading, setLoading] = useState(true);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [editForm, setEditForm] = useState({
-    role: '',
-    status: '',
-    credits: 0,
-    plan: '',
-  });
 
   useEffect(() => {
     loadUsers();
@@ -88,17 +72,17 @@ export default function AdminUsers() {
       console.log('✅ Données reçues de l\'API:', data);
       console.log('📊 Type de données:', typeof data);
       console.log('📦 Est un tableau?', Array.isArray(data));
-      
+
       const usersArray = Array.isArray(data) ? data : [];
       console.log('👥 Nombre d\'utilisateurs:', usersArray.length);
-      
+
       // Log first user to see structure
       if (usersArray.length > 0) {
         console.log('🔍 Premier utilisateur structure:', usersArray[0]);
         console.log('🔍 Current Plan field:', usersArray[0].currentPlan);
         console.log('🔍 Plan field (old):', usersArray[0].plan);
       }
-      
+
       setUsers(usersArray);
     } catch (error: any) {
       console.error('❌ Erreur lors du chargement des utilisateurs:', error);
@@ -116,60 +100,12 @@ export default function AdminUsers() {
     }
   };
 
-  const handleEdit = (user: User) => {
-    setSelectedUser(user);
-    setEditForm({
-      role: user.role,
-      status: user.status,
-      credits: user.creditBalance,
-      plan: user.currentPlan || user.plan || 'FREE',
-    });
-    setEditDialogOpen(true);
-  };
-
   const handleDelete = (user: User) => {
     setSelectedUser(user);
     setDeleteDialogOpen(true);
   };
 
-  const handleSaveEdit = async () => {
-    if (!selectedUser) return;
 
-    try {
-      // Prepare update data - match backend expected format
-      const updateData: Record<string, any> = {
-        role: editForm.role,
-        status: editForm.status,
-        creditBalance: editForm.credits,
-      };
-
-      // Only include plan for USER/NORMAL role
-      if (editForm.role === 'USER' || editForm.role === 'NORMAL') {
-        updateData.plan = editForm.plan;
-      }
-
-      // Update user with all changes at once
-      console.log('Updating user with data:', updateData);
-      await adminService.updateUser(selectedUser.id, updateData);
-
-      toast({
-        title: 'Succès',
-        description: 'Utilisateur mis à jour avec succès',
-      });
-      setEditDialogOpen(false);
-      loadUsers();
-    } catch (error: any) {
-      console.error('Erreur lors de la mise à jour:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error response message:', JSON.stringify(error.response?.data, null, 2));
-      console.error('Error status:', error.response?.status);
-      toast({
-        title: 'Erreur',
-        description: error.response?.data?.message || 'Impossible de mettre à jour l\'utilisateur',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const handleConfirmDelete = async () => {
     if (!selectedUser || !currentUser) return;
@@ -212,14 +148,14 @@ export default function AdminUsers() {
     const matchesType = typeFilter === 'all' || user.role === typeFilter;
     const userPlan = user.currentPlan || user.plan || 'FREE';
     const matchesPlan = planFilter === 'all' || userPlan === planFilter;
-    
+
     // Pour le filtre code promo, on ne considère que les USER (pas ADMIN ni COMMERCIAL)
     const isRegularUser = user.role === 'USER';
     const hasPromoCode = user.usedPromoCode && user.usedPromoCode.trim() !== '';
-    const matchesPromo = promoFilter === 'all' || 
-      (promoFilter === 'with' && isRegularUser && hasPromoCode) || 
+    const matchesPromo = promoFilter === 'all' ||
+      (promoFilter === 'with' && isRegularUser && hasPromoCode) ||
       (promoFilter === 'without' && isRegularUser && !hasPromoCode);
-    
+
     return matchesSearch && matchesType && matchesPlan && matchesPromo;
   });
 
@@ -238,16 +174,16 @@ export default function AdminUsers() {
   const exportToCSV = (filterType: string) => {
     let usersToExport = users;
     let exportLabel = filterType;
-    
+
     if (filterType === 'WITHOUT_PROMO') {
       // Filtrer uniquement les USER (pas ADMIN ni COMMERCIAL) sans code promo
-      usersToExport = users.filter((user) => 
+      usersToExport = users.filter((user) =>
         user.role === 'USER' && (!user.usedPromoCode || user.usedPromoCode.trim() === '')
       );
       exportLabel = 'sans_code_promo';
     } else if (filterType === 'WITH_PROMO') {
       // Filtrer uniquement les USER (pas ADMIN ni COMMERCIAL) avec code promo
-      usersToExport = users.filter((user) => 
+      usersToExport = users.filter((user) =>
         user.role === 'USER' && user.usedPromoCode && user.usedPromoCode.trim() !== ''
       );
       exportLabel = 'avec_code_promo';
@@ -320,7 +256,7 @@ export default function AdminUsers() {
 
   // Stats pour les USER uniquement (pas ADMIN ni COMMERCIAL) pour les filtres code promo
   const usersOnly = users.filter((u) => u.role === 'USER');
-  
+
   const stats = {
     total: users.length,
     free: users.filter((u) => (u.currentPlan || u.plan || 'FREE') === 'FREE').length,
@@ -483,7 +419,6 @@ export default function AdminUsers() {
                   <TableHead>Type</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Plan</TableHead>
-                  <TableHead>Crédits</TableHead>
                   <TableHead>Actif</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -491,7 +426,7 @@ export default function AdminUsers() {
               <TableBody>
                 {paginatedUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       Aucun utilisateur trouvé
                     </TableCell>
                   </TableRow>
@@ -519,14 +454,14 @@ export default function AdminUsers() {
                       </TableCell>
                       <TableCell>
                         {user.role === 'USER' ? (
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className={
-                              (user.currentPlan || user.plan) === 'VIP' 
-                                ? 'bg-purple-500/10 text-purple-600 border-purple-500/20' 
+                              (user.currentPlan || user.plan) === 'VIP'
+                                ? 'bg-purple-500/10 text-purple-600 border-purple-500/20'
                                 : (user.currentPlan || user.plan) === 'NORMAL'
-                                ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
-                                : 'bg-gray-500/10 text-gray-600 border-gray-500/20'
+                                  ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                                  : 'bg-gray-500/10 text-gray-600 border-gray-500/20'
                             }
                           >
                             {user.currentPlan || user.plan || 'FREE'}
@@ -536,23 +471,12 @@ export default function AdminUsers() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <span className="font-medium">{user.creditBalance}</span>
-                      </TableCell>
-                      <TableCell>
                         <Badge variant={user.active ? 'default' : 'secondary'}>
                           {user.active ? 'Oui' : 'Non'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleEdit(user)}
-                            title="Modifier"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
                           <Button
                             size="icon"
                             variant="ghost"
@@ -624,89 +548,6 @@ export default function AdminUsers() {
           )}
         </CardContent>
       </Card>
-
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Modifier l'utilisateur</DialogTitle>
-            <DialogDescription>
-              Modifier les informations de {selectedUser?.fullName}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="role">Type d'utilisateur</Label>
-              <Select
-                value={editForm.role}
-                onValueChange={(value) => setEditForm({ ...editForm, role: value })}
-              >
-                <SelectTrigger id="role">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USER">User</SelectItem>
-                  <SelectItem value="COMMERCIAL">Commercial</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Statut</Label>
-              <Select
-                value={editForm.status}
-                onValueChange={(value) => setEditForm({ ...editForm, status: value })}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CONFIRME">Confirmé</SelectItem>
-                  <SelectItem value="EN_ATTENTE">En attente</SelectItem>
-                  <SelectItem value="EXPIRED">Expiré</SelectItem>
-                  <SelectItem value="SUSPENDED">Suspendu</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Only show plan field for USER role, not for COMMERCIAL or ADMIN */}
-            {editForm.role === 'USER' && (
-              <div className="space-y-2">
-                <Label htmlFor="plan">Type de Plan</Label>
-                <Select
-                  value={editForm.plan}
-                  onValueChange={(value) => setEditForm({ ...editForm, plan: value })}
-                >
-                  <SelectTrigger id="plan">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="FREE">Free</SelectItem>
-                    <SelectItem value="NORMAL">Normal</SelectItem>
-                    <SelectItem value="VIP">VIP</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="credits">Crédits</Label>
-              <Input
-                id="credits"
-                type="number"
-                value={editForm.credits}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, credits: parseInt(e.target.value) || 0 })
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleSaveEdit}>Enregistrer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

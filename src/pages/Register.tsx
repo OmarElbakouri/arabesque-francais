@@ -33,7 +33,7 @@ export default function Register() {
       if (!payload.promoCode || payload.promoCode.trim() === '') {
         delete payload.promoCode;
       }
-      
+
       await registerUser(payload);
       toast({
         title: 'مرحباً بك!',
@@ -51,7 +51,7 @@ export default function Register() {
       <div className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float"></div>
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
       <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent/5 rounded-full blur-2xl animate-float" style={{ animationDelay: '2s' }}></div>
-      
+
       <Card className="w-full max-w-md shadow-2xl border-0 backdrop-blur-sm bg-white/95 relative z-10 animate-fade-in overflow-hidden">
         {/* Top decorative bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
@@ -154,7 +154,6 @@ export default function Register() {
                   }}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Codes actifs : OMAR2025, SALES2025</p>
             </div>
 
             <div className="space-y-2">
@@ -216,7 +215,7 @@ export default function Register() {
               تسجيل الدخول
             </Link>
           </div>
-          
+
           {/* Bottom decoration */}
           <div className="flex justify-center gap-2 mt-4 pb-2">
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
