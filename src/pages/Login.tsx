@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, AlertCircle } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,7 +24,7 @@ export default function Login() {
         title: 'مرحباً بك!',
         description: 'تم تسجيل الدخول بنجاح',
       });
-      
+
       // Redirect based on role
       const authState = useAuthStore.getState();
       if (authState.user?.role === 'ADMIN') {
@@ -44,7 +44,7 @@ export default function Login() {
       <div className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float"></div>
       <div className="absolute bottom-20 left-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
       <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-accent/5 rounded-full blur-2xl animate-float" style={{ animationDelay: '2s' }}></div>
-      
+
       <Card className="w-full max-w-md shadow-2xl border-0 backdrop-blur-sm bg-white/95 relative z-10 animate-fade-in overflow-hidden">
         {/* Top decorative bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
@@ -122,12 +122,22 @@ export default function Login() {
               إنشاء حساب جديد
             </Link>
           </div>
-          
+
           {/* Bottom decoration */}
           <div className="flex justify-center gap-2 mt-4 pb-2">
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
             <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
             <div className="w-2 h-2 bg-accent rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+          </div>
+
+          {/* Home button */}
+          <div className="mt-4 text-center">
+            <Link to="/home">
+              <Button variant="outline" className="gap-2 hover:bg-primary/10 transition-colors">
+                <Home className="w-4 h-4" />
+                <span>العودة إلى الصفحة الرئيسية</span>
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

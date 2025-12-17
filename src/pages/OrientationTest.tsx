@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
-import { GraduationCap, Briefcase, Plane, BookOpen, Users, Globe, Building, Stethoscope, Scale, Check, ArrowRight, ArrowLeft } from "lucide-react";
+import { GraduationCap, Briefcase, Plane, BookOpen, Users, Globe, Building, Stethoscope, Scale, Check, ArrowRight, ArrowLeft, BookOpenCheck } from "lucide-react";
 
 interface Question {
   id: number;
@@ -38,6 +38,12 @@ const questions: Question[] = [
         label: "Évoluer professionnellement",
         icon: <Briefcase className="w-8 h-8" />,
         description: "Améliorer mes compétences pour le travail"
+      },
+      {
+        value: "FRENCH_PROFESSOR",
+        label: "Enseigner le français",
+        icon: <BookOpenCheck className="w-8 h-8" />,
+        description: "Je suis professeur ou futur enseignant de FLE"
       }
     ]
   },
@@ -417,6 +423,9 @@ const OrientationTest = () => {
                 )}
                 {result.learnerType === "CASUAL" && (
                   <li>• Quiz IA avec situations du quotidien et pratiques</li>
+                )}
+                {result.learnerType === "TEACHER" && (
+                  <li>• Quiz IA avec ressources pédagogiques et techniques d'enseignement</li>
                 )}
 
                 {/* Dynamic content based on sector of interest */}
