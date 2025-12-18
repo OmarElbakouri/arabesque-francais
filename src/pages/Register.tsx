@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, User, Phone, AlertCircle, Tag } from 'lucide-react';
+import { Mail, Lock, User, Phone, AlertCircle, Tag, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -213,6 +213,16 @@ export default function Register() {
             <span className="text-muted-foreground">لديك حساب بالفعل؟ </span>
             <Link to="/login" className="text-primary hover:underline font-medium link-animated">
               تسجيل الدخول
+            </Link>
+          </div>
+
+          {/* Return to Home Button */}
+          <div className="mt-4 flex justify-center">
+            <Link to="/home">
+              <Button variant="outline" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+                <Home className="h-4 w-4" />
+                العودة إلى الصفحة الرئيسية
+              </Button>
             </Link>
           </div>
 

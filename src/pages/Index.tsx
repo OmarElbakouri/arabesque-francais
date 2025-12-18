@@ -51,107 +51,122 @@ const Index = () => {
                 <Button variant="ghost" className="font-medium">تسجيل الدخول</Button>
               </Link>
               <Link to="/register">
-                <Button className="btn-hero text-sm">ابدأ مجاناً</Button>
+                <Button className="btn-hero text-sm">جرب الحصة الاولى بالمجان</Button>
               </Link>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Hero Section - Modern Dark Design */}
+      {/* Hero Section - Modern White Design */}
       <section className="relative pt-24 pb-20 overflow-hidden min-h-[90vh] flex items-center">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black"></div>
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1456428746267-a1756408f782?q=80&w=2670&auto=format&fit=crop')] bg-cover bg-center opacity-10"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/50"></div>
+        {/* Background Effects - White Theme */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-white"></div>
 
-        {/* Animated Gradient Orbs */}
-        <div className="absolute top-20 right-20 w-96 h-96 bg-primary/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-primary/10 to-purple-600/10 rounded-full blur-3xl"></div>
+        {/* Subtle Pattern Overlay */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%239C92AC\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }}></div>
+
+        {/* Animated Gradient Orbs - Softer for white background */}
+        <div className="absolute top-20 right-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-purple-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-primary/5 to-purple-400/5 rounded-full blur-3xl"></div>
+
+        {/* Decorative Elements */}
+        <div className="absolute top-32 right-10 w-20 h-20 border-2 border-primary/20 rounded-full"></div>
+        <div className="absolute bottom-32 left-10 w-32 h-32 border-2 border-purple-400/20 rounded-full"></div>
+        <div className="absolute top-1/3 right-1/4 w-4 h-4 bg-primary/30 rounded-full"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-6 h-6 bg-purple-400/30 rounded-full"></div>
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Text Content */}
-            <div className="animate-slide-up text-white">
+            {/* Text Content - Dark text for white background */}
+            <div className="animate-slide-up">
               <div className="inline-block mb-6">
-                <span className="inline-flex items-center gap-2 py-2 px-4 rounded-full bg-primary/20 border border-primary/50 text-primary text-sm font-bold backdrop-blur-sm">
+                <span className="inline-flex items-center gap-2 py-2 px-4 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm font-bold shadow-sm">
                   <Sparkles className="w-4 h-4" />
-                  أول منصة لتعلم الفرنسية بالذكاء الاصطناعي في المغرب
+                  أول منصة لتعلم الفرنسية مع الاستاذ اناس بAI في المغرب
                 </span>
               </div>
 
-              <h1 className="text-5xl lg:text-7xl font-black mb-6 leading-tight text-white">
+              <h1 className="text-5xl lg:text-7xl font-black mb-6 leading-tight text-gray-900">
                 أتقن اللغة الفرنسية
-                <span className="block">مع الأستاذ أناس</span>
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">مع الأستاذ أناس</span>
                 <span className="block">بمساعدة AI</span>
               </h1>
 
-              <p className="text-xl text-gray-300 mb-8 leading-relaxed max-w-xl">
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-xl">
                 تعلم اللغة الفرنسية بأسلوب عصري مدعوم بالذكاء الاصطناعي. دروس فيديو، تمارين تفاعلية، ومساعد ذكي يصحح نطقك ويجيب على أسئلتك في الحين.
               </p>
 
               {/* Stats Row */}
-              <div className="flex flex-wrap items-center gap-6 mb-8">
-                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-full px-4 py-2 border border-white/10">
-                  <Check className="h-5 w-5 text-green-400" />
-                  <span className="font-medium text-white">أكثر من 15000 طالب</span>
+              <div className="flex flex-wrap items-center gap-4 mb-8">
+                <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span className="font-medium text-gray-700">أكثر من 15000 طالب</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-full px-4 py-2 border border-white/10">
-                  <Check className="h-5 w-5 text-green-400" />
-                  <span className="font-medium text-white">شهادات معتمدة</span>
+                <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span className="font-medium text-gray-700">شهادات معتمدة</span>
                 </div>
-                <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-full px-4 py-2 border border-white/10">
-                  <Check className="h-5 w-5 text-green-400" />
-                  <span className="font-medium text-white">دعم 24/7</span>
+                <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <Check className="h-5 w-5 text-green-500" />
+                  <span className="font-medium text-gray-700">دعم 24/7</span>
                 </div>
               </div>
+
+              {/* Free Trial Button - Visible without scrolling */}
+              <Link to="/register">
+                <Button size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white text-lg px-8 py-6 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                  <Play className="ml-2 h-5 w-5" />
+                  جرب الحصة الاولى بالمجان
+                </Button>
+              </Link>
             </div>
 
             {/* Professor Image with Creative Frame */}
             <div className="relative">
               {/* Glowing Background Effect */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-primary via-purple-500 to-pink-500 rounded-3xl blur-2xl opacity-40 animate-pulse"></div>
+              <div className="absolute -inset-4 bg-gradient-to-r from-primary via-purple-500 to-pink-500 rounded-3xl blur-2xl opacity-30 animate-pulse"></div>
 
               {/* Main Image Container */}
               <div className="relative">
                 {/* Decorative Frame */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary via-purple-500 to-pink-500 rounded-3xl opacity-75"></div>
 
-                <div className="relative bg-gray-900 rounded-3xl p-2">
+                <div className="relative bg-white rounded-3xl p-2 shadow-2xl">
                   <img
                     src={professorImg}
                     alt="Professor"
-                    className="rounded-2xl w-full max-w-md mx-auto grayscale-[20%] contrast-110"
+                    className="rounded-2xl w-full max-w-md mx-auto"
                   />
 
                   {/* Gradient Overlay on Image */}
-                  <div className="absolute inset-2 rounded-2xl bg-gradient-to-t from-gray-900/80 via-transparent to-transparent pointer-events-none"></div>
+                  <div className="absolute inset-2 rounded-2xl bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
                 </div>
 
                 {/* Floating Rating Card */}
-                <div className="absolute -bottom-4 -left-4 bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 border border-white/10 animate-float">
+                <div className="absolute -bottom-4 -left-4 bg-white backdrop-blur-xl rounded-2xl shadow-xl p-4 border border-gray-100 animate-float">
                   <div className="flex items-center gap-3">
                     <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full p-3">
                       <Star className="h-6 w-6 text-white fill-current" />
                     </div>
                     <div>
-                      <p className="font-bold text-2xl text-white">4.9/5</p>
-                      <p className="text-sm text-gray-400">تقييم الطلاب</p>
+                      <p className="font-bold text-2xl text-gray-900">4.9/5</p>
+                      <p className="text-sm text-gray-500">تقييم الطلاب</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Floating AI Badge */}
-                <div className="absolute -top-4 -right-4 bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 border border-white/10 animate-float" style={{ animationDelay: '0.5s' }}>
+                <div className="absolute -top-4 -right-4 bg-white backdrop-blur-xl rounded-2xl shadow-xl p-4 border border-gray-100 animate-float" style={{ animationDelay: '0.5s' }}>
                   <div className="flex items-center gap-3">
                     <div className="bg-gradient-to-r from-primary to-purple-600 rounded-full p-3">
                       <Brain className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="font-bold text-white">AI مساعد</p>
-                      <p className="text-xs text-green-400 flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                      <p className="font-bold text-gray-900">AI مساعد</p>
+                      <p className="text-xs text-green-500 flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                         متصل الآن
                       </p>
                     </div>
@@ -159,14 +174,14 @@ const Index = () => {
                 </div>
 
                 {/* Floating Students Count */}
-                <div className="absolute top-1/2 -right-8 bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-2xl p-4 border border-white/10 animate-float" style={{ animationDelay: '1s' }}>
+                <div className="absolute top-1/2 -right-8 bg-white backdrop-blur-xl rounded-2xl shadow-xl p-4 border border-gray-100 animate-float" style={{ animationDelay: '1s' }}>
                   <div className="flex items-center gap-3">
                     <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full p-3">
                       <Users className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="font-bold text-xl text-white">+15K</p>
-                      <p className="text-xs text-gray-400">طالب نشط</p>
+                      <p className="font-bold text-xl text-gray-900">+10K</p>
+                      <p className="text-xs text-gray-500">طالب نشط</p>
                     </div>
                   </div>
                 </div>
@@ -177,7 +192,7 @@ const Index = () => {
 
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <ChevronDown className="h-8 w-8 text-white/50" />
+          <ChevronDown className="h-8 w-8 text-gray-400" />
         </div>
       </section>
 
