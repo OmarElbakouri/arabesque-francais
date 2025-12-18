@@ -81,11 +81,10 @@ const Index = () => {
                 </span>
               </div>
 
-              <h1 className="text-5xl lg:text-7xl font-black mb-6 leading-tight">
+              <h1 className="text-5xl lg:text-7xl font-black mb-6 leading-tight text-white">
                 أتقن اللغة الفرنسية
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-yellow-400 to-orange-500">
-                  بمساعدة الذكاء الاصطناعي
-                </span>
+                <span className="block">مع الأستاذ أناس</span>
+                <span className="block">بمساعدة AI</span>
               </h1>
 
               <p className="text-xl text-gray-300 mb-8 leading-relaxed max-w-xl">
@@ -328,17 +327,17 @@ const Index = () => {
         </div>
       </section>
 
-      {/* 3 Stages Path */}
+      {/* 2 Stages Path */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16 animate-fade-in">
             <h2 className="text-4xl font-black mb-4">
               طريقك لإتقان <span className="text-gradient">التواصل باللغة الفرنسية</span>
             </h2>
-            <p className="text-2xl font-bold text-primary mb-2">عبر 3 مراحل</p>
+            <p className="text-2xl font-bold text-primary mb-2">عبر مرحلتين</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {[
               {
                 stage: "المرحلة 1",
@@ -361,17 +360,6 @@ const Index = () => {
                 ],
                 highlight: "لمدة شهر و نصف",
                 color: "bg-secondary/10 text-secondary border-secondary"
-              },
-              {
-                stage: "المرحلة 3",
-                icon: UserCheck,
-                title: "التمرن على التحدث مع شخص آخر باللغة الفرنسية",
-                points: [
-                  "عبر حصص مباشرة مع طلاب آخرين و تحضير أستاذ تقوم بمناقشة مواضيع مختلفة",
-                  "كل هذا فيه فيديو التمرن على التواصل المباشر باللغة الفرنسية في مواقف واقعية",
-                ],
-                highlight: "إختياري لمدة شهرين - دفع إضافي",
-                color: "bg-info/10 text-info border-info"
               }
             ].map((stage, idx) => {
               const Icon = stage.icon;

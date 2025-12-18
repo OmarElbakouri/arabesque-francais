@@ -25,8 +25,7 @@ import {
   XCircle,
   Play,
   Volume2,
-  VolumeX,
-  PhoneOff
+  VolumeX
 } from 'lucide-react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import {
@@ -631,17 +630,8 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
 
       {/* Controls */}
       <div className="absolute bottom-12 w-full flex justify-center items-center gap-8">
-        {/* End Conversation Button */}
-        <motion.button
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handleEndConversation}
-          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg bg-muted hover:bg-muted-foreground/20 text-muted-foreground transition-colors"
-          title="Terminer la conversation"
-        >
-          <PhoneOff className="w-6 h-6" />
-        </motion.button>
+        {/* Placeholder for symmetry */}
+        <div className="w-14 h-14" />
 
         {/* Mic Button */}
         <AnimatePresence>
