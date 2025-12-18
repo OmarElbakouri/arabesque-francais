@@ -174,13 +174,7 @@ export function Navbar() {
                 )}
               </>
             )}
-            <Link
-              to="/contact"
-              className="block py-2 text-foreground"
-              onClick={() => setIsOpen(false)}
-            >
-              اتصل بنا
-            </Link>
+
             {isAuthenticated ? (
               <>
                 <Link to="/profile" className="block py-2" onClick={() => setIsOpen(false)}>

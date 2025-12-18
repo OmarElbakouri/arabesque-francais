@@ -19,7 +19,6 @@ import StudentCourseDetail from "./pages/StudentCourseDetail";
 import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
 import Blog from "./pages/Blog";
-import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import DevicesPage from "./pages/Devices";
 import NotFound from "./pages/NotFound";
@@ -72,7 +71,6 @@ const App = () => (
           <Route path="/messages" element={<ProtectedRoute><Navbar /><Messages /></ProtectedRoute>} />
           <Route path="/devices" element={<ProtectedRoute><Navbar /><DevicesPage /></ProtectedRoute>} />
           <Route path="/blog" element={<><Navbar /><Blog /></>} />
-          <Route path="/contact" element={<><Navbar /><Contact /></>} />
           <Route path="/faq" element={<><Navbar /><FAQ /></>} />
 
           {/* Admin routes with separate layout */}

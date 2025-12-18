@@ -77,11 +77,11 @@ export default function FAQ() {
           <CardContent className="pt-6 text-center">
             <h3 className="text-2xl font-bold mb-2">لا تزال لديك أسئلة؟</h3>
             <p className="mb-6 text-white/90">
-              لا تتردد في التواصل معنا، نحن هنا لمساعدتك
+              لا تتردد في التواصل معنا عبر البريد الإلكتروني
             </p>
-            <a href="/contact" className="inline-block">
+            <a href="mailto:contact@bclt.ma" className="inline-block">
               <button className="btn-hero-outline">
-                اتصل بنا
+                contact@bclt.ma
               </button>
             </a>
           </CardContent>
