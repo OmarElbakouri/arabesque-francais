@@ -49,10 +49,11 @@ export function Navbar() {
   return (
     <nav className="bg-card border-b border-border sticky top-0 z-50 shadow-custom-sm">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="BCLT" className="h-12 w-auto" />
-            <span className="text-xl font-bold text-foreground">BCLT الفرنسية</span>
+        <div className="flex justify-between items-center h-16 gap-2">
+          {/* Logo */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <img src={logo} alt="BCLT" className="h-10 sm:h-12 w-auto" />
+            <span className="text-lg sm:text-xl font-bold text-foreground hidden sm:inline">BCLT الفرنسية</span>
           </div>
 
           {/* Desktop Menu */}

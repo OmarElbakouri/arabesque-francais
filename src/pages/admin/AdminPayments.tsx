@@ -30,11 +30,11 @@ import {
 import { Search, Edit, CheckCircle, XCircle, Clock, DollarSign, Users, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/adminService';
-import { 
-  PAYMENT_STATUS_MAP, 
+import {
+  PAYMENT_STATUS_MAP,
   PAYMENT_METHOD_MAP,
   PAYMENT_STATUS_DISPLAY,
-  PAYMENT_METHOD_DISPLAY 
+  PAYMENT_METHOD_DISPLAY
 } from '@/lib/paymentConstants';
 
 interface User {
@@ -104,12 +104,12 @@ export default function AdminPayments() {
     try {
       setLoading(true);
       console.log('👥 Chargement des paiements (utilisateurs NORMAL et VIP)...');
-      
+
       const payments = await adminService.getAllPayments();
       console.log('📦 Paiements reçus:', payments);
       console.log('📦 Type de payments:', typeof payments);
       console.log('📦 Est un tableau?', Array.isArray(payments));
-      
+
       // Check if payments is a valid array
       if (!payments || !Array.isArray(payments)) {
         console.warn('⚠️ Réponse invalide - pas un tableau:', payments);
@@ -118,7 +118,7 @@ export default function AdminPayments() {
       }
 
       console.log('📦 Nombre de paiements:', payments.length);
-      
+
       if (payments.length > 0) {
         console.log('📦 Premier paiement COMPLET:', payments[0]);
         console.log('📦 TOUTES les clés du paiement:', Object.keys(payments[0]));
@@ -128,12 +128,12 @@ export default function AdminPayments() {
         console.log('📦 userId:', payments[0].userId);
         console.log('📦 paidAt direct:', payments[0].paidAt); // ✨ VÉRIFIER SI LA DATE EXISTE
       }
-      
+
       // Map payments to user format with planName from payment
       const usersWithPayments = payments.map((payment: any) => {
         // Le backend envoie les données directement dans payment, PAS dans payment.user
         const user = payment.user || {};
-        
+
         console.log('🔍 Processing payment:', {
           paymentId: payment.id,
           userId: payment.userId,
@@ -141,38 +141,38 @@ export default function AdminPayments() {
           userEmail: payment.userEmail,
           paymentKeys: Object.keys(payment)
         });
-        
+
         // Extract email - DIRECTEMENT depuis payment
         const email = payment.userEmail || user.email || '';
-        
+
         // Extract names - DIRECTEMENT depuis payment
-        const fullName = payment.userName || 
-                        user.fullName || 
-                        `${user.firstName || ''} ${user.lastName || ''}`.trim() || 
-                        email?.split('@')[0] || 
-                        'Unknown';
-        
+        const fullName = payment.userName ||
+          user.fullName ||
+          `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
+          email?.split('@')[0] ||
+          'Unknown';
+
         console.log('✅ Extracted names:', { fullName, email });
-        
+
         // planName comes from the payment object directly
         const planName = payment.planName || 'NORMAL';
         const plan = (planName.toUpperCase() === 'VIP' ? 'VIP' : 'NORMAL') as 'NORMAL' | 'VIP';
-        
+
         // Payment status from payment object - MAPPER EN→FR pour l'affichage
         const backendStatus = payment.status || 'PENDING';
         const paymentStatus = PAYMENT_STATUS_DISPLAY[backendStatus] || backendStatus;
-        
+
         // Payment method - MAPPER EN→FR pour l'affichage
         const backendMethod = payment.paymentMethod;
         const paymentMethod = backendMethod ? (PAYMENT_METHOD_DISPLAY[backendMethod] || backendMethod) : undefined;
-        
-        console.log('🔄 Mapping affichage:', { 
-          backendStatus, 
+
+        console.log('🔄 Mapping affichage:', {
+          backendStatus,
           displayStatus: paymentStatus,
           backendMethod,
           displayMethod: paymentMethod
         });
-        
+
         return {
           id: payment.userId || user.id, // ID utilisateur DEPUIS payment.userId
           paymentId: payment.id, // ID du paiement (IMPORTANT pour update)
@@ -192,13 +192,13 @@ export default function AdminPayments() {
           paidAt: payment.paidAt,
         };
       });
-      
+
       console.log('✅ Utilisateurs avec paiements mappés:', usersWithPayments.length);
       if (usersWithPayments.length > 0) {
         console.log('📦 Premier utilisateur mappé:', usersWithPayments[0]);
         console.log('📅 paidAt dans l\'utilisateur mappé:', usersWithPayments[0].paidAt);
       }
-      
+
       setUsers(usersWithPayments);
     } catch (error) {
       console.error('❌ Erreur lors du chargement des paiements:', error);
@@ -225,7 +225,7 @@ export default function AdminPayments() {
 
   const handleDelete = async (paymentId: number) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) return;
-    
+
     try {
       await adminService.deletePayment(paymentId);
       toast({
@@ -246,7 +246,7 @@ export default function AdminPayments() {
   useEffect(() => {
     loadUsers();
     loadStatistics();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleEditClick = (user: User) => {
@@ -264,7 +264,7 @@ export default function AdminPayments() {
     setSelectedMethod(user.paymentMethod || 'UNDEFINED');
     setSelectedPlan(user.plan || 'NORMAL');
     setNewAmount(user.amount || 0); // Initialiser avec le montant actuel
-    
+
     // Ajouter cette partie :
     if (user.paidAt) {
       const date = new Date(user.paidAt);
@@ -272,7 +272,7 @@ export default function AdminPayments() {
     } else {
       setNewPaidAt('');
     }
-    
+
     setEditDialogOpen(true);
   };
 
@@ -298,33 +298,33 @@ export default function AdminPayments() {
       console.log('📋 Status actuel:', editingUser.currentStatus, '→ Nouveau:', selectedStatus);
       console.log('📋 Méthode actuelle:', editingUser.currentMethod, '→ Nouvelle:', selectedMethod);
       console.log('📌 Date de paiement saisie:', newPaidAt);
-      
+
       // Prepare updates object with FR→EN mapping
       const updates: { status?: string; paymentMethod?: string; amount: number; paidAt?: string; planName?: string } = {
         amount: newAmount,
         planName: selectedPlan
       };
-      
+
       if (selectedStatus !== editingUser.currentStatus) {
         updates.status = mappedStatus;
         console.log('🔄 Status mappé:', selectedStatus, '→', updates.status);
       }
-      
+
       if (selectedMethod && selectedMethod !== 'UNDEFINED' && selectedMethod !== editingUser.currentMethod) {
         updates.paymentMethod = mappedMethod;
         console.log('🔄 Méthode mappée:', selectedMethod, '→', updates.paymentMethod);
       }
-      
+
       // Ajouter cette ligne :
       if (newPaidAt) {
         updates.paidAt = new Date(newPaidAt).toISOString();
         console.log('📅 Date de paiement ajoutée:', newPaidAt, '→', updates.paidAt);
       }
-      
+
       console.log('📦 Mise à jour COMPLÈTE du paiement:', updates);
       console.log('📤 API Call: PUT /admin/payments/update');
       console.log('📤 Body COMPLET:', JSON.stringify({ paymentId: editingUser.paymentId, ...updates }, null, 2));
-      
+
       // Use paymentId (payment.id) instead of userId
       await adminService.updatePayment(editingUser.paymentId, updates);
       console.log('✅ Paiement mis à jour');
@@ -336,14 +336,14 @@ export default function AdminPayments() {
 
       setEditDialogOpen(false);
       setEditingUser(null);
-      
+
       // ⚠️ IMPORTANT : Rafraîchir TOUTE la liste depuis le serveur
       console.log('🔄 Rafraîchissement des données...');
       await loadUsers(); // Recharger TOUTE la liste depuis le backend
       console.log('✅ Données rafraîchies');
     } catch (error) {
       console.error('❌ Erreur lors de la mise à jour:', error);
-      
+
       // Log detailed error information
       if (error instanceof Error && 'response' in error) {
         const axiosError = error as any;
@@ -352,7 +352,7 @@ export default function AdminPayments() {
         console.error('❌ Request URL:', axiosError.config?.url);
         console.error('❌ Request params:', axiosError.config?.params);
       }
-      
+
       toast({
         title: 'Erreur',
         description: 'Impossible de mettre à jour les informations',
@@ -366,7 +366,7 @@ export default function AdminPayments() {
   // Filter users based on search and filters
   const filteredUsers = users.filter((user) => {
     const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || user.paymentStatus === statusFilter;
     const matchesPlan = planFilter === 'all' || user.plan === planFilter;
     return matchesSearch && matchesStatus && matchesPlan;
@@ -390,7 +390,7 @@ export default function AdminPayments() {
 
   const getMethodBadge = (method?: string) => {
     if (!method) return <span className="text-gray-400 text-sm">Non défini</span>;
-    
+
     const config = {
       VIREMENT: { color: 'bg-blue-500', label: 'Virement' },
       ESPECES: { color: 'bg-green-500', label: 'Espèces' },
@@ -411,79 +411,79 @@ export default function AdminPayments() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <div>
-          <h1 className="text-3xl font-bold">Gestion des Paiements</h1>
-          <p className="text-gray-500 mt-1">Gérer les statuts et méthodes de paiement des utilisateurs NORMAL et VIP</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Gestion des Paiements</h1>
+          <p className="text-gray-500 mt-1 text-sm sm:text-base">Gérer les statuts et méthodes de paiement des utilisateurs NORMAL et VIP</p>
         </div>
       </div>
 
       {/* Stats Cards */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i}>
-              <CardContent className="p-6">
-                <Skeleton className="h-20 w-full" />
+              <CardContent className="p-4 sm:p-6">
+                <Skeleton className="h-16 sm:h-20 w-full" />
               </CardContent>
             </Card>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Total Utilisateurs</p>
-                  <h3 className="text-3xl font-bold text-gray-900 mt-2">{stats.totalPayments}</h3>
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">Total Utilisateurs</p>
+                  <h3 className="text-xl sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{stats.totalPayments}</h3>
                 </div>
-                <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-blue-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">En Attente</p>
-                  <h3 className="text-3xl font-bold text-yellow-600 mt-2">{stats.pendingCount}</h3>
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">En Attente</p>
+                  <h3 className="text-xl sm:text-3xl font-bold text-yellow-600 mt-1 sm:mt-2">{stats.pendingCount}</h3>
                 </div>
-                <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Clock className="h-6 w-6 text-yellow-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Validés</p>
-                  <h3 className="text-3xl font-bold text-green-600 mt-2">{stats.validatedCount}</h3>
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">Validés</p>
+                  <h3 className="text-xl sm:text-3xl font-bold text-green-600 mt-1 sm:mt-2">{stats.validatedCount}</h3>
                 </div>
-                <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Rejetés</p>
-                  <h3 className="text-3xl font-bold text-red-600 mt-2">{stats.rejectedCount}</h3>
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">Rejetés</p>
+                  <h3 className="text-xl sm:text-3xl font-bold text-red-600 mt-1 sm:mt-2">{stats.rejectedCount}</h3>
                 </div>
-                <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <XCircle className="h-6 w-6 text-red-600" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-red-100 rounded-lg flex items-center justify-center">
+                  <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
                 </div>
               </div>
             </CardContent>
@@ -546,89 +546,91 @@ export default function AdminPayments() {
               <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-4 text-lg font-medium text-gray-900">Aucun utilisateur trouvé</h3>
               <p className="mt-2 text-sm text-gray-500">
-                {users.length === 0 
+                {users.length === 0
                   ? "Il n'y a pas encore d'utilisateurs NORMAL ou VIP."
                   : "Aucun utilisateur ne correspond à vos critères de recherche."}
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Utilisateur</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Téléphone</TableHead>
-                    <TableHead>Plan</TableHead>
-                    <TableHead>Montant</TableHead>
-                    <TableHead>Statut Paiement</TableHead>
-                    <TableHead>Méthode Paiement</TableHead>
-                    <TableHead>Référence</TableHead>
-                    <TableHead>Date Paiement</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.paymentId}>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium text-sm">{user.fullName || `${user.firstName} ${user.lastName}` || 'Nom non disponible'}</span>
-                          <span className="text-xs text-gray-500">{user.email || '-'}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{user.email || '-'}</TableCell>
-                      <TableCell>{user.phone || '-'}</TableCell>
-                      <TableCell>{getPlanBadge(user.plan)}</TableCell>
-                      <TableCell>
-                        <span className="font-bold text-gray-900">{user.amount ? `${user.amount} DH` : '-'}</span>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(user.paymentStatus)}</TableCell>
-                      <TableCell>{getMethodBadge(user.paymentMethod)}</TableCell>
-                      <TableCell>
-                        <span className="font-mono text-xs text-gray-600">
-                          {user.transactionReference || '-'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {user.paidAt ? (
-                          <div className="text-sm">
-                            {new Date(user.paidAt).toLocaleDateString('fr-FR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditClick(user)}
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Modifier
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(user.paymentId)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Supprimer
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="min-w-[900px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Utilisateur</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Téléphone</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead>Montant</TableHead>
+                      <TableHead>Statut Paiement</TableHead>
+                      <TableHead>Méthode Paiement</TableHead>
+                      <TableHead>Référence</TableHead>
+                      <TableHead>Date Paiement</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
+                      <TableRow key={user.paymentId}>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm">{user.fullName || `${user.firstName} ${user.lastName}` || 'Nom non disponible'}</span>
+                            <span className="text-xs text-gray-500">{user.email || '-'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{user.email || '-'}</TableCell>
+                        <TableCell>{user.phone || '-'}</TableCell>
+                        <TableCell>{getPlanBadge(user.plan)}</TableCell>
+                        <TableCell>
+                          <span className="font-bold text-gray-900">{user.amount ? `${user.amount} DH` : '-'}</span>
+                        </TableCell>
+                        <TableCell>{getStatusBadge(user.paymentStatus)}</TableCell>
+                        <TableCell>{getMethodBadge(user.paymentMethod)}</TableCell>
+                        <TableCell>
+                          <span className="font-mono text-xs text-gray-600">
+                            {user.transactionReference || '-'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {user.paidAt ? (
+                            <div className="text-sm">
+                              {new Date(user.paidAt).toLocaleDateString('fr-FR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditClick(user)}
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Modifier
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(user.paymentId)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Supprimer
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </CardContent>

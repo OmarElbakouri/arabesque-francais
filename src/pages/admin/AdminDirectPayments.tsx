@@ -513,57 +513,61 @@ export default function AdminDirectPayments() {
               )}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Utilisateur</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Montant</TableHead>
-                  <TableHead>Méthode</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Date de paiement</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPayments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{payment.userName}</p>
-                        <p className="text-sm text-muted-foreground">{payment.userEmail}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getPlanBadge(payment.planName)}</TableCell>
-                    <TableCell className="font-medium">{formatCurrency(payment.amount)}</TableCell>
-                    <TableCell>{getMethodBadge(payment.paymentMethod)}</TableCell>
-                    <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                    <TableCell>{formatDate(payment.paidAt)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditClick(payment)}
-                          title="Modifier"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(payment.id)}
-                          className="text-red-500 hover:text-red-700"
-                          title="Supprimer"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <div className="min-w-[700px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Utilisateur</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead>Montant</TableHead>
+                      <TableHead>Méthode</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Date de paiement</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPayments.map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{payment.userName}</p>
+                            <p className="text-sm text-muted-foreground">{payment.userEmail}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>{getPlanBadge(payment.planName)}</TableCell>
+                        <TableCell className="font-medium">{formatCurrency(payment.amount)}</TableCell>
+                        <TableCell>{getMethodBadge(payment.paymentMethod)}</TableCell>
+                        <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                        <TableCell>{formatDate(payment.paidAt)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditClick(payment)}
+                              title="Modifier"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(payment.id)}
+                              className="text-red-500 hover:text-red-700"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

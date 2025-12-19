@@ -1,10 +1,10 @@
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  BookOpen, 
-  FileText, 
-  DollarSign, 
+import {
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  FileText,
+  DollarSign,
   UserCog,
   LogOut,
   Menu,
@@ -51,11 +51,10 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-card border-b z-50 px-4 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-primary">Panneau d'Administration</h1>
           <Button
             variant="ghost"
             size="icon"
@@ -63,6 +62,7 @@ export default function AdminLayout() {
           >
             {sidebarOpen ? <X /> : <Menu />}
           </Button>
+          <h1 className="text-xl font-bold text-primary">Panneau d'Administration</h1>
         </div>
       </div>
 
@@ -70,9 +70,9 @@ export default function AdminLayout() {
         {/* Sidebar */}
         <aside
           className={`
-            fixed lg:static inset-y-0 left-0 z-40
-            w-64 bg-card border-r transform transition-transform duration-200
-            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            fixed lg:fixed inset-y-0 right-0 z-40
+            w-64 bg-card border-l transform transition-transform duration-200
+            ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
             lg:block
           `}
         >
@@ -92,10 +92,9 @@ export default function AdminLayout() {
                   onClick={() => setSidebarOpen(false)}
                   className={`
                     flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
-                    ${
-                      isActive(item.path)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ${isActive(item.path)
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     }
                   `}
                 >
@@ -131,8 +130,8 @@ export default function AdminLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 lg:ml-64 mt-16 lg:mt-0">
-          <div className="p-6">
+        <main className="flex-1 lg:mr-64 mt-16 lg:mt-0 min-w-0">
+          <div className="p-4 sm:p-6 max-w-full overflow-x-auto">
             <Outlet />
           </div>
         </main>

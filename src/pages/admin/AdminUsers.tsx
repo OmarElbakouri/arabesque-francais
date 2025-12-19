@@ -278,15 +278,15 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Gestion des Utilisateurs</h1>
-        <p className="text-muted-foreground mt-1">Afficher et gérer tous les utilisateurs</p>
+        <h1 className="text-2xl sm:text-3xl font-bold">Gestion des Utilisateurs</h1>
+        <p className="text-muted-foreground mt-1 text-sm sm:text-base">Afficher et gérer tous les utilisateurs</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -411,87 +411,89 @@ export default function AdminUsers() {
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Utilisateur</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Actif</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedUsers.length === 0 ? (
+            <div className="min-w-[700px]">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      Aucun utilisateur trouvé
-                    </TableCell>
+                    <TableHead>Utilisateur</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead>Actif</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  paginatedUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <p className="font-medium">{user.fullName || 'N/A'}</p>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-muted-foreground">{user.email}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={roleColors[user.role] || ''}>
-                          {user.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={statusColors[user.status] || ''}>
-                          {user.status === 'CONFIRME' ? 'CONFIRMÉ' : user.status.replace('_', ' ')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {user.role === 'USER' ? (
-                          <Badge
-                            variant="outline"
-                            className={
-                              (user.currentPlan || user.plan) === 'VIP'
-                                ? 'bg-purple-500/10 text-purple-600 border-purple-500/20'
-                                : (user.currentPlan || user.plan) === 'NORMAL'
-                                  ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
-                                  : 'bg-gray-500/10 text-gray-600 border-gray-500/20'
-                            }
-                          >
-                            {user.currentPlan || user.plan || 'FREE'}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={user.active ? 'default' : 'secondary'}>
-                          {user.active ? 'Oui' : 'Non'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleDelete(user)}
-                            title="Supprimer"
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {paginatedUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        Aucun utilisateur trouvé
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    paginatedUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <p className="font-medium">{user.fullName || 'N/A'}</p>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-muted-foreground">{user.email}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={roleColors[user.role] || ''}>
+                            {user.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={statusColors[user.status] || ''}>
+                            {user.status === 'CONFIRME' ? 'CONFIRMÉ' : user.status.replace('_', ' ')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {user.role === 'USER' ? (
+                            <Badge
+                              variant="outline"
+                              className={
+                                (user.currentPlan || user.plan) === 'VIP'
+                                  ? 'bg-purple-500/10 text-purple-600 border-purple-500/20'
+                                  : (user.currentPlan || user.plan) === 'NORMAL'
+                                    ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                                    : 'bg-gray-500/10 text-gray-600 border-gray-500/20'
+                              }
+                            >
+                              {user.currentPlan || user.plan || 'FREE'}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.active ? 'default' : 'secondary'}>
+                            {user.active ? 'Oui' : 'Non'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleDelete(user)}
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
           {/* Pagination */}
           {filteredUsers.length > usersPerPage && (

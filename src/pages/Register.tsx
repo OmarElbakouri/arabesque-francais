@@ -209,10 +209,15 @@ export default function Register() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">لديك حساب بالفعل؟ </span>
-            <Link to="/login" className="text-primary hover:underline font-medium link-animated">
-              تسجيل الدخول
+          <div className="mt-6 text-center">
+            <span className="text-muted-foreground text-sm">لديك حساب بالفعل؟</span>
+            <Link to="/login" className="block mt-3">
+              <Button
+                variant="outline"
+                className="w-full border-2 border-primary/50 hover:border-primary hover:bg-primary/5 text-primary font-bold py-5 transition-all duration-300 hover:scale-[1.02]"
+              >
+                تسجيل الدخول
+              </Button>
             </Link>
           </div>
 

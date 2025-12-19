@@ -116,10 +116,15 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">ليس لديك حساب؟ </span>
-            <Link to="/register" className="text-primary hover:underline font-medium link-animated">
-              إنشاء حساب جديد
+          <div className="mt-6 text-center">
+            <span className="text-muted-foreground text-sm">ليس لديك حساب؟</span>
+            <Link to="/register" className="block mt-3">
+              <Button
+                variant="outline"
+                className="w-full border-2 border-primary/50 hover:border-primary hover:bg-primary/5 text-primary font-bold py-5 transition-all duration-300 hover:scale-[1.02]"
+              >
+                إنشاء حساب جديد
+              </Button>
             </Link>
           </div>
 

@@ -31,27 +31,35 @@ const Index = () => {
     <div className="min-h-screen bg-background" dir="rtl">
       {/* Header */}
       <header className="fixed top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src={logoImg} alt="BCLT Logo" className="h-12 w-12 object-contain" />
-              <div>
-                <h1 className="text-xl font-bold text-primary">BCLT</h1>
+        <div className="container mx-auto px-4 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            {/* Logo */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <img src={logoImg} alt="BCLT Logo" className="h-10 sm:h-12 w-10 sm:w-12 object-contain" />
+              <div className="hidden sm:block">
+                <h1 className="text-lg sm:text-xl font-bold text-primary">BCLT</h1>
                 <p className="text-xs text-muted-foreground">تعلم الفرنسية بسهولة</p>
               </div>
             </div>
-            <nav className="hidden md:flex items-center gap-6">
+
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center gap-6">
               <a href="#features" className="link-animated text-foreground hover:text-primary font-medium">المميزات</a>
               <a href="#courses" className="link-animated text-foreground hover:text-primary font-medium">الدورات</a>
               <a href="#pricing" className="link-animated text-foreground hover:text-primary font-medium">الأسعار</a>
               <a href="#faq" className="link-animated text-foreground hover:text-primary font-medium">الأسئلة الشائعة</a>
             </nav>
-            <div className="flex items-center gap-3">
+
+            {/* Auth Buttons */}
+            <div className="flex items-center gap-1 sm:gap-3">
               <Link to="/login">
-                <Button variant="ghost" className="font-medium">تسجيل الدخول</Button>
+                <Button variant="ghost" className="font-medium text-xs sm:text-sm px-2 sm:px-4">تسجيل الدخول</Button>
               </Link>
               <Link to="/register">
-                <Button className="btn-hero text-sm">جرب الحصة الاولى بالمجان</Button>
+                <Button className="btn-hero text-xs sm:text-sm whitespace-nowrap px-2 sm:px-4">
+                  <span className="hidden sm:inline">جرب الحصة الاولى بالمجان</span>
+                  <span className="sm:hidden">جرب مجاناً</span>
+                </Button>
               </Link>
             </div>
           </div>

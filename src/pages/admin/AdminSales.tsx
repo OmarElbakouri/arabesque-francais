@@ -388,12 +388,12 @@ export default function AdminSales() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Gestion de l'Équipe Commerciale</h1>
-          <p className="text-muted-foreground mt-1">Gérer les commerciaux et leurs codes promo</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Gestion de l'Équipe Commerciale</h1>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Gérer les commerciaux et leurs codes promo</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
@@ -525,51 +525,51 @@ export default function AdminSales() {
       </div>
 
       {/* Overall Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card className="card-elevated">
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Clients</p>
-                <p className="text-3xl font-bold text-primary">{totalStats.totalClients}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Clients</p>
+                <p className="text-xl sm:text-3xl font-bold text-primary">{totalStats.totalClients}</p>
               </div>
-              <Users className="h-10 w-10 text-primary/20" />
+              <Users className="h-6 w-6 sm:h-10 sm:w-10 text-primary/20" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="card-elevated">
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Clients ce mois</p>
-                <p className="text-3xl font-bold text-success">{totalStats.monthlyClients}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Clients ce mois</p>
+                <p className="text-xl sm:text-3xl font-bold text-success">{totalStats.monthlyClients}</p>
               </div>
-              <Users className="h-10 w-10 text-success/20" />
+              <Users className="h-6 w-6 sm:h-10 sm:w-10 text-success/20" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="card-elevated">
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Revenus Totaux</p>
-                <p className="text-3xl font-bold text-secondary">{totalStats.totalRevenue} DH</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Revenus Totaux</p>
+                <p className="text-lg sm:text-3xl font-bold text-secondary">{totalStats.totalRevenue} DH</p>
               </div>
-              <DollarSign className="h-10 w-10 text-secondary/20" />
+              <DollarSign className="h-6 w-6 sm:h-10 sm:w-10 text-secondary/20" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="card-elevated">
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Revenus du mois</p>
-                <p className="text-3xl font-bold text-warning">{totalStats.monthlyRevenue} DH</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Revenus du mois</p>
+                <p className="text-lg sm:text-3xl font-bold text-warning">{totalStats.monthlyRevenue} DH</p>
               </div>
-              <DollarSign className="h-10 w-10 text-warning/20" />
+              <DollarSign className="h-6 w-6 sm:h-10 sm:w-10 text-warning/20" />
             </div>
           </CardContent>
         </Card>
@@ -578,101 +578,103 @@ export default function AdminSales() {
       {/* Commercials Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Liste des Commerciaux</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Liste des Commerciaux</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Commercial</TableHead>
-                  <TableHead>Code Promo</TableHead>
-                  <TableHead>Total Clients</TableHead>
-                  <TableHead>Clients du mois</TableHead>
-                  <TableHead>Revenus Totaux</TableHead>
-                  <TableHead>Revenus du mois</TableHead>
-                  <TableHead>Commission</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {commercials.length === 0 ? (
+            <div className="min-w-[800px]">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      Aucun commercial trouvé
-                    </TableCell>
+                    <TableHead>Commercial</TableHead>
+                    <TableHead>Code Promo</TableHead>
+                    <TableHead>Total Clients</TableHead>
+                    <TableHead>Clients du mois</TableHead>
+                    <TableHead>Revenus Totaux</TableHead>
+                    <TableHead>Revenus du mois</TableHead>
+                    <TableHead>Commission</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ) : (
-                  commercials.map((commercial) => (
-                    <TableRow key={commercial.commercialId}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{commercial.commercialName}</p>
-                          <p className="text-sm text-muted-foreground">{commercial.commercialEmail}</p>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {commercials.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        Aucun commercial trouvé
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="font-mono">
-                            {commercial.promoCode}
+                    </TableRow>
+                  ) : (
+                    commercials.map((commercial) => (
+                      <TableRow key={commercial.commercialId}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{commercial.commercialName}</p>
+                            <p className="text-sm text-muted-foreground">{commercial.commercialEmail}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="font-mono">
+                              {commercial.promoCode}
+                            </Badge>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => copyCouponCode(commercial.promoCode)}
+                            >
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-primary">{commercial.totalClients}</p>
+                            {commercial.totalClients > 0 && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => loadCommercialUsers(commercial)}
+                                className="h-7 px-2"
+                              >
+                                <Users className="w-4 h-4 mr-1" />
+                                Voir
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className="bg-success text-white">
+                            +{commercial.monthlyClients}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <p className="font-medium">{Math.round(commercial.totalRevenue)} DH</p>
+                        </TableCell>
+                        <TableCell>
+                          <p className="font-medium text-success">
+                            {Math.round(commercial.monthlyRevenue)} DH
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getCommissionColor(commercial.commissionRate)}>
+                            {commercial.commissionRate}%
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
                           <Button
                             size="icon"
                             variant="ghost"
-                            onClick={() => copyCouponCode(commercial.promoCode)}
+                            onClick={() => openDeleteDialog(commercial)}
                           >
-                            <Copy className="w-4 h-4" />
+                            <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-primary">{commercial.totalClients}</p>
-                          {commercial.totalClients > 0 && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => loadCommercialUsers(commercial)}
-                              className="h-7 px-2"
-                            >
-                              <Users className="w-4 h-4 mr-1" />
-                              Voir
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className="bg-success text-white">
-                          +{commercial.monthlyClients}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium">{Math.round(commercial.totalRevenue)} DH</p>
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium text-success">
-                          {Math.round(commercial.monthlyRevenue)} DH
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getCommissionColor(commercial.commissionRate)}>
-                          {commercial.commissionRate}%
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => openDeleteDialog(commercial)}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </CardContent>
       </Card>
