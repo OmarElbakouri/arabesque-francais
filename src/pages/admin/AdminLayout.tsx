@@ -84,7 +84,7 @@ export default function AdminLayout() {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 p-4 space-y-2 mt-16 lg:mt-0">
+            <nav className="flex-1 p-4 space-y-2 mt-16 lg:mt-0 overflow-y-auto">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
