@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, AlertCircle, Home } from 'lucide-react';
+import { Mail, Lock, AlertCircle, Home, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 
 export default function Login() {
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm();
   const { login } = useAuthStore();
   const navigate = useNavigate();
@@ -93,11 +94,18 @@ export default function Login() {
                 <Lock className="absolute right-3 top-3 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-primary" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pr-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20 border-border hover:border-primary/50"
+                  className="pr-10 pl-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20 border-border hover:border-primary/50"
                   {...register('password', { required: 'كلمة المرور مطلوبة' })}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-3 h-5 w-5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
               {errors.password && (
                 <p className="text-sm text-destructive mt-1 animate-fade-in">{errors.password.message as string}</p>
