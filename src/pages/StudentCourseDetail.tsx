@@ -112,11 +112,8 @@ export default function StudentCourseDetail() {
 
   const handleChapterClick = (chapter: StudentChapterDTO) => {
     if (chapter.locked) {
-      toast({
-        title: 'Contenu verrouillé',
-        description: chapter.lockedReason || 'Passez au plan NORMAL ou VIP pour accéder à ce contenu',
-        variant: 'destructive',
-      });
+      // Redirect to premium plans page for locked chapters
+      navigate('/premium-plans');
       return;
     }
     setSelectedChapter(chapter);
@@ -389,6 +386,20 @@ export default function StudentCourseDetail() {
                   />
                 </div>
               </div>
+
+              {/* Premium Button */}
+              {(course.chapters || []).some(c => c.locked) && (
+                <Link to="/premium-plans">
+                  <Button
+                    size="sm"
+                    className="rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white border-0"
+                  >
+                    <Crown className="ml-2 h-4 w-4" />
+                    Premium
+                  </Button>
+                </Link>
+              )}
+
               <Button
                 variant="outline"
                 size="sm"

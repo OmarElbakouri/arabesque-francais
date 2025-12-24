@@ -1,12 +1,8 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion";
+
 import { Link, useNavigate } from "react-router-dom";
 import {
     Crown,
@@ -14,7 +10,7 @@ import {
     Sparkles,
     Brain,
     Mic,
-    Star,
+
     MessageCircle,
     ArrowRight,
     Play,
@@ -23,9 +19,48 @@ import {
     Rocket,
 } from "lucide-react";
 import logo from "@/assets/logo.jpg";
+import ribBcp from "@/assets/rib-bcp.png";
+import ribAttijariwafa from "@/assets/rib-attijariwafa.png";
+
+const DEFAULT_WHATSAPP = "212657507364";
 
 export default function PremiumPlans() {
     const navigate = useNavigate();
+    const [whatsappNumber, setWhatsappNumber] = useState(DEFAULT_WHATSAPP);
+    const [commercialName, setCommercialName] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Fetch commercial WhatsApp number if user was referred
+        const fetchCommercialWhatsApp = async () => {
+            try {
+                const token = localStorage.getItem("jwt_token");
+                if (!token) return;
+
+                const response = await fetch("/api/profile/commercial-whatsapp", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.data?.whatsapp) {
+                        // Format phone number (remove spaces, ensure it starts without +)
+                        let phone = data.data.whatsapp.replace(/[\s+-]/g, "");
+                        if (!phone.startsWith("212")) {
+                            phone = "212" + phone.replace(/^0/, "");
+                        }
+                        setWhatsappNumber(phone);
+                        setCommercialName(data.data.name || null);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch commercial WhatsApp:", error);
+            }
+        };
+
+        fetchCommercialWhatsApp();
+    }, []);
 
     const normalFeatures = [
         "6 أشهر لإتقان اللغة الفرنسية",
@@ -50,47 +85,13 @@ export default function PremiumPlans() {
     ];
 
     const aiFeatures = [
-        { name: "المساعد الذكي (Chatbot)", icon: Brain },
-        { name: "Quiz IA", icon: Sparkles },
-        { name: "Quiz Vocal", icon: Mic },
+        { name: "المساعد الذكي (Chatbot)", icon: Brain, normalLimit: 30, vipLimit: "غير محدود ♾️" },
+        { name: "Quiz IA", icon: Sparkles, normalLimit: 50, vipLimit: 100 },
+        { name: "Quiz Vocal", icon: Mic, normalLimit: 15, vipLimit: 100 },
     ];
 
-    const testimonials = [
-        {
-            name: "Oujdi Oujdi",
-            comment: "Saraha une formation li stafadt menha bzaaaf o hasit b rasi niveau Dyali t7assan o bzaaaaf merci bclt français 🙏🙏🙏",
-            rating: 5,
-        },
-        {
-            name: "Sofyane Lahnid",
-            comment: "Une formation claire et motivante, qui donne vraiment envie d'apprendre le français et de progresser rapidement merci Mr Anas",
-            rating: 5,
-        },
-        {
-            name: "Fatna Rafii",
-            comment: "كاين فرق بين استاذ واستاذ تبارك الله عليك.والله تستاهل 7000درهم حيث جربت بزاف الأساتذة .شكرا",
-            rating: 5,
-        },
-    ];
 
-    const faqs = [
-        {
-            question: "ما الفرق بين الباقة العادية وباقة VIP؟",
-            answer: "الباقة العادية توفر لك الوصول للدروس والتمارين مع وصول محدود لميزات الذكاء الاصطناعي. أما باقة VIP فتمنحك وصولاً غير محدود للمساعد الذكي، Quiz IA، وQuiz Vocal لتجربة تعليمية متكاملة.",
-        },
-        {
-            question: "هل يمكنني الترقية من الباقة العادية إلى VIP؟",
-            answer: "نعم! يمكنك الترقية في أي وقت بدفع الفرق بين الباقتين. تواصل معنا عبر الواتساب لمساعدتك.",
-        },
-        {
-            question: "كم مدة الوصول للمحتوى؟",
-            answer: "تحصل على وصول كامل لمدة 6 أشهر من تاريخ التسجيل، بما في ذلك جميع التحديثات والمحتوى الجديد.",
-        },
-        {
-            question: "هل أحصل على شهادة؟",
-            answer: "نعم! عند إكمال الدورة بنجاح، تحصل على شهادة مستوى B2 معتمدة.",
-        },
-    ];
+
 
     return (
         <div dir="rtl" className="min-h-screen bg-white">
@@ -139,7 +140,7 @@ export default function PremiumPlans() {
                     <div className="inline-block mb-6">
                         <span className="inline-flex items-center gap-2 py-2 px-6 rounded-full bg-gradient-to-r from-primary to-purple-600 text-white text-sm font-bold shadow-lg animate-pulse">
                             <Gift className="w-5 h-5" />
-                            عرض حصري - خصم 30% لل 50 الأوائل
+                            عرض حصري - خصم 50% لل 50 الأوائل
                         </span>
                     </div>
 
@@ -157,11 +158,11 @@ export default function PremiumPlans() {
                     <div className="flex items-center justify-center gap-8 text-gray-600 flex-wrap">
                         <div className="flex items-center gap-2">
                             <CheckCircle2 className="w-5 h-5 text-primary" />
-                            <span>75 درس فيديو</span>
+                            <span>95 فيديو</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <CheckCircle2 className="w-5 h-5 text-primary" />
-                            <span>120 تمرين</span>
+                            <span><span className="text-xl font-bold">∞</span> تمرين</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <CheckCircle2 className="w-5 h-5 text-primary" />
@@ -219,7 +220,7 @@ export default function PremiumPlans() {
                                                 <Icon className="h-5 w-5 text-gray-400 flex-shrink-0" />
                                                 <span>
                                                     {feature.name} -{" "}
-                                                    <span className="text-orange-500 font-bold">محدود</span>
+                                                    <span className="text-orange-500 font-bold">{feature.normalLimit} {feature.name.includes("Chatbot") ? "رسالة" : "مرة"}/الشهر</span>
                                                 </span>
                                             </li>
                                         );
@@ -227,7 +228,7 @@ export default function PremiumPlans() {
                                 </ul>
                             </div>
 
-                            <a href="https://wa.me/212612097399?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%D9%83%20%D9%81%D9%8A%20%D8%A7%D9%84%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D8%B9%D8%A7%D8%AF%D9%8A%D8%A9%20(1000%20%D8%AF%D8%B1%D9%87%D9%85)" target="_blank" rel="noopener noreferrer" className="block mt-8">
+                            <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('مرحبا، أريد الاشتراك في الباقة العادية (1000 درهم)')}`} target="_blank" rel="noopener noreferrer" className="block mt-8">
                                 <Button
                                     size="lg"
                                     className="w-full bg-gray-900 hover:bg-gray-800 text-white text-lg py-6 rounded-2xl"
@@ -284,6 +285,7 @@ export default function PremiumPlans() {
                                         </li>
                                         {aiFeatures.map((feature, idx) => {
                                             const Icon = feature.icon;
+                                            const isUnlimited = typeof feature.vipLimit === "string";
                                             return (
                                                 <li key={idx} className="flex items-center gap-3">
                                                     <div className="w-5 h-5 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center flex-shrink-0">
@@ -291,7 +293,9 @@ export default function PremiumPlans() {
                                                     </div>
                                                     <span className="text-gray-700">
                                                         {feature.name} -{" "}
-                                                        <span className="text-green-500 font-bold">غير محدود ♾️</span>
+                                                        <span className="text-green-500 font-bold">
+                                                            {isUnlimited ? feature.vipLimit : `${feature.vipLimit} مرة/الشهر`}
+                                                        </span>
                                                     </span>
                                                 </li>
                                             );
@@ -299,7 +303,7 @@ export default function PremiumPlans() {
                                     </ul>
                                 </div>
 
-                                <a href="https://wa.me/212612097399?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%D9%83%20%D9%81%D9%8A%20%D8%A8%D8%A7%D9%82%D8%A9%20VIP%20(1500%20%D8%AF%D8%B1%D9%87%D9%85)" target="_blank" rel="noopener noreferrer" className="block mt-8">
+                                <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('مرحبا، أريد الاشتراك في باقة VIP (1500 درهم)')}`} target="_blank" rel="noopener noreferrer" className="block mt-8">
                                     <Button
                                         size="lg"
                                         className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white text-lg py-6 shadow-lg shadow-primary/25 rounded-2xl"
@@ -366,79 +370,37 @@ export default function PremiumPlans() {
                 </div>
             </section>
 
-            {/* Testimonials */}
+            {/* Bank Account Details */}
             <section className="py-16 px-4 relative overflow-hidden">
-                {/* Background */}
                 <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white"></div>
 
                 <div className="container mx-auto relative z-10">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
-                            ماذا يقول{" "}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-yellow-500">
-                                طلابنا
-                            </span>
-                        </h2>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                        {testimonials.map((testimonial, idx) => (
-                            <Card key={idx} className="bg-white border-gray-100 shadow-lg p-6 hover:shadow-xl transition-all duration-300">
-                                <div className="flex gap-1 mb-4">
-                                    {[...Array(testimonial.rating)].map((_, i) => (
-                                        <Star key={i} className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                                    ))}
-                                </div>
-                                <p className="text-gray-600 mb-4 italic leading-relaxed">
-                                    "{testimonial.comment}"
-                                </p>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-purple-600 flex items-center justify-center text-white font-bold">
-                                        {testimonial.name.charAt(0)}
-                                    </div>
-                                    <p className="font-bold text-gray-900">{testimonial.name}</p>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* FAQ */}
-            <section className="py-16 px-4 relative overflow-hidden">
-                {/* Background */}
-                <div className="absolute inset-0 bg-gradient-to-b from-white to-gray-50"></div>
-
-                <div className="container mx-auto max-w-3xl relative z-10">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
-                            الأسئلة{" "}
+                            معلومات{" "}
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">
-                                الشائعة
+                                الدفع البنكي
                             </span>
                         </h2>
+                        <p className="text-gray-600 max-w-2xl mx-auto">
+                            يمكنك إرسال الدفع إلى أحد الحسابين البنكيين التاليين
+                        </p>
                     </div>
 
-                    <Accordion type="single" collapsible className="space-y-4">
-                        {faqs.map((item, idx) => (
-                            <AccordionItem
-                                key={idx}
-                                value={`item-${idx}`}
-                                className="bg-white rounded-xl px-6 border border-gray-100 shadow-sm"
-                            >
-                                <AccordionTrigger className="text-right hover:no-underline py-5 text-gray-900">
-                                    <span className="font-bold text-lg">{item.question}</span>
-                                </AccordionTrigger>
-                                <AccordionContent className="text-gray-600 leading-relaxed pb-5">
-                                    {item.answer}
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
+                    <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                        <Card className="bg-white border-gray-100 shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">banque populaire</h3>
+                            <img src={ribBcp} alt="RIB BCP" className="w-full rounded-lg shadow" />
+                        </Card>
+
+                        <Card className="bg-white border-gray-100 shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">CIH</h3>
+                            <img src={ribAttijariwafa} alt="RIB Attijariwafa" className="w-full rounded-lg shadow" />
+                        </Card>
+                    </div>
                 </div>
             </section>
 
-            {/* CTA Section */}
             <section className="py-16 px-4 relative overflow-hidden">
                 {/* Background gradient */}
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-purple-600/5"></div>
@@ -456,7 +418,7 @@ export default function PremiumPlans() {
                         </p>
                         <div className="flex justify-center">
                             <a
-                                href="https://wa.me/212612097399"
+                                href={`https://wa.me/${whatsappNumber}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
@@ -479,12 +441,12 @@ export default function PremiumPlans() {
                     <p className="text-gray-600">
                         هل لديك أسئلة؟ تواصل معنا:{" "}
                         <a
-                            href="https://wa.me/212612097399"
+                            href={`https://wa.me/${whatsappNumber}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-green-600 hover:text-green-700 font-bold"
                         >
-                            +212 612097399
+                            {whatsappNumber.startsWith('212') ? `+${whatsappNumber.slice(0, 3)} ${whatsappNumber.slice(3)}` : whatsappNumber}
                         </a>
                     </p>
                 </div>
