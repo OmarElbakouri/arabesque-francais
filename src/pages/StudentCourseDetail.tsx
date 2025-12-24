@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Play,
   Lock,
@@ -492,17 +492,19 @@ export default function StudentCourseDetail() {
           {/* Premium upgrade */}
           {(course.chapters || []).some(c => c.locked) && (
             <div className="p-4 border-t border-slate-700/50">
-              <div className="p-4 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-2xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
-                    <Crown className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-yellow-200">Contenu Premium</p>
-                    <p className="text-xs text-yellow-300/60">Débloquez tous les chapitres</p>
+              <Link to="/premium-plans" className="block">
+                <div className="p-4 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-2xl hover:border-yellow-500/40 hover:from-yellow-500/20 hover:to-orange-500/20 transition-all cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
+                      <Crown className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-yellow-200">Contenu Premium</p>
+                      <p className="text-xs text-yellow-300/60">Débloquez tous les chapitres</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
           )}
 

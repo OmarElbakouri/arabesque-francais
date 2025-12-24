@@ -20,6 +20,7 @@ import Profile from "./pages/Profile";
 import Messages from "./pages/Messages";
 import Blog from "./pages/Blog";
 import FAQ from "./pages/FAQ";
+import PremiumPlans from "./pages/PremiumPlans";
 import DevicesPage from "./pages/Devices";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -72,6 +73,7 @@ const App = () => (
           <Route path="/devices" element={<ProtectedRoute><Navbar /><DevicesPage /></ProtectedRoute>} />
           <Route path="/blog" element={<><Navbar /><Blog /></>} />
           <Route path="/faq" element={<><Navbar /><FAQ /></>} />
+          <Route path="/premium-plans" element={<ProtectedRoute><PremiumPlans /></ProtectedRoute>} />
 
           {/* Admin routes with separate layout */}
           <Route path="/admin" element={<AdminLayout />}>
