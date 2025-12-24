@@ -460,10 +460,10 @@ const Index = () => {
                     الباقة العادية
                   </span>
                   <div className="flex items-baseline justify-center gap-2 mb-2">
-                    <span className="text-5xl md:text-6xl font-black text-white">749</span>
+                    <span className="text-5xl md:text-6xl font-black text-white">1000</span>
                     <span className="text-2xl font-bold text-gray-400">درهم</span>
                   </div>
-                  <p className="text-gray-500 line-through">عوض 1000 درهم</p>
+                  <p className="text-gray-500 line-through">عوض 2000 درهم</p>
                 </div>
 
                 {/* Features List */}
@@ -506,7 +506,7 @@ const Index = () => {
                 <Link to="/register" className="block mt-8">
                   <Button size="lg" className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 text-lg py-6">
                     <Play className="ml-2 h-5 w-5" />
-                    ابدأ الآن بـ 749 درهم
+                    ابدأ الآن بـ 1000 درهم
                   </Button>
                 </Link>
               </div>
@@ -529,10 +529,10 @@ const Index = () => {
                     باقة VIP
                   </span>
                   <div className="flex items-baseline justify-center gap-2 mb-2">
-                    <span className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">999</span>
+                    <span className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">1500</span>
                     <span className="text-2xl font-bold text-gray-400">درهم</span>
                   </div>
-                  <p className="text-gray-500 line-through">عوض 2000 درهم</p>
+                  <p className="text-gray-500 line-through">عوض 3000 درهم</p>
                 </div>
 
                 {/* Features List */}
@@ -581,7 +581,7 @@ const Index = () => {
                 <Link to="/register" className="block mt-8">
                   <Button size="lg" className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white text-lg py-6 shadow-lg shadow-primary/25">
                     <Crown className="ml-2 h-5 w-5" />
-                    انضم لـ VIP بـ 999 درهم
+                    انضم لـ VIP بـ 1500 درهم
                   </Button>
                 </Link>
               </div>
