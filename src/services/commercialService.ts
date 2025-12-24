@@ -22,7 +22,7 @@ export const getPromoUsers = async () => {
     const response = await api.get('/commercial/promo-users');
     console.log('✅ Réponse promo-users brute:', response);
     console.log('✅ Réponse promo-users data:', response.data);
-    
+
     if (response.data.data) {
       return response.data.data;
     }
@@ -44,7 +44,7 @@ export const getPayments = async () => {
     const response = await api.get('/commercial/payments');
     console.log('✅ Réponse payments brute:', response);
     console.log('✅ Réponse payments data:', response.data);
-    
+
     if (response.data.data) {
       return response.data.data;
     }
@@ -72,11 +72,12 @@ export const createPayment = async (userId: number, paymentData: {
   paymentMethod: string;
   paymentDate: string;
   status: string;
+  receiptUrl?: string; // URL Cloudinary de la photo de preuve
 }) => {
   try {
     console.log('🔄 Création paiement pour user:', userId);
     console.log('📝 Données:', paymentData);
-    
+
     const response = await api.post(
       `/commercial/users/${userId}/create-payment`,
       {
@@ -84,10 +85,11 @@ export const createPayment = async (userId: number, paymentData: {
         amount: paymentData.amount,
         paymentMethod: paymentData.paymentMethod,
         paymentDate: paymentData.paymentDate,
-        status: paymentData.status
+        status: paymentData.status,
+        receiptUrl: paymentData.receiptUrl || null
       }
     );
-    
+
     console.log('✅ Paiement créé:', response.data);
     return response.data;
   } catch (error: any) {
@@ -139,7 +141,7 @@ export const getMyUsers = async () => {
     console.log('🔄 Appel API: GET /commercial/my-users');
     const response = await api.get('/commercial/my-users');
     console.log('✅ Réponse my-users:', response.data);
-    
+
     if (response.data.data) {
       return response.data.data;
     }

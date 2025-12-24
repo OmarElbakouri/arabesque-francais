@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Edit, CheckCircle, XCircle, Clock, DollarSign, Users, Trash2 } from 'lucide-react';
+import { Search, Edit, CheckCircle, XCircle, Clock, DollarSign, Users, Trash2, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/adminService';
 import {
@@ -54,6 +54,7 @@ interface User {
   creditBalance: number;
   createdAt: string;
   paidAt?: string;
+  receiptUrl?: string; // URL de la photo de preuve de paiement
 }
 
 interface EditPaymentData {
@@ -99,6 +100,8 @@ export default function AdminPayments() {
     totalRevenue: 0,
     monthlyRevenue: 0
   });
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState<{ url: string; userName: string } | null>(null);
 
   const loadUsers = async () => {
     try {
@@ -180,7 +183,7 @@ export default function AdminPayments() {
           firstName: '',
           lastName: '',
           fullName: fullName,
-          phone: user.phone || user.userProfile?.phone || '',
+          phone: payment.userPhone || user.phone || user.userProfile?.phone || '',
           role: user.role || 'USER',
           plan,
           paymentStatus: paymentStatus as 'PENDING' | 'ACCEPTE' | 'REFUSE' | 'CANCELLED',
@@ -190,6 +193,7 @@ export default function AdminPayments() {
           creditBalance: user.creditBalance || 0,
           createdAt: user.createdAt || payment.createdAt,
           paidAt: payment.paidAt,
+          receiptUrl: payment.receiptUrl, // URL de la photo de preuve
         };
       });
 
@@ -401,6 +405,40 @@ export default function AdminPayments() {
     return <Badge className={`${color} text-white`}>{label}</Badge>;
   };
 
+  // Format phone number for display (French/Moroccan format)
+  const formatPhoneNumber = (phone?: string): string => {
+    if (!phone) return '-';
+
+    // Remove all non-numeric characters except +
+    let cleaned = phone.replace(/[^\d+]/g, '');
+
+    // If starts with 00, replace with +
+    if (cleaned.startsWith('00')) {
+      cleaned = '+' + cleaned.substring(2);
+    }
+
+    // Format based on country code
+    if (cleaned.startsWith('+212') || cleaned.startsWith('212')) {
+      // Moroccan number: +212 6XX XX XX XX
+      const base = cleaned.startsWith('+') ? cleaned.substring(4) : cleaned.substring(3);
+      if (base.length >= 9) {
+        return `+212 ${base.substring(0, 1)} ${base.substring(1, 3)} ${base.substring(3, 5)} ${base.substring(5, 7)} ${base.substring(7, 9)}`;
+      }
+    } else if (cleaned.startsWith('+33') || cleaned.startsWith('33')) {
+      // French number: +33 6 XX XX XX XX
+      const base = cleaned.startsWith('+') ? cleaned.substring(3) : cleaned.substring(2);
+      if (base.length >= 9) {
+        return `+33 ${base.substring(0, 1)} ${base.substring(1, 3)} ${base.substring(3, 5)} ${base.substring(5, 7)} ${base.substring(7, 9)}`;
+      }
+    } else if (cleaned.startsWith('0') && cleaned.length >= 10) {
+      // Local format: 06 XX XX XX XX
+      return `${cleaned.substring(0, 2)} ${cleaned.substring(2, 4)} ${cleaned.substring(4, 6)} ${cleaned.substring(6, 8)} ${cleaned.substring(8, 10)}`;
+    }
+
+    // Return original if can't format
+    return phone;
+  };
+
   const getPlanBadge = (plan: string) => {
     const config = {
       NORMAL: { color: 'bg-blue-600', label: 'Normal' },
@@ -579,7 +617,7 @@ export default function AdminPayments() {
                           </div>
                         </TableCell>
                         <TableCell>{user.email || '-'}</TableCell>
-                        <TableCell>{user.phone || '-'}</TableCell>
+                        <TableCell><span dir="ltr" className="inline-block">{formatPhoneNumber(user.phone)}</span></TableCell>
                         <TableCell>{getPlanBadge(user.plan)}</TableCell>
                         <TableCell>
                           <span className="font-bold text-gray-900">{user.amount ? `${user.amount} DH` : '-'}</span>
@@ -607,7 +645,23 @@ export default function AdminPayments() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex gap-2 justify-end">
+                          <div className="flex gap-2 justify-end flex-wrap">
+                            {user.receiptUrl && (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => {
+                                  setSelectedReceipt({
+                                    url: user.receiptUrl!,
+                                    userName: user.fullName || 'Utilisateur'
+                                  });
+                                  setReceiptDialogOpen(true);
+                                }}
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                Preuve
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               variant="outline"
@@ -754,6 +808,38 @@ export default function AdminPayments() {
             </Button>
             <Button onClick={handleSavePayment} disabled={saving}>
               {saving ? 'Enregistrement...' : 'Enregistrer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receipt Proof Dialog */}
+      <Dialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Preuve de paiement</DialogTitle>
+            <DialogDescription>
+              Photo de preuve pour {selectedReceipt?.userName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 flex justify-center">
+            {selectedReceipt?.url && (
+              <img
+                src={selectedReceipt.url}
+                alt="Preuve de paiement"
+                className="max-w-full max-h-[400px] object-contain rounded-lg shadow-lg"
+              />
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => window.open(selectedReceipt?.url, '_blank')}
+            >
+              Ouvrir en grand
+            </Button>
+            <Button onClick={() => setReceiptDialogOpen(false)}>
+              Fermer
             </Button>
           </DialogFooter>
         </DialogContent>

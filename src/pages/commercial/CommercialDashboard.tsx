@@ -14,6 +14,8 @@ import {
 import { DollarSign, CheckCircle, Clock, Users as UsersIcon, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getPayments, getPaymentStatistics, markPaymentAsPending, getPromoUsers, createPayment, deletePayment } from '@/services/commercialService';
+import { uploadToCloudinary } from '@/services/cloudinaryService';
+import { Upload, Image as ImageIcon } from 'lucide-react';
 
 interface Payment {
   id?: number;
@@ -76,6 +78,9 @@ const CommercialDashboard = () => {
     paymentDate: new Date().toISOString().slice(0, 16),
     status: 'EN_ATTENTE'
   });
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [stats, setStats] = useState<PaymentStats>({
     totalUsersCreated: 0,
     confirmedUsers: 0,
@@ -210,12 +215,34 @@ const CommercialDashboard = () => {
     }
 
     try {
+      setUploading(true);
+
+      // Upload image to Cloudinary if provided
+      let receiptUrl: string | undefined;
+      if (receiptFile) {
+        try {
+          const cloudinaryResponse = await uploadToCloudinary(receiptFile);
+          receiptUrl = cloudinaryResponse.secure_url;
+          console.log('✅ Image uploadée:', receiptUrl);
+        } catch (uploadError) {
+          console.error('❌ Erreur upload image:', uploadError);
+          toast({
+            variant: 'destructive',
+            title: 'Erreur',
+            description: "Échec de l'upload de l'image. Veuillez réessayer."
+          });
+          setUploading(false);
+          return;
+        }
+      }
+
       const paymentData = {
         planName: formData.planName,
         amount: Number(formData.amount),
         paymentMethod: formData.paymentMethod,
         paymentDate: formData.paymentDate + ':00',
-        status: formData.status
+        status: formData.status,
+        receiptUrl: receiptUrl
       };
 
       await createPayment(selectedUserId, paymentData);
@@ -231,6 +258,8 @@ const CommercialDashboard = () => {
         paymentDate: new Date().toISOString().slice(0, 16),
         status: 'EN_ATTENTE'
       });
+      setReceiptFile(null);
+      setReceiptPreview(null);
       await loadPayments();
       await loadStatistics();
     } catch (error: any) {
@@ -260,6 +289,20 @@ const CommercialDashboard = () => {
           description: "Erreur lors de la création du paiement"
         });
       }
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setReceiptFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReceiptPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -272,6 +315,8 @@ const CommercialDashboard = () => {
       paymentDate: new Date().toISOString().slice(0, 16),
       status: 'EN_ATTENTE'
     });
+    setReceiptFile(null);
+    setReceiptPreview(null);
     setIsCreateModalOpen(true);
   };
 
@@ -609,7 +654,7 @@ const CommercialDashboard = () => {
 
       {/* Create Payment Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Créer un Paiement</DialogTitle>
           </DialogHeader>
@@ -682,13 +727,58 @@ const CommercialDashboard = () => {
               </select>
               <p className="text-xs text-muted-foreground">Statut par défaut : "EN_ATTENTE"</p>
             </div>
+
+            {/* Photo de preuve de paiement */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Photo de preuve (optionnel)</label>
+              <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                {receiptPreview ? (
+                  <div className="space-y-2">
+                    <img
+                      src={receiptPreview}
+                      alt="Prévisualisation"
+                      className="max-h-32 mx-auto rounded-md object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReceiptFile(null);
+                        setReceiptPreview(null);
+                      }}
+                      className="text-sm text-red-500 hover:text-red-700"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer flex flex-col items-center gap-2">
+                    <Upload className="h-8 w-8 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Cliquez pour ajouter une photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">Photo du reçu de virement, screenshot, etc.</p>
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} disabled={uploading}>
               Annuler
             </Button>
-            <Button onClick={handleCreatePayment}>
-              Créer le paiement
+            <Button onClick={handleCreatePayment} disabled={uploading}>
+              {uploading ? (
+                <>
+                  <Clock className="mr-2 h-4 w-4 animate-spin" />
+                  Upload en cours...
+                </>
+              ) : (
+                'Créer le paiement'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

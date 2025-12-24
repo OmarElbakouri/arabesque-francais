@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { Users, DollarSign, Settings, LogOut, Menu, X, UserPlus } from 'lucide-react';
+import { Users, Settings, LogOut, Menu, X, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
 import logoImg from '@/assets/logo.jpg';
@@ -17,7 +17,6 @@ const CommercialLayout = () => {
 
   const navItems = [
     { icon: Users, label: 'Utilisateurs', path: '/commercial' },
-    { icon: DollarSign, label: 'Revenus', path: '/commercial/revenues' },
     { icon: UserPlus, label: 'Créer un compte', path: '/commercial/create-user' },
     { icon: Settings, label: 'Paramètres', path: '/commercial/settings' },
   ];
@@ -48,9 +47,8 @@ const CommercialLayout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 right-0 h-full bg-background border-l w-64 z-40 transform transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : 'translate-x-full'
-        } lg:translate-x-0`}
+        className={`fixed top-0 right-0 h-full bg-background border-l w-64 z-40 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'
+          } lg:translate-x-0`}
       >
         <div className="p-6 border-b">
           <div className="flex items-center gap-3 mb-4">
@@ -79,11 +77,10 @@ const CommercialLayout = () => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                  isActive(item.path)
-                    ? 'bg-primary text-white'
-                    : 'text-foreground hover:bg-muted'
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive(item.path)
+                  ? 'bg-primary text-white'
+                  : 'text-foreground hover:bg-muted'
+                  }`}
               >
                 <Icon className="h-5 w-5" />
                 <span className="font-medium">{item.label}</span>

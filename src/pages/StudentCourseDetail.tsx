@@ -287,6 +287,31 @@ export default function StudentCourseDetail() {
     return course?.durationHours || 0;
   };
 
+  // Check if current lesson is the last lesson of the chapter
+  // Quiz IA and Voice Quiz should only be available on the last lesson
+  const isLastLesson = (): boolean => {
+    if (!selectedChapter) return false;
+
+    // If chapter has no lessons, allow quiz (single content chapter)
+    if (!selectedChapter.lessons || selectedChapter.lessons.length === 0) {
+      return true;
+    }
+
+    // If chapter has only one lesson, allow quiz
+    if (selectedChapter.lessons.length === 1) {
+      return true;
+    }
+
+    // If no lesson selected, check if we're viewing the chapter directly
+    if (!selectedLesson) {
+      return false;
+    }
+
+    // Check if current lesson is the last one
+    const lastLesson = selectedChapter.lessons[selectedChapter.lessons.length - 1];
+    return selectedLesson.id === lastLesson.id;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
@@ -708,20 +733,25 @@ export default function StudentCourseDetail() {
                       <Download className="w-4 h-4 ml-2" />
                       Ressources
                     </TabsTrigger>
-                    <TabsTrigger
-                      value="quiz"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
-                    >
-                      <Sparkles className="w-4 h-4 ml-2" />
-                      Quiz IA
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="voice-quiz"
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
-                    >
-                      <Mic className="w-4 h-4 ml-2" />
-                      Quiz Vocal
-                    </TabsTrigger>
+                    {/* Quiz IA and Voice Quiz - Only show on last lesson of chapter */}
+                    {isLastLesson() && (
+                      <>
+                        <TabsTrigger
+                          value="quiz"
+                          className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
+                        >
+                          <Sparkles className="w-4 h-4 ml-2" />
+                          Quiz IA
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="voice-quiz"
+                          className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
+                        >
+                          <Mic className="w-4 h-4 ml-2" />
+                          Quiz Vocal
+                        </TabsTrigger>
+                      </>
+                    )}
                   </TabsList>
 
                   <CardContent className="pt-6">
@@ -837,23 +867,27 @@ export default function StudentCourseDetail() {
                       </div>
                     </TabsContent>
 
-                    {/* Quiz IA Tab */}
-                    <TabsContent value="quiz" className="mt-0">
-                      <ChapterQuiz
-                        chapterId={selectedChapter.id}
-                        chapterTitle={selectedChapter.title}
-                        thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
-                      />
-                    </TabsContent>
+                    {/* Quiz IA Tab - Only on last lesson */}
+                    {isLastLesson() && (
+                      <TabsContent value="quiz" className="mt-0">
+                        <ChapterQuiz
+                          chapterId={selectedChapter.id}
+                          chapterTitle={selectedChapter.title}
+                          thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
+                        />
+                      </TabsContent>
+                    )}
 
-                    {/* Voice Quiz Tab */}
-                    <TabsContent value="voice-quiz" className="mt-0">
-                      <VoiceQuiz
-                        chapterId={selectedChapter.id}
-                        chapterTitle={selectedChapter.title}
-                        thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
-                      />
-                    </TabsContent>
+                    {/* Voice Quiz Tab - Only on last lesson */}
+                    {isLastLesson() && (
+                      <TabsContent value="voice-quiz" className="mt-0">
+                        <VoiceQuiz
+                          chapterId={selectedChapter.id}
+                          chapterTitle={selectedChapter.title}
+                          thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
+                        />
+                      </TabsContent>
+                    )}
                   </CardContent>
                 </Tabs>
               </Card>
