@@ -443,21 +443,32 @@ const OrientationTest = () => {
   const currentQuestion = questions[currentStep];
   const progress = ((currentStep + 1) / totalQuestions) * 100;
 
-  // Check if orientation is already completed on mount
+  // Simplified check on mount - ProtectedRoute already handles the main status check
+  // This just handles the case where user has a cached result or needs to show the test
   useEffect(() => {
+    // Prevent multiple checks
     if (hasCheckedStatusRef.current) {
       setIsLoading(false);
       return;
     }
+    hasCheckedStatusRef.current = true;
 
+    // If we have a cached result, show it
     if (result) {
-      hasCheckedStatusRef.current = true;
       setIsLoading(false);
       return;
     }
 
+    // Check sessionStorage first (fast path set by ProtectedRoute)
+    const orientationCompleted = sessionStorage.getItem('orientationCompleted');
+    if (orientationCompleted === 'true') {
+      // Already completed, redirect to courses
+      navigate('/courses', { state: { fromOrientationTest: true }, replace: true });
+      return;
+    }
+
+    // Make a single API call with proper error handling and guaranteed loading state update
     const checkStatus = async () => {
-      hasCheckedStatusRef.current = true;
       try {
         const response = await api.get('/orientation-test/status');
         if (response.data.completed) {
@@ -467,8 +478,11 @@ const OrientationTest = () => {
         }
       } catch (error) {
         console.error('Failed to check orientation status:', error);
+        // On error, just show the test - user can take it
+      } finally {
+        // CRITICAL: Always set loading to false, even on error or redirect
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     checkStatus();

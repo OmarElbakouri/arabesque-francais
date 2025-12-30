@@ -12,10 +12,10 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
   const { isAuthenticated, user } = useAuthStore();
   const location = useLocation();
   const [status, setStatus] = useState<'loading' | 'ready' | 'needs-orientation'>('loading');
-  
+
   // Use refs to track state across renders without triggering re-renders
   const isCheckingRef = useRef(false);
-  const checkedForUserRef = useRef<number | null>(null);
+  const checkedForUserRef = useRef<string | null>(null);
   const orientationCompletedRef = useRef(false);
 
   // Check if this user type needs orientation check
@@ -90,11 +90,19 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     const checkWithBackend = async () => {
       isCheckingRef.current = true;
       setStatus('loading');
-      
+
+      // Add timeout to prevent indefinite loading
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      );
+
       try {
-        const response = await api.get('/orientation-test/status');
+        const response = await Promise.race([
+          api.get('/orientation-test/status'),
+          timeoutPromise
+        ]);
         checkedForUserRef.current = user.id;
-        
+
         if (response.data.completed) {
           orientationCompletedRef.current = true;
           sessionStorage.setItem('orientationCompleted', 'true');
@@ -107,8 +115,11 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
         }
       } catch (error) {
         console.error('Failed to check orientation status:', error);
-        // On error, allow access
-        setStatus('ready');
+        // On error or timeout, redirect to orientation test for safety
+        // This ensures new users always see the test
+        checkedForUserRef.current = user.id;
+        orientationCompletedRef.current = false;
+        setStatus('needs-orientation');
       } finally {
         isCheckingRef.current = false;
       }
