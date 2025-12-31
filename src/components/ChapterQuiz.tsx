@@ -223,7 +223,7 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
           <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
             <Brain className="w-8 h-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Quiz IA - {chapterTitle}</CardTitle>
+          <CardTitle className="text-2xl">Exercice - {chapterTitle}</CardTitle>
           <p className="text-muted-foreground mt-2">
             Testez vos connaissances avec 20 questions générées par l'IA.
             Les questions peuvent être à choix multiple ou à réponse écrite.

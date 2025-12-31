@@ -752,14 +752,14 @@ export default function StudentCourseDetail() {
                           className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
                         >
                           <Sparkles className="w-4 h-4 ml-2" />
-                          Quiz IA
+                          Exercice
                         </TabsTrigger>
                         <TabsTrigger
                           value="voice-quiz"
                           className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
                         >
                           <Mic className="w-4 h-4 ml-2" />
-                          Quiz Vocal
+                          Communication
                         </TabsTrigger>
                       </>
                     )}

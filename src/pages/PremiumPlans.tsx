@@ -86,8 +86,8 @@ export default function PremiumPlans() {
 
     const aiFeatures = [
         { name: "المساعد الذكي (Chatbot)", icon: Brain, normalLimit: 30, vipLimit: "غير محدود ♾️" },
-        { name: "Quiz IA", icon: Sparkles, normalLimit: 50, vipLimit: 100 },
-        { name: "Quiz Vocal", icon: Mic, normalLimit: 15, vipLimit: 100 },
+        { name: "Exercice", icon: Sparkles, normalLimit: 50, vipLimit: 100 },
+        { name: "Communication", icon: Mic, normalLimit: 15, vipLimit: 100 },
     ];
 
 

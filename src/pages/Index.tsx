@@ -494,11 +494,11 @@ const Index = () => {
                     </li>
                     <li className="flex items-center gap-3 text-gray-400">
                       <Sparkles className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                      <span>Quiz IA - <span className="text-orange-400 font-bold">محدود</span></span>
+                      <span>Exercice - <span className="text-orange-400 font-bold">محدود</span></span>
                     </li>
                     <li className="flex items-center gap-3 text-gray-400">
                       <Mic className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                      <span>Quiz Vocal - <span className="text-orange-400 font-bold">محدود</span></span>
+                      <span>Communication - <span className="text-orange-400 font-bold">محدود</span></span>
                     </li>
                   </ul>
                 </div>
@@ -567,13 +567,13 @@ const Index = () => {
                       <div className="w-5 h-5 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center flex-shrink-0">
                         <Sparkles className="h-3 w-3 text-white" />
                       </div>
-                      <span className="text-white">Quiz IA - <span className="text-green-400 font-bold">غير محدود ♾️</span></span>
+                      <span className="text-white">Exercice - <span className="text-green-400 font-bold">غير محدود ♾️</span></span>
                     </li>
                     <li className="flex items-center gap-3">
                       <div className="w-5 h-5 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center flex-shrink-0">
                         <Mic className="h-3 w-3 text-white" />
                       </div>
-                      <span className="text-white">Quiz Vocal - <span className="text-green-400 font-bold">غير محدود ♾️</span></span>
+                      <span className="text-white">Communication - <span className="text-green-400 font-bold">غير محدود ♾️</span></span>
                     </li>
                   </ul>
                 </div>
