@@ -417,6 +417,7 @@ export default function AdminUsers() {
                   <TableRow>
                     <TableHead>Utilisateur</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Téléphone</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead>Plan</TableHead>
@@ -427,7 +428,7 @@ export default function AdminUsers() {
                 <TableBody>
                   {paginatedUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                         Aucun utilisateur trouvé
                       </TableCell>
                     </TableRow>
@@ -441,6 +442,12 @@ export default function AdminUsers() {
                           <div className="flex items-center gap-2 text-sm">
                             <Mail className="w-3 h-3 text-muted-foreground" />
                             <span className="text-muted-foreground">{user.email}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm" dir="ltr">
+                            <Phone className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-muted-foreground">{user.phone || '-'}</span>
                           </div>
                         </TableCell>
                         <TableCell>
