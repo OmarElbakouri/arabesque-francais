@@ -384,11 +384,25 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             // Seamless transition - conversation continues
             setCurrentQuestion(response.nextQuestion);
 
-            // Display feedback + next question text
-            const feedbackText = response.transcribedText ?
-              `Vous avez dit: "${response.transcribedText}"\n\n${response.feedbackText || ''}` :
-              response.feedbackText || '';
-            setDisplayedText(feedbackText);
+            // Display feedback + corrections + next question text
+            let feedbackDisplay = '';
+
+            // Show what the user said
+            if (response.transcribedText) {
+              feedbackDisplay += `Vous avez dit: "${response.transcribedText}"\n\n`;
+            }
+
+            // Show corrections if any (from explanation field)
+            if (response.explanation && response.explanation.trim()) {
+              feedbackDisplay += `${response.explanation}\n\n`;
+            }
+
+            // Show general feedback
+            if (response.feedbackText) {
+              feedbackDisplay += response.feedbackText;
+            }
+
+            setDisplayedText(feedbackDisplay.trim());
 
             if (response.nextQuestion.audioBase64) {
               audioSequence.push(response.nextQuestion.audioBase64);
