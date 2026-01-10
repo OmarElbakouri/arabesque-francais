@@ -28,6 +28,7 @@ interface Payment {
   paymentMethod: 'BANK_TRANSFER' | 'CASH' | 'CHECK' | 'MOBILE';
   reference: string;
   paidAt: string | null;
+  createdByAdmin?: boolean; // true si le paiement a été créé par l'admin
 }
 
 interface PaymentStats {
@@ -568,7 +569,14 @@ const CommercialDashboard = () => {
                         <Badge>{payment.planName}</Badge>
                       </TableCell>
                       <TableCell className="text-sm">{payment.userEmail}</TableCell>
-                      <TableCell className="font-medium">{payment.userName}</TableCell>
+                      <TableCell className="font-medium">
+                        {payment.userName}
+                        {payment.createdByAdmin && (
+                          <Badge variant="outline" className="ml-2 bg-blue-100 text-blue-700 border-blue-300">
+                            Créé par Admin
+                          </Badge>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}

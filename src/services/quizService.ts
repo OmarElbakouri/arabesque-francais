@@ -7,7 +7,7 @@ const MOCK_MODE = false;
 // NEW TYPES FROM BACKEND SPEC
 // ============================================
 
-export type QuestionType = 
+export type QuestionType =
   | 'CHOIX_MULTIPLE'       // Multiple choice
   | 'VRAI_FAUX'            // True/False  
   | 'TEXTE_A_TROUS'        // Fill in the blanks
@@ -104,7 +104,7 @@ const mockMixedQuestions: QuestionDTO[] = [
     requiresTyping: false,
     explanation: '"Sommes" est la forme de "être" pour "nous".'
   },
-  
+
   // VRAI_FAUX - True/False
   {
     id: 'q3',
@@ -259,7 +259,7 @@ const mockMixedQuestions: QuestionDTO[] = [
 // SERVICE FUNCTIONS
 // ============================================
 
-const simulateDelay = (ms: number = 800) => 
+const simulateDelay = (ms: number = 800) =>
   new Promise(resolve => setTimeout(resolve, ms));
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -285,15 +285,15 @@ function normalizeAnswer(text: string): string {
 function isPartiallyCorrect(userAnswer: string, correctAnswer: string): boolean {
   const userNorm = normalizeAnswer(userAnswer);
   const correctNorm = normalizeAnswer(correctAnswer);
-  
+
   // Exact match
   if (userNorm === correctNorm) return false; // Not partial, it's correct
-  
+
   // Check Levenshtein distance for small typos
   const distance = levenshteinDistance(userNorm, correctNorm);
   const maxLength = Math.max(userNorm.length, correctNorm.length);
   const similarity = 1 - (distance / maxLength);
-  
+
   // 80% similarity or more = partially correct
   return similarity >= 0.8;
 }
@@ -301,14 +301,14 @@ function isPartiallyCorrect(userAnswer: string, correctAnswer: string): boolean 
 // Levenshtein distance for fuzzy matching
 function levenshteinDistance(a: string, b: string): number {
   const matrix: number[][] = [];
-  
+
   for (let i = 0; i <= b.length; i++) {
     matrix[i] = [i];
   }
   for (let j = 0; j <= a.length; j++) {
     matrix[0][j] = j;
   }
-  
+
   for (let i = 1; i <= b.length; i++) {
     for (let j = 1; j <= a.length; j++) {
       if (b.charAt(i - 1) === a.charAt(j - 1)) {
@@ -322,7 +322,7 @@ function levenshteinDistance(a: string, b: string): number {
       }
     }
   }
-  
+
   return matrix[b.length][a.length];
 }
 
@@ -334,17 +334,17 @@ export async function startQuizSession(
 ): Promise<QuizSessionDTO> {
   if (MOCK_MODE) {
     await simulateDelay(1000);
-    
+
     // Shuffle and pick questions
     const shuffled = shuffleArray(mockMixedQuestions);
     const selected = shuffled.slice(0, Math.min(10, shuffled.length));
-    
+
     // Shuffle options for multiple choice questions
     const questionsWithShuffledOptions = selected.map(q => ({
       ...q,
       options: q.options ? shuffleArray(q.options) : null
     }));
-    
+
     return {
       sessionId: `session_${Date.now()}`,
       questions: questionsWithShuffledOptions,
@@ -352,30 +352,30 @@ export async function startQuizSession(
       generatedAt: new Date().toISOString()
     };
   }
-  
+
   const request: QuizStartRequest = {
     thematicGroup,
     ...(specificChapters && specificChapters.length > 0 && { specificChapters }),
     ...(resumeSessionId && { resumeSessionId })
   };
-  
+
   console.log('Starting quiz with request:', request);
-  
+
   const response = await api.post('/quiz/start', request);
   const apiResponse = response.data;  // { success, message, data }
-  
+
   console.log('Quiz API response:', apiResponse);
-  
+
   // Check if API call was successful
   if (!apiResponse.success) {
     throw new Error(apiResponse.message || 'Failed to start quiz');
   }
-  
+
   // Extract the actual quiz data from the ApiResponse wrapper
   const quizData = apiResponse.data;  // { sessionId, questions, thematicGroup, ... }
-  
+
   console.log('Quiz data extracted:', quizData);
-  
+
   // Map backend response to frontend DTO structure
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mappedQuestions: QuestionDTO[] = (quizData.questions || []).map((q: any, index: number) => ({
@@ -395,7 +395,7 @@ export async function startQuizSession(
     chapterNumber: q.chapterNumber,
     thematicGroup: q.thematicGroup
   }));
-  
+
   const result: QuizSessionDTO = {
     sessionId: quizData.sessionId?.toString() || `session_${Date.now()}`,
     questions: mappedQuestions,
@@ -403,9 +403,9 @@ export async function startQuizSession(
     totalQuestions: quizData.totalQuestions || mappedQuestions.length,
     resumedFromSaved: quizData.resumedFromSaved
   };
-  
+
   console.log('Mapped quiz session:', result);
-  
+
   return result;
 }
 
@@ -417,10 +417,10 @@ export async function submitQuizAnswers(
 ): Promise<QuizResultDTO> {
   if (MOCK_MODE) {
     await simulateDelay(1500);
-    
+
     let correctCount = 0;
     let partialCount = 0;
-    
+
     const corrections: CorrectionDTO[] = answers.map((answer, index) => {
       const question = mockMixedQuestions[index];
       if (!question) {
@@ -432,19 +432,19 @@ export async function submitQuizAnswers(
           tip: ''
         };
       }
-      
+
       const userAnswer = answer.trim();
       const correctAnswer = question.correctAnswer;
-      
+
       // For typed questions, use normalized comparison
       let isCorrect = false;
       let isPartial = false;
-      
+
       if (question.requiresTyping) {
         const userNorm = normalizeAnswer(userAnswer);
         const correctNorm = normalizeAnswer(correctAnswer);
         isCorrect = userNorm === correctNorm;
-        
+
         if (!isCorrect) {
           isPartial = isPartiallyCorrect(userAnswer, correctAnswer);
         }
@@ -452,10 +452,10 @@ export async function submitQuizAnswers(
         // For multiple choice, exact match
         isCorrect = userAnswer === correctAnswer;
       }
-      
+
       if (isCorrect) correctCount++;
       if (isPartial) partialCount++;
-      
+
       // Generate helpful tips based on question type
       let tip = question.explanation || '';
       if (!isCorrect && !isPartial) {
@@ -473,7 +473,7 @@ export async function submitQuizAnswers(
             tip = tip || 'Révisez cette notion dans le cours.';
         }
       }
-      
+
       return {
         questionId: question.id,
         isCorrect,
@@ -482,11 +482,11 @@ export async function submitQuizAnswers(
         tip
       };
     });
-    
+
     // Calculate score: full points for correct, half for partial
     const totalQuestions = answers.length;
     const score = Math.round(((correctCount + (partialCount * 0.5)) / totalQuestions) * 100);
-    
+
     return {
       sessionId,
       totalQuestions,
@@ -497,28 +497,28 @@ export async function submitQuizAnswers(
       completedAt: new Date().toISOString()
     };
   }
-  
+
   const submitPayload = {
     sessionId: typeof sessionId === 'string' ? parseInt(sessionId, 10) : sessionId,
     answers: answers,  // Array of answer strings
     timeSpentSeconds: timeSpentSeconds
   };
-  
+
   console.log('Submitting quiz answers:', submitPayload);
-  
+
   const response = await api.post('/quiz/submit', submitPayload);
   const apiResponse = response.data;
-  
+
   console.log('Quiz submit response:', apiResponse);
-  
+
   // Check if API call was successful
   if (!apiResponse.success) {
     throw new Error(apiResponse.message || 'Failed to submit quiz');
   }
-  
+
   // Extract from ApiResponse wrapper and map to frontend DTO
   const data = apiResponse.data;
-  
+
   return {
     sessionId: data.sessionId?.toString() || sessionId.toString(),
     totalQuestions: data.totalQuestions || answers.length,
@@ -538,14 +538,74 @@ export async function submitQuizAnswers(
   };
 }
 
-// Get quiz history for a chapter
+/**
+ * Submit VOCAL quiz answers for a practice session.
+ * Uses FLEXIBLE interpretation for voice responses.
+ * This is ONLY used by ExerciceParVocale.
+ * 
+ * The user can:
+ * 1. Give just the word/verb (e.g., "voulez")
+ * 2. Give the complete sentence (e.g., "vous voulez")
+ * 3. Spell or explain (e.g., "voulez avec e-z")
+ * 4. Rephrase (e.g., "c'est voulez" or "la réponse est voulez")
+ */
+export async function submitVocalQuizAnswers(
+  sessionId: string | number,
+  answers: string[],  // Array of vocal transcription strings
+  timeSpentSeconds: number
+): Promise<QuizResultDTO> {
+  if (MOCK_MODE) {
+    // Same as regular submit in mock mode
+    return submitQuizAnswers(sessionId, answers, timeSpentSeconds);
+  }
+
+  const submitPayload = {
+    sessionId: typeof sessionId === 'string' ? parseInt(sessionId, 10) : sessionId,
+    answers: answers,  // Array of vocal transcription strings
+    timeSpentSeconds: timeSpentSeconds
+  };
+
+  console.log('[VOCAL] Submitting vocal quiz answers:', submitPayload);
+
+  // Use the vocal-specific endpoint for flexible correction
+  const response = await api.post('/quiz/submit-vocal', submitPayload);
+  const apiResponse = response.data;
+
+  console.log('[VOCAL] Vocal quiz submit response:', apiResponse);
+
+  // Check if API call was successful
+  if (!apiResponse.success) {
+    throw new Error(apiResponse.message || 'Failed to submit vocal quiz');
+  }
+
+  // Extract from ApiResponse wrapper and map to frontend DTO
+  const data = apiResponse.data;
+
+  return {
+    sessionId: data.sessionId?.toString() || sessionId.toString(),
+    totalQuestions: data.totalQuestions || answers.length,
+    correctAnswers: data.correctCount || 0,
+    partiallyCorrect: data.partiallyCorrectCount || 0,
+    score: data.scorePercentage || 0,
+    corrections: (data.corrections || []).map((c: { questionIndex: number; isCorrect: boolean; isPartiallyCorrect?: boolean; correctAnswer: string; tip?: string; userAnswer?: string; explanation?: string }, index: number) => ({
+      questionId: `q_${c.questionIndex ?? index}`,
+      questionIndex: c.questionIndex ?? index,
+      isCorrect: c.isCorrect,
+      isPartiallyCorrect: c.isPartiallyCorrect || false,
+      suggestedAnswer: c.correctAnswer,
+      tip: c.tip || c.explanation || '',
+      userAnswer: c.userAnswer || answers[c.questionIndex ?? index] || ''
+    })),
+    completedAt: new Date().toISOString()
+  };
+}// Get quiz history for a chapter
 export async function getChapterQuizHistory(chapterId: number): Promise<QuizResultDTO[]> {
   if (MOCK_MODE) {
     await simulateDelay(500);
     // Return empty history in mock mode
     return [];
   }
-  
+
   const response = await api.get(`/quiz/history/chapter/${chapterId}`);
   return response.data;
 }
@@ -568,7 +628,7 @@ export async function getQuizStatistics(): Promise<{
       correctAnswers: 0
     };
   }
-  
+
   const response = await api.get('/quiz/statistics');
   return response.data;
 }
@@ -596,7 +656,7 @@ export async function checkQuizIaAccess(): Promise<QuizAccessInfo> {
       planName: 'VIP'
     };
   }
-  
+
   try {
     const response = await api.get('/quiz/access');
     if (response.data?.success) {

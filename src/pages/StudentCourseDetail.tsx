@@ -42,6 +42,7 @@ import { StudentLessonDTO } from '@/services/courseService';
 import HLSVideoPlayer from '@/components/HLSVideoPlayer';
 import ChapterQuiz from '@/components/ChapterQuiz';
 import VoiceQuiz from '@/components/VoiceQuiz';
+import VocalExercise from '@/components/VocalExercise';
 
 export default function StudentCourseDetail() {
   const { courseId } = useParams<{ courseId: string }>();
@@ -755,6 +756,13 @@ export default function StudentCourseDetail() {
                           Exercice
                         </TabsTrigger>
                         <TabsTrigger
+                          value="vocal-exercise"
+                          className="rounded-none border-b-2 border-transparent data-[state=active]:border-purple-500 data-[state=active]:bg-transparent data-[state=active]:text-purple-400 px-6 py-4 text-slate-400"
+                        >
+                          <Mic className="w-4 h-4 ml-2 text-purple-400" />
+                          ExerciceParVocale
+                        </TabsTrigger>
+                        <TabsTrigger
                           value="voice-quiz"
                           className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-white px-6 py-4 text-slate-400"
                         >
@@ -882,6 +890,17 @@ export default function StudentCourseDetail() {
                     {isLastLesson() && (
                       <TabsContent value="quiz" className="mt-0">
                         <ChapterQuiz
+                          chapterId={selectedChapter.id}
+                          chapterTitle={selectedChapter.title}
+                          thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
+                        />
+                      </TabsContent>
+                    )}
+
+                    {/* Vocal Exercise Tab - Only on last lesson */}
+                    {isLastLesson() && (
+                      <TabsContent value="vocal-exercise" className="mt-0">
+                        <VocalExercise
                           chapterId={selectedChapter.id}
                           chapterTitle={selectedChapter.title}
                           thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}

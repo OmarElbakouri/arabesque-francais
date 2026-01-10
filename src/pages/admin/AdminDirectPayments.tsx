@@ -57,6 +57,8 @@ interface DirectUser {
   currentPlan: string;
   createdAt: string;
   hasActiveSubscription: boolean;
+  hasPromoCode?: boolean; // true si l'utilisateur a un code promo (appartient à un commercial)
+  promoCodeUsed?: string; // le code promo utilisé
 }
 
 interface DirectPayment {
@@ -389,9 +391,9 @@ export default function AdminDirectPayments() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Paiements sans code promo</h1>
+          <h1 className="text-2xl font-bold">Paiements Directs (Admin)</h1>
           <p className="text-muted-foreground">
-            Gérer les paiements des utilisateurs inscrits directement (sans code commercial)
+            Gérer les paiements pour tous les utilisateurs (avec ou sans code promo)
           </p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
@@ -576,9 +578,9 @@ export default function AdminDirectPayments() {
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nouveau Paiement Direct</DialogTitle>
+            <DialogTitle>Nouveau Paiement Admin</DialogTitle>
             <DialogDescription>
-              Créer un paiement pour un utilisateur inscrit sans code promo
+              Créer un paiement pour n'importe quel utilisateur (y compris ceux avec code promo commercial)
             </DialogDescription>
           </DialogHeader>
 
@@ -608,7 +610,14 @@ export default function AdminDirectPayments() {
                     filteredUsers.map((user) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
                         <div className="flex flex-col">
-                          <span className="font-medium">{user.fullName}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{user.fullName}</span>
+                            {user.hasPromoCode && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200">
+                                Code promo: {user.promoCodeUsed}
+                              </span>
+                            )}
+                          </div>
                           <span className="text-xs text-muted-foreground">
                             {user.email} {user.phone && `• ${user.phone}`}
                           </span>

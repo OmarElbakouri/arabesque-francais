@@ -3,15 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/api";
 import {
   GraduationCap, Briefcase, BookOpen, Building, Stethoscope, Scale,
   Check, ArrowRight, ArrowLeft, BookOpenCheck, Users, Globe, Baby,
-  Microscope, FileText, MessageSquare, Mail, UserCheck
+  FileText, MessageSquare, Mail, UserCheck, Brain, Target, Loader2
 } from "lucide-react";
 
-// ==================== QUESTION DEFINITIONS ====================
+// ==================== INTERFACES ====================
 
 interface QuestionOption {
   value: string;
@@ -27,6 +28,44 @@ interface Question {
   field: string;
   options: QuestionOption[];
 }
+
+interface LevelTestQuestion {
+  questionIndex: number;
+  questionText: string;
+  questionType: "QCM" | "OPEN";
+  category: "GRAMMAIRE" | "CONJUGAISON" | "VOCABULAIRE";
+  difficulty: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+  options: string[] | null;
+  correctAnswer: string;
+  hint?: string;
+  explanation?: string;
+}
+
+interface LevelTestAnswer {
+  questionIndex: number;
+  questionText: string;
+  questionType: string;
+  category: string;
+  difficulty: string;
+  userAnswer: string;
+  correctAnswer: string;
+  options: string[] | null;
+}
+
+interface LevelTestResult {
+  determinedLevel: string;
+  determinedLevelLabel: string;
+  levelDescription: string;
+  correctAnswers: number;
+  totalQuestions: number;
+  successPercentage: number;
+  strengths: string;
+  weaknesses: string;
+  recommendations: string;
+  internalLevel: string;
+}
+
+// ==================== QUESTION DEFINITIONS ====================
 
 // Question 1: Profile Type (determines the path)
 const profileTypeQuestion: Question = {
@@ -62,7 +101,7 @@ const profileTypeQuestion: Question = {
   ]
 };
 
-// Student Path Questions
+// Student Path Questions (without level - will come from AI test)
 const studentQuestions: Question[] = [
   {
     id: "educationLevel",
@@ -115,36 +154,10 @@ const studentQuestions: Question[] = [
         description: "Progression globale en français"
       }
     ]
-  },
-  {
-    id: "currentLevel",
-    title: "Quel est votre niveau actuel en français ?",
-    description: "Nous ajusterons la difficulté des exercices",
-    field: "currentLevel",
-    options: [
-      {
-        value: "BEGINNER",
-        label: "Débutant",
-        icon: <span className="text-2xl font-bold">A1-A2</span>,
-        description: "Je connais les bases, vocabulaire limité"
-      },
-      {
-        value: "INTERMEDIATE",
-        label: "Intermédiaire",
-        icon: <span className="text-2xl font-bold">B1-B2</span>,
-        description: "Je peux tenir une conversation"
-      },
-      {
-        value: "ADVANCED",
-        label: "Avancé",
-        icon: <span className="text-2xl font-bold">C1-C2</span>,
-        description: "Je suis à l'aise dans la plupart des situations"
-      }
-    ]
   }
 ];
 
-// Professional Path Questions
+// Professional Path Questions (without level)
 const professionalQuestions: Question[] = [
   {
     id: "sectorInterest",
@@ -215,36 +228,10 @@ const professionalQuestions: Question[] = [
         description: "Un peu de tout"
       }
     ]
-  },
-  {
-    id: "currentLevel",
-    title: "Quel est votre niveau actuel en français ?",
-    description: "Nous ajusterons la difficulté des exercices",
-    field: "currentLevel",
-    options: [
-      {
-        value: "BEGINNER",
-        label: "Débutant",
-        icon: <span className="text-2xl font-bold">A1-A2</span>,
-        description: "Je connais les bases, vocabulaire limité"
-      },
-      {
-        value: "INTERMEDIATE",
-        label: "Intermédiaire",
-        icon: <span className="text-2xl font-bold">B1-B2</span>,
-        description: "Je peux tenir une conversation"
-      },
-      {
-        value: "ADVANCED",
-        label: "Avancé",
-        icon: <span className="text-2xl font-bold">C1-C2</span>,
-        description: "Je suis à l'aise dans la plupart des situations"
-      }
-    ]
   }
 ];
 
-// Professor Path Questions
+// Professor Path Questions (without level)
 const professorQuestions: Question[] = [
   {
     id: "teachingType",
@@ -344,35 +331,7 @@ const professorQuestions: Question[] = [
   }
 ];
 
-// TCF Path Questions
-const tcfQuestions: Question[] = [
-  {
-    id: "currentLevel",
-    title: "Quel est votre niveau actuel en français ?",
-    description: "Nous calibrerons la difficulté des exercices TCF",
-    field: "currentLevel",
-    options: [
-      {
-        value: "BEGINNER",
-        label: "Débutant",
-        icon: <span className="text-2xl font-bold">A1-A2</span>,
-        description: "Je vise un score A1-A2 au TCF"
-      },
-      {
-        value: "INTERMEDIATE",
-        label: "Intermédiaire",
-        icon: <span className="text-2xl font-bold">B1-B2</span>,
-        description: "Je vise un score B1-B2 au TCF"
-      },
-      {
-        value: "ADVANCED",
-        label: "Avancé",
-        icon: <span className="text-2xl font-bold">C1-C2</span>,
-        description: "Je vise un score C1-C2 au TCF"
-      }
-    ]
-  }
-];
+// TCF has no additional questions - goes straight to level test
 
 // ==================== ANSWERS INTERFACE ====================
 
@@ -388,7 +347,7 @@ interface Answers {
   teachingType: string;
   teachingLevel: string;
   professorNeed: string;
-  // Common fields
+  // Level from AI test
   currentLevel: string;
 }
 
@@ -397,6 +356,8 @@ interface Answers {
 const OrientationTest = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Main state
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [answers, setAnswers] = useState<Answers>({
@@ -414,6 +375,16 @@ const OrientationTest = () => {
   const isSubmittingRef = useRef(false);
   const hasCheckedStatusRef = useRef(false);
 
+  // Level Test State
+  const [showLevelTest, setShowLevelTest] = useState(false);
+  const [levelTestQuestions, setLevelTestQuestions] = useState<LevelTestQuestion[]>([]);
+  const [levelTestAnswers, setLevelTestAnswers] = useState<LevelTestAnswer[]>([]);
+  const [currentLevelQuestion, setCurrentLevelQuestion] = useState(0);
+  const [currentAnswer, setCurrentAnswer] = useState("");
+  const [isLoadingLevelTest, setIsLoadingLevelTest] = useState(false);
+  const [levelTestResult, setLevelTestResult] = useState<LevelTestResult | null>(null);
+  const [isEvaluatingLevel, setIsEvaluatingLevel] = useState(false);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [result, setResult] = useState<any | null>(() => {
     const savedResult = sessionStorage.getItem('orientationResult');
@@ -427,13 +398,13 @@ const OrientationTest = () => {
     return null;
   });
 
-  // Get questions based on selected profile type
+  // Get questions based on selected profile type (WITHOUT currentLevel question)
   const getQuestionsForPath = (): Question[] => {
     const pathQuestions = {
       STUDENT: studentQuestions,
       PROFESSIONAL: professionalQuestions,
       PROFESSOR: professorQuestions,
-      TCF: tcfQuestions
+      TCF: [] // TCF goes straight to level test
     };
     return [profileTypeQuestion, ...(pathQuestions[answers.profileType as keyof typeof pathQuestions] || [])];
   };
@@ -441,33 +412,39 @@ const OrientationTest = () => {
   const questions = getQuestionsForPath();
   const totalQuestions = answers.profileType ? questions.length : 1;
   const currentQuestion = questions[currentStep];
-  const progress = ((currentStep + 1) / totalQuestions) * 100;
+  const progress = showLevelTest
+    ? ((currentLevelQuestion + 1) / (levelTestQuestions.length || 1)) * 100
+    : ((currentStep + 1) / totalQuestions) * 100;
 
-  // Simplified check on mount - ProtectedRoute already handles the main status check
-  // This just handles the case where user has a cached result or needs to show the test
+  // Check status on mount
   useEffect(() => {
-    // Prevent multiple checks
+    const safetyTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.log('⚠️ Safety timeout triggered - forcing test to display');
+        setIsLoading(false);
+      }
+    }, 3000);
+
     if (hasCheckedStatusRef.current) {
       setIsLoading(false);
+      clearTimeout(safetyTimeout);
       return;
     }
     hasCheckedStatusRef.current = true;
 
-    // If we have a cached result, show it
     if (result) {
       setIsLoading(false);
+      clearTimeout(safetyTimeout);
       return;
     }
 
-    // Check sessionStorage first (fast path set by ProtectedRoute)
     const orientationCompleted = sessionStorage.getItem('orientationCompleted');
     if (orientationCompleted === 'true') {
-      // Already completed, redirect to courses
       navigate('/courses', { state: { fromOrientationTest: true }, replace: true });
+      clearTimeout(safetyTimeout);
       return;
     }
 
-    // Make a single API call with proper error handling and guaranteed loading state update
     const checkStatus = async () => {
       try {
         const response = await api.get('/orientation-test/status');
@@ -478,15 +455,147 @@ const OrientationTest = () => {
         }
       } catch (error) {
         console.error('Failed to check orientation status:', error);
-        // On error, just show the test - user can take it
       } finally {
-        // CRITICAL: Always set loading to false, even on error or redirect
         setIsLoading(false);
+        clearTimeout(safetyTimeout);
       }
     };
 
     checkStatus();
+
+    return () => clearTimeout(safetyTimeout);
   }, [navigate, result]);
+
+  // Start the level test
+  const startLevelTest = async () => {
+    setIsLoadingLevelTest(true);
+    try {
+      const response = await api.get('/orientation-test/level-test/start');
+      setLevelTestQuestions(response.data);
+      setLevelTestAnswers([]);
+      setCurrentLevelQuestion(0);
+      setCurrentAnswer("");
+      setShowLevelTest(true);
+      toast({
+        title: "Test de niveau",
+        description: "20 questions pour évaluer votre niveau de français"
+      });
+    } catch (error) {
+      console.error('Failed to start level test:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger le test. Veuillez réessayer.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingLevelTest(false);
+    }
+  };
+
+  // Handle answer for level test question
+  const handleLevelTestAnswer = (answer: string) => {
+    const question = levelTestQuestions[currentLevelQuestion];
+
+    const newAnswer: LevelTestAnswer = {
+      questionIndex: question.questionIndex,
+      questionText: question.questionText,
+      questionType: question.questionType,
+      category: question.category,
+      difficulty: question.difficulty,
+      userAnswer: answer,
+      correctAnswer: question.correctAnswer,
+      options: question.options
+    };
+
+    setLevelTestAnswers(prev => [...prev, newAnswer]);
+    setCurrentAnswer("");
+
+    if (currentLevelQuestion < levelTestQuestions.length - 1) {
+      setCurrentLevelQuestion(prev => prev + 1);
+    } else {
+      // All questions answered, submit for evaluation
+      submitLevelTest([...levelTestAnswers, newAnswer]);
+    }
+  };
+
+  // Submit all level test answers at once
+  const submitLevelTest = async (allAnswers: LevelTestAnswer[]) => {
+    setIsEvaluatingLevel(true);
+    try {
+      const response = await api.post('/orientation-test/level-test/submit', {
+        answers: allAnswers
+      });
+
+      setLevelTestResult(response.data);
+
+      // Update the answers with the determined level
+      setAnswers(prev => ({
+        ...prev,
+        currentLevel: response.data.internalLevel
+      }));
+
+      toast({
+        title: "Test terminé !",
+        description: `Votre niveau: ${response.data.determinedLevelLabel}`
+      });
+    } catch (error) {
+      console.error('Failed to evaluate level test:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'évaluation. Niveau par défaut attribué.",
+        variant: "destructive"
+      });
+      // Fallback to intermediate
+      setAnswers(prev => ({
+        ...prev,
+        currentLevel: "INTERMEDIATE"
+      }));
+      setLevelTestResult({
+        determinedLevel: "B1",
+        determinedLevelLabel: "Intermédiaire (B1)",
+        levelDescription: "Niveau intermédiaire par défaut",
+        correctAnswers: 0,
+        totalQuestions: allAnswers.length,
+        successPercentage: 0,
+        strengths: "",
+        weaknesses: "",
+        recommendations: "",
+        internalLevel: "INTERMEDIATE"
+      });
+    } finally {
+      setIsEvaluatingLevel(false);
+    }
+  };
+
+  // Continue after level test to complete orientation
+  const completeOrientationAfterLevelTest = async () => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+
+    try {
+      const response = await api.post("/orientation-test/submit", answers);
+
+      sessionStorage.setItem('orientationCompleted', 'true');
+      sessionStorage.setItem('orientationResult', JSON.stringify(response.data));
+
+      setResult(response.data);
+      toast({
+        title: "Test terminé !",
+        description: "Votre profil d'apprentissage a été déterminé"
+      });
+    } catch (error) {
+      console.error('Submit error:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite. Veuillez réessayer.",
+        variant: "destructive"
+      });
+      isSubmittingRef.current = false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleSelect = (value: string) => {
     const field = currentQuestion.field;
@@ -495,7 +604,6 @@ const OrientationTest = () => {
       [field]: value
     }));
 
-    // If selecting profile type, reset path-specific answers
     if (field === "profileType") {
       setAnswers(prev => ({
         ...prev,
@@ -530,44 +638,24 @@ const OrientationTest = () => {
     if (currentStep < questions.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
-      handleSubmit();
+      // Last question of the path - start level test
+      startLevelTest();
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 0) {
+    if (showLevelTest) {
+      if (currentLevelQuestion > 0 && !levelTestResult) {
+        setCurrentLevelQuestion(prev => prev - 1);
+        setLevelTestAnswers(prev => prev.slice(0, -1));
+        setCurrentAnswer("");
+      } else if (currentLevelQuestion === 0) {
+        setShowLevelTest(false);
+        setLevelTestQuestions([]);
+        setLevelTestAnswers([]);
+      }
+    } else if (currentStep > 0) {
       setCurrentStep(prev => prev - 1);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (isSubmittingRef.current) {
-      return;
-    }
-    isSubmittingRef.current = true;
-    setIsSubmitting(true);
-
-    try {
-      const response = await api.post("/orientation-test/submit", answers);
-
-      sessionStorage.setItem('orientationCompleted', 'true');
-      sessionStorage.setItem('orientationResult', JSON.stringify(response.data));
-
-      setResult(response.data);
-      toast({
-        title: "Test terminé !",
-        description: "Votre profil d'apprentissage a été déterminé"
-      });
-    } catch (error) {
-      console.error('Submit error:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite. Veuillez réessayer.",
-        variant: "destructive"
-      });
-      isSubmittingRef.current = false;
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -584,7 +672,7 @@ const OrientationTest = () => {
     );
   }
 
-  // Result screen
+  // Final result screen
   if (result) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
@@ -607,7 +695,6 @@ const OrientationTest = () => {
               {result.learnerTypeDescription}
             </p>
 
-            {/* Detailed choices overview */}
             <div className="bg-gray-50 rounded-lg p-4 space-y-3">
               <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-blue-600" />
@@ -619,83 +706,25 @@ const OrientationTest = () => {
                   <span className="font-medium text-gray-800">{result.profileTypeLabel || answers.profileType}</span>
                 </div>
 
-                {/* Path-specific fields */}
-                {answers.profileType === "STUDENT" && (
-                  <>
-                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-500 text-sm">Niveau d'études</span>
-                      <span className="font-medium text-gray-800">{result.educationLevelLabel || answers.educationLevel}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-500 text-sm">Objectif</span>
-                      <span className="font-medium text-gray-800">{result.studentObjectiveLabel || answers.studentObjective}</span>
-                    </div>
-                  </>
-                )}
-
-                {answers.profileType === "PROFESSIONAL" && (
-                  <>
-                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-500 text-sm">Secteur d'activité</span>
-                      <span className="font-medium text-gray-800">{result.sectorInterestLabel || answers.sectorInterest}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-500 text-sm">Contexte d'utilisation</span>
-                      <span className="font-medium text-gray-800">{result.usageContextLabel || answers.usageContext}</span>
-                    </div>
-                  </>
-                )}
-
-                {answers.profileType === "PROFESSOR" && (
-                  <>
-                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-500 text-sm">Type d'enseignement</span>
-                      <span className="font-medium text-gray-800">{result.teachingTypeLabel || answers.teachingType}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-500 text-sm">Niveau enseigné</span>
-                      <span className="font-medium text-gray-800">{result.teachingLevelLabel || answers.teachingLevel}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                      <span className="text-gray-500 text-sm">Besoin principal</span>
-                      <span className="font-medium text-gray-800">{result.professorNeedLabel || answers.professorNeed}</span>
-                    </div>
-                  </>
-                )}
-
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-gray-500 text-sm">Niveau actuel</span>
-                  <span className="font-medium text-gray-800">{result.currentLevelLabel || answers.currentLevel}</span>
+                  <span className="text-gray-500 text-sm">Niveau évalué par l'IA</span>
+                  <span className="font-medium text-gray-800 flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-purple-600" />
+                    {result.currentLevelLabel || answers.currentLevel}
+                  </span>
                 </div>
               </div>
             </div>
 
             <div className="bg-blue-50 rounded-lg p-4">
-              <h4 className="font-medium mb-2">Ce que cela signifie :</h4>
+              <h4 className="font-medium mb-2 flex items-center gap-2">
+                <Target className="w-5 h-5 text-blue-600" />
+                Ce que cela signifie :
+              </h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                {result.learnerType === "STUDENT" && (
-                  <li>• Quiz IA avec exercices académiques adaptés à votre niveau</li>
-                )}
-                {result.learnerType === "PROFESSIONAL" && (
-                  <li>• Quiz IA avec situations professionnelles réalistes</li>
-                )}
-                {result.learnerType === "TEACHER" && (
-                  <li>• Quiz IA avec ressources pédagogiques et techniques d'enseignement</li>
-                )}
-                {result.learnerType === "TCF_CANDIDATE" && (
-                  <li>• Quiz IA avec exercices de préparation au TCF</li>
-                )}
-
-                {/* Level-specific content */}
-                {result.currentLevel === "BEGINNER" && (
-                  <li>• Progression adaptée niveau débutant (A1-A2)</li>
-                )}
-                {result.currentLevel === "INTERMEDIATE" && (
-                  <li>• Exercices intermédiaires pour consolider vos acquis (B1-B2)</li>
-                )}
-                {result.currentLevel === "ADVANCED" && (
-                  <li>• Défis avancés pour perfectionner votre maîtrise (C1-C2)</li>
-                )}
+                <li>• Exercices adaptés à votre niveau réel</li>
+                <li>• Quiz IA personnalisés selon votre profil</li>
+                <li>• Progression optimisée pour vos besoins</li>
               </ul>
             </div>
 
@@ -712,7 +741,214 @@ const OrientationTest = () => {
     );
   }
 
-  // Question screen
+  // Level Test Result Screen (before submitting orientation)
+  if (levelTestResult && !result) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-2xl">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
+              <Brain className="w-10 h-10 text-white" />
+            </div>
+            <CardTitle className="text-2xl">Test de niveau terminé !</CardTitle>
+            <CardDescription>Voici les résultats de votre évaluation</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-6 text-white text-center">
+              <p className="text-sm opacity-90 mb-2">Votre niveau CECR</p>
+              <h2 className="text-4xl font-bold mb-2">{levelTestResult.determinedLevel}</h2>
+              <p className="text-lg">{levelTestResult.determinedLevelLabel}</p>
+            </div>
+
+            <p className="text-gray-600 text-center">
+              {levelTestResult.levelDescription}
+            </p>
+
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <p className="text-2xl font-bold text-blue-600">{levelTestResult.correctAnswers}</p>
+                <p className="text-sm text-gray-500">Bonnes réponses</p>
+              </div>
+              <div className="bg-purple-50 rounded-lg p-4">
+                <p className="text-2xl font-bold text-purple-600">{levelTestResult.totalQuestions}</p>
+                <p className="text-sm text-gray-500">Questions</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-4">
+                <p className="text-2xl font-bold text-green-600">{Math.round(levelTestResult.successPercentage)}%</p>
+                <p className="text-sm text-gray-500">Réussite</p>
+              </div>
+            </div>
+
+            {levelTestResult.strengths && (
+              <div className="bg-green-50 rounded-lg p-4">
+                <h4 className="font-medium mb-2 text-green-800">✓ Points forts</h4>
+                <p className="text-sm text-green-700">{levelTestResult.strengths}</p>
+              </div>
+            )}
+
+            {levelTestResult.weaknesses && (
+              <div className="bg-orange-50 rounded-lg p-4">
+                <h4 className="font-medium mb-2 text-orange-800">⚡ À améliorer</h4>
+                <p className="text-sm text-orange-700">{levelTestResult.weaknesses}</p>
+              </div>
+            )}
+
+            {levelTestResult.recommendations && (
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h4 className="font-medium mb-2 text-blue-800">💡 Recommandations</h4>
+                <p className="text-sm text-blue-700">{levelTestResult.recommendations}</p>
+              </div>
+            )}
+
+            <Button
+              onClick={completeOrientationAfterLevelTest}
+              disabled={isSubmitting}
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                  Finalisation...
+                </>
+              ) : (
+                <>
+                  Continuer
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Level Test Question Screen
+  if (showLevelTest && levelTestQuestions.length > 0 && !levelTestResult) {
+    const question = levelTestQuestions[currentLevelQuestion];
+    const levelProgress = ((currentLevelQuestion + 1) / levelTestQuestions.length) * 100;
+
+    if (isEvaluatingLevel) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl">
+            <CardContent className="py-16 text-center">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                <Brain className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold mb-4">Analyse en cours...</h2>
+              <p className="text-gray-600 mb-6">L'IA évalue vos réponses pour déterminer votre niveau</p>
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-600" />
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-2xl">
+          <CardHeader>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Brain className="w-5 h-5 text-purple-600" />
+                <span className="text-sm text-gray-500">
+                  Test de niveau - Question {currentLevelQuestion + 1} sur {levelTestQuestions.length}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs px-2 py-1 rounded-full ${question.category === "GRAMMAIRE" ? "bg-blue-100 text-blue-700" :
+                    question.category === "CONJUGAISON" ? "bg-green-100 text-green-700" :
+                      "bg-purple-100 text-purple-700"
+                  }`}>
+                  {question.category}
+                </span>
+                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                  {question.difficulty}
+                </span>
+              </div>
+            </div>
+            <Progress value={levelProgress} className="h-2 mb-6" />
+            <CardTitle className="text-xl md:text-2xl">{question.questionText}</CardTitle>
+            {question.hint && (
+              <CardDescription className="mt-2">💡 {question.hint}</CardDescription>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {question.questionType === "QCM" && question.options ? (
+              <div className="grid gap-3">
+                {question.options.map((option, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleLevelTestAnswer(option)}
+                    className="p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left"
+                  >
+                    <span className="font-medium">{String.fromCharCode(65 + idx)}.</span> {option}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Input
+                  value={currentAnswer}
+                  onChange={(e) => setCurrentAnswer(e.target.value)}
+                  placeholder="Tapez votre réponse..."
+                  className="text-lg p-4"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && currentAnswer.trim()) {
+                      handleLevelTestAnswer(currentAnswer.trim());
+                    }
+                  }}
+                />
+                <Button
+                  onClick={() => handleLevelTestAnswer(currentAnswer.trim())}
+                  disabled={!currentAnswer.trim()}
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
+                >
+                  Valider
+                  <Check className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
+            )}
+
+            <div className="flex justify-between pt-6">
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                disabled={currentLevelQuestion === 0}
+              >
+                <ArrowLeft className="mr-2 w-4 h-4" />
+                Retour
+              </Button>
+              <span className="text-sm text-gray-500 self-center">
+                {Math.round(levelProgress)}% complété
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Loading level test screen
+  if (isLoadingLevelTest) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-2xl">
+          <CardContent className="py-16 text-center">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-6">
+              <Brain className="w-10 h-10 text-white animate-pulse" />
+            </div>
+            <h2 className="text-2xl font-bold mb-4">Préparation du test de niveau</h2>
+            <p className="text-gray-600 mb-6">L'IA génère 20 questions adaptées pour évaluer votre niveau...</p>
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-600" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Main orientation question screen
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
@@ -777,12 +1013,10 @@ const OrientationTest = () => {
               disabled={isSubmitting}
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
             >
-              {isSubmitting ? (
-                "Analyse en cours..."
-              ) : currentStep === questions.length - 1 ? (
+              {currentStep === questions.length - 1 ? (
                 <>
-                  Terminer
-                  <Check className="ml-2 w-4 h-4" />
+                  <Brain className="mr-2 w-4 h-4" />
+                  Passer le test de niveau
                 </>
               ) : (
                 <>
