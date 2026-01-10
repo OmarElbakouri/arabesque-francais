@@ -13,7 +13,8 @@ import {
   Bell,
   Video,
   Settings,
-  CreditCard
+  CreditCard,
+  KeyRound
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
@@ -32,6 +33,7 @@ export default function AdminLayout() {
   const navItems = [
     { icon: LayoutDashboard, label: 'Tableau de bord', path: '/admin' },
     { icon: Users, label: 'Utilisateurs', path: '/admin/users' },
+    { icon: KeyRound, label: 'Réinit. Mot de passe', path: '/admin/password-reset' },
     { icon: UserCog, label: 'Équipe Commerciale', path: '/admin/sales' },
     { icon: BookOpen, label: 'Cours', path: '/admin/courses' },
     { icon: Video, label: 'Chapitres & Vidéos', path: '/admin/chapters' },

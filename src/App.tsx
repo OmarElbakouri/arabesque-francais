@@ -42,6 +42,7 @@ import AdminDirectPayments from "./pages/admin/AdminDirectPayments";
 import AdminAICredits from "./pages/admin/AdminAICredits";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminPasswordReset from "./pages/admin/AdminPasswordReset";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const App = () => (
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="password-reset" element={<AdminPasswordReset />} />
             <Route path="sales" element={<AdminSales />} />
             <Route path="courses" element={<AdminCourses />} />
             <Route path="courses/:courseId/chapters" element={<AdminChapters />} />

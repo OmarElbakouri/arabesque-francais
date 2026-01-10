@@ -123,6 +123,12 @@ export const adminService = {
     return response.data.data;
   },
 
+  // Réinitialiser le mot de passe d'un utilisateur (admin peut réinitialiser sans connaître l'ancien)
+  resetUserPassword: async (userId: number | string, newPassword: string) => {
+    const response = await api.put(`/admin/users/${userId}/reset-password`, { newPassword });
+    return response.data;
+  },
+
   // Commercial Users Management
   getAllCommercials: async () => {
     const response = await api.get('/admin/commercial-users');
