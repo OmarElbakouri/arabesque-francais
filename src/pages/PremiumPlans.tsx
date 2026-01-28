@@ -136,13 +136,6 @@ export default function PremiumPlans() {
                 <div className="absolute bottom-1/3 left-1/3 w-6 h-6 bg-purple-400/30 rounded-full"></div>
 
                 <div className="container mx-auto px-4 relative z-10 text-center">
-                    {/* Discount Badge */}
-                    <div className="inline-block mb-6">
-                        <span className="inline-flex items-center gap-2 py-2 px-6 rounded-full bg-gradient-to-r from-primary to-purple-600 text-white text-sm font-bold shadow-lg animate-pulse">
-                            <Gift className="w-5 h-5" />
-                            عرض حصري - خصم 50% لل 50 الأوائل
-                        </span>
-                    </div>
 
                     <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight text-gray-900">
                         ارتقِ بمستواك مع{" "}
@@ -190,13 +183,9 @@ export default function PremiumPlans() {
                                     الباقة العادية
                                 </Badge>
                                 <div className="flex items-baseline justify-center gap-2 mb-2">
-                                    <span className="text-5xl md:text-6xl font-black text-gray-900">1000</span>
+                                    <span className="text-5xl md:text-6xl font-black text-gray-900">2000</span>
                                     <span className="text-2xl font-bold text-gray-400">درهم</span>
                                 </div>
-                                <p className="text-gray-400 line-through">عوض 2000 درهم</p>
-                                <Badge className="mt-3 bg-green-50 text-green-600 border-green-200">
-                                    وفر 1000 درهم
-                                </Badge>
                             </div>
 
                             {/* Features List */}
@@ -228,13 +217,13 @@ export default function PremiumPlans() {
                                 </ul>
                             </div>
 
-                            <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('مرحبا، أريد الاشتراك في الباقة العادية (1000 درهم)')}`} target="_blank" rel="noopener noreferrer" className="block mt-8">
+                            <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('مرحبا، أريد الاشتراك في الباقة العادية (2000 درهم)')}`} target="_blank" rel="noopener noreferrer" className="block mt-8">
                                 <Button
                                     size="lg"
                                     className="w-full bg-gray-900 hover:bg-gray-800 text-white text-lg py-6 rounded-2xl"
                                 >
                                     <MessageCircle className="ml-2 h-5 w-5" />
-                                    ابدأ الآن بـ 1000 درهم
+                                    ابدأ الآن بـ 2000 درهم
                                 </Button>
                             </a>
                         </Card>
@@ -259,14 +248,10 @@ export default function PremiumPlans() {
                                     </Badge>
                                     <div className="flex items-baseline justify-center gap-2 mb-2">
                                         <span className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">
-                                            1500
+                                            3000
                                         </span>
                                         <span className="text-2xl font-bold text-gray-400">درهم</span>
                                     </div>
-                                    <p className="text-gray-400 line-through">عوض 3000 درهم</p>
-                                    <Badge className="mt-3 bg-green-50 text-green-600 border-green-200">
-                                        وفر 1500 درهم
-                                    </Badge>
                                 </div>
 
                                 {/* Features List */}
