@@ -174,7 +174,7 @@ export const courseService = {
   },
 
   // ===== NOUVELLES APIs PUBLIQUES =====
-  
+
   // Liste des cours publiés (frontend public)
   getPublicCourses: async (): Promise<CoursePublic[]> => {
     const response = await api.get('/courses');
@@ -223,6 +223,18 @@ export const courseService = {
   // Annuler la complétion d'une leçon
   markLessonIncomplete: async (lessonId: number): Promise<StudentLessonDTO> => {
     const response = await api.post(`/student/lessons/${lessonId}/incomplete`);
+    return response.data?.data || response.data;
+  },
+
+  // Marquer un chapitre comme terminé
+  markChapterComplete: async (chapterId: number): Promise<StudentChapterDTO> => {
+    const response = await api.post(`/student/chapters/${chapterId}/complete`);
+    return response.data?.data || response.data;
+  },
+
+  // Annuler la complétion d'un chapitre
+  markChapterIncomplete: async (chapterId: number): Promise<StudentChapterDTO> => {
+    const response = await api.post(`/student/chapters/${chapterId}/incomplete`);
     return response.data?.data || response.data;
   },
 

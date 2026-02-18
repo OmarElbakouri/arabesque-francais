@@ -66,24 +66,40 @@ export default function StudentCourseDetail() {
     }
   }, [courseId]);
 
-  const loadCourse = async (id: number) => {
+  const loadCourse = async (id: number, preserveSelection = false) => {
+    const currentChapterId = selectedChapter?.id;
+    const currentLessonId = selectedLesson?.id;
     try {
-      setLoading(true);
+      if (!preserveSelection) setLoading(true);
       const data = await courseService.getStudentCourse(id);
       setCourse(data);
 
-      // Auto-expand all chapters and select first unlocked chapter
       if (data.chapters && data.chapters.length > 0) {
         const allChapterIds = new Set(data.chapters.map(c => c.id));
         setExpandedChapters(allChapterIds);
 
-        // Select first available (unlocked) chapter
-        const firstUnlocked = data.chapters.find(c => !c.locked);
-        if (firstUnlocked) {
-          setSelectedChapter(firstUnlocked);
-          // Select first lesson of the chapter if available
-          if (firstUnlocked.lessons && firstUnlocked.lessons.length > 0) {
-            setSelectedLesson(firstUnlocked.lessons[0]);
+        if (preserveSelection && currentChapterId) {
+          const restoredChapter = data.chapters.find(c => c.id === currentChapterId);
+          if (restoredChapter) {
+            setSelectedChapter(restoredChapter);
+            if (currentLessonId && restoredChapter.lessons?.length > 0) {
+              const restoredLesson = restoredChapter.lessons.find(l => l.id === currentLessonId);
+              setSelectedLesson(restoredLesson || restoredChapter.lessons[0]);
+            }
+          } else {
+            const firstUnlocked = data.chapters.find(c => !c.locked);
+            if (firstUnlocked) {
+              setSelectedChapter(firstUnlocked);
+              if (firstUnlocked.lessons?.length > 0) setSelectedLesson(firstUnlocked.lessons[0]);
+            }
+          }
+        } else {
+          const firstUnlocked = data.chapters.find(c => !c.locked);
+          if (firstUnlocked) {
+            setSelectedChapter(firstUnlocked);
+            if (firstUnlocked.lessons && firstUnlocked.lessons.length > 0) {
+              setSelectedLesson(firstUnlocked.lessons[0]);
+            }
           }
         }
       }
@@ -152,15 +168,14 @@ export default function StudentCourseDetail() {
   const handleMarkChapterComplete = async (chapterId: number, currentlyCompleted: boolean) => {
     try {
       setMarkingComplete(chapterId);
-      // Use the chapter ID as lesson ID since chapters now contain content directly
       if (currentlyCompleted) {
-        await courseService.markLessonIncomplete(chapterId);
+        await courseService.markChapterIncomplete(chapterId);
       } else {
-        await courseService.markLessonComplete(chapterId);
+        await courseService.markChapterComplete(chapterId);
       }
-      // Reload course to update progress
+      // Reload course to update progress, preserving current selection
       if (courseId) {
-        await loadCourse(Number(courseId));
+        await loadCourse(Number(courseId), true);
       }
       toast({
         title: 'Succès',
@@ -699,7 +714,7 @@ export default function StudentCourseDetail() {
               )}
 
               {/* Navigation Buttons */}
-              <div className="flex justify-between mb-6">
+              <div className="flex justify-between items-center mb-6">
                 <Button
                   variant="outline"
                   onClick={() => navigateToChapter('next')}
@@ -709,6 +724,36 @@ export default function StudentCourseDetail() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                   Chapitre suivant
                 </Button>
+
+                {/* Marquer comme lu - shown only on last lesson or single-content chapters */}
+                {selectedChapter && !selectedChapter.locked && isLastLesson() && (
+                  <Button
+                    onClick={() => handleMarkChapterComplete(selectedChapter.id, selectedChapter.completed)}
+                    disabled={markingComplete === selectedChapter.id}
+                    className={`rounded-xl px-6 transition-all duration-300 ${selectedChapter.completed
+                        ? 'bg-emerald-600 hover:bg-red-600 text-white border-0'
+                        : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white border-0 shadow-lg shadow-emerald-500/30'
+                      }`}
+                  >
+                    {markingComplete === selectedChapter.id ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                        Mise à jour...
+                      </>
+                    ) : selectedChapter.completed ? (
+                      <>
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Marquer comme non lu
+                      </>
+                    ) : (
+                      <>
+                        <Circle className="mr-2 h-4 w-4" />
+                        Marquer comme lu
+                      </>
+                    )}
+                  </Button>
+                )}
+
                 <Button
                   variant="outline"
                   onClick={() => navigateToChapter('prev')}
