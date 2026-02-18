@@ -85,6 +85,11 @@ export default function StudentCourseDetail() {
             if (currentLessonId && restoredChapter.lessons?.length > 0) {
               const restoredLesson = restoredChapter.lessons.find(l => l.id === currentLessonId);
               setSelectedLesson(restoredLesson || restoredChapter.lessons[0]);
+            } else if (!currentLessonId && restoredChapter.lessons?.length > 0) {
+              // Chapter now has lessons (e.g. after auto-creation) but none was selected before
+              setSelectedLesson(restoredChapter.lessons[0]);
+            } else if (!restoredChapter.lessons || restoredChapter.lessons.length === 0) {
+              setSelectedLesson(null);
             }
           } else {
             const firstUnlocked = data.chapters.find(c => !c.locked);
@@ -731,8 +736,8 @@ export default function StudentCourseDetail() {
                     onClick={() => handleMarkChapterComplete(selectedChapter.id, selectedChapter.completed)}
                     disabled={markingComplete === selectedChapter.id}
                     className={`rounded-xl px-6 transition-all duration-300 ${selectedChapter.completed
-                        ? 'bg-emerald-600 hover:bg-red-600 text-white border-0'
-                        : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white border-0 shadow-lg shadow-emerald-500/30'
+                      ? 'bg-emerald-600 hover:bg-red-600 text-white border-0'
+                      : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white border-0 shadow-lg shadow-emerald-500/30'
                       }`}
                   >
                     {markingComplete === selectedChapter.id ? (
