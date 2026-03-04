@@ -1079,7 +1079,6 @@ export default function AdminChapters() {
                             </div>
                           </div>
                         </div>
-                      </div>
 
                       {/* Lessons Content */}
                       <CollapsibleContent>
@@ -1168,10 +1167,11 @@ export default function AdminChapters() {
                           )}
                         </div>
                       </CollapsibleContent>
-                    </div>
-                  </Collapsible>
+                          </div>
+                        </Collapsible>
                       )}
                     </SortableChapterItem>
+
                   ))}
                 </div>
               </SortableContext>
