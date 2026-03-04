@@ -160,6 +160,8 @@ export default function AdminChapters() {
   const [isEditLessonModalOpen, setIsEditLessonModalOpen] = useState(false);
   const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [editingOrderChapterId, setEditingOrderChapterId] = useState<number | null>(null);
+  const [editingOrderValue, setEditingOrderValue] = useState<string>('');
   const [lessonFormData, setLessonFormData] = useState<LessonFormData>({
     title: '',
     description: '',
@@ -324,23 +326,27 @@ export default function AdminChapters() {
     }
   };
 
-  const handleMoveChapter = async (chapterId: number, direction: 'up' | 'down') => {
+  const handleMoveToPosition = async (chapterId: number, targetPosition: number) => {
+    if (targetPosition < 1 || targetPosition > chapters.length) return;
+
     const currentIndex = chapters.findIndex((c) => c.id === chapterId);
     if (currentIndex === -1) return;
 
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex < 0 || newIndex >= chapters.length) return;
+    const targetIndex = targetPosition - 1;
+    if (currentIndex === targetIndex) return;
 
-    // Create new order array
+    // Remove chapter from current position and insert at target
     const newOrder = chapters.map((c) => c.id);
-    [newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]];
+    const [movedId] = newOrder.splice(currentIndex, 1);
+    newOrder.splice(targetIndex, 0, movedId);
 
     try {
       await adminService.reorderChapters(Number(selectedCourseId), newOrder);
       toast({
         title: 'Succès',
-        description: 'Ordre des chapitres mis à jour',
+        description: `Chapitre déplacé à la position #${targetPosition}`,
       });
+      setEditingOrderChapterId(null);
       loadCourseAndChapters();
     } catch (error) {
       console.error('Erreur lors du réordonnancement:', error);
@@ -602,21 +608,21 @@ export default function AdminChapters() {
   // Détecter le type de vidéo (Bunny Stream, direct, YouTube)
   const getVideoType = (url: string): 'bunny-stream' | 'bunny-cdn' | 'direct' | 'youtube' => {
     if (!url) return 'direct';
-    
+
     // Bunny Stream embed or play URLs
     if (url.includes('iframe.mediadelivery.net') || url.includes('video.bunnycdn.com')) {
       return 'bunny-stream';
     }
-    
+
     // Bunny CDN direct video URLs (HLS streams or direct files)
     if (url.includes('.b-cdn.net') || (url.includes('vz-') && url.includes('.b-cdn.net'))) {
       return 'bunny-cdn';
     }
-    
+
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
       return 'youtube';
     }
-    
+
     return 'direct';
   };
 
@@ -630,7 +636,7 @@ export default function AdminChapters() {
       }
       return url;
     }
-    
+
     // Convert video.bunnycdn.com/play/ to embed format
     if (url.includes('video.bunnycdn.com/play/')) {
       const parts = url.split('video.bunnycdn.com/play/')[1];
@@ -638,7 +644,7 @@ export default function AdminChapters() {
         return `https://iframe.mediadelivery.net/embed/${parts}?responsive=true&preload=metadata`;
       }
     }
-    
+
     return url;
   };
 
@@ -875,8 +881,49 @@ export default function AdminChapters() {
                               </Button>
                             </CollapsibleTrigger>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-gray-500">#{chapter.orderIndex}</span>
-                              <GripVertical className="h-4 w-4 text-gray-400" />
+                              {editingOrderChapterId === chapter.id ? (
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={chapters.length}
+                                  value={editingOrderValue}
+                                  onChange={(e) => setEditingOrderValue(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    e.stopPropagation();
+                                    if (e.key === 'Enter') {
+                                      const val = parseInt(editingOrderValue);
+                                      if (val >= 1 && val <= chapters.length) {
+                                        handleMoveToPosition(chapter.id, val);
+                                      }
+                                    } else if (e.key === 'Escape') {
+                                      setEditingOrderChapterId(null);
+                                    }
+                                  }}
+                                  onBlur={() => {
+                                    const val = parseInt(editingOrderValue);
+                                    if (val >= 1 && val <= chapters.length) {
+                                      handleMoveToPosition(chapter.id, val);
+                                    } else {
+                                      setEditingOrderChapterId(null);
+                                    }
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  autoFocus
+                                  className="w-14 h-7 text-center text-sm font-medium border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingOrderChapterId(chapter.id);
+                                    setEditingOrderValue(String(index + 1));
+                                  }}
+                                  className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                                  title="Cliquez pour changer la position"
+                                >
+                                  #{chapter.orderIndex}
+                                </button>
+                              )}
                             </div>
                             <div className="flex-1">
                               <p className="font-semibold">{chapter.title}</p>
@@ -885,7 +932,7 @@ export default function AdminChapters() {
                               )}
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-3">
                             {/* Badges info */}
                             <div className="hidden md:flex items-center gap-2">
@@ -910,27 +957,9 @@ export default function AdminChapters() {
                               )}
                               {getStatusBadge(chapter.status || (chapter.published ? 'PUBLISHED' : 'DRAFT'))}
                             </div>
-                            
+
                             {/* Actions */}
                             <div className="flex items-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => { e.stopPropagation(); handleMoveChapter(chapter.id, 'up'); }}
-                                disabled={index === 0}
-                                title="Monter"
-                              >
-                                <ArrowUp className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => { e.stopPropagation(); handleMoveChapter(chapter.id, 'down'); }}
-                                disabled={index === chapters.length - 1}
-                                title="Descendre"
-                              >
-                                <ArrowDown className="h-4 w-4" />
-                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -951,7 +980,7 @@ export default function AdminChapters() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Lessons Content */}
                       <CollapsibleContent>
                         <div className="p-4 border-t bg-white dark:bg-gray-900">
@@ -967,7 +996,7 @@ export default function AdminChapters() {
                               Ajouter une leçon
                             </Button>
                           </div>
-                          
+
                           {loadingLessons.has(chapter.id) ? (
                             <div className="flex items-center justify-center py-8">
                               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -991,7 +1020,7 @@ export default function AdminChapters() {
                                       <span className="text-xs text-gray-400 w-6">
                                         {lesson.displayOrder}.
                                       </span>
-                                      <div 
+                                      <div
                                         className={`p-1.5 rounded-full ${lesson.videoUrl ? 'bg-indigo-100 dark:bg-indigo-900' : 'bg-gray-200 dark:bg-gray-600'}`}
                                       >
                                         <Play className={`h-3 w-3 ${lesson.videoUrl ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400'}`} />
@@ -1083,7 +1112,7 @@ export default function AdminChapters() {
               <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
                 🤖 Prompts IA pour les Quiz
               </h4>
-              
+
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -1259,7 +1288,7 @@ export default function AdminChapters() {
               <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
                 🤖 Prompts IA pour les Quiz
               </h4>
-              
+
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -1563,7 +1592,7 @@ export default function AdminChapters() {
               Lecteur vidéo pour la leçon sélectionnée
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 p-6 pt-4">
             {selectedVideoLesson?.videoUrl && (
               <div className="aspect-video w-full rounded-lg overflow-hidden bg-black">
@@ -1610,14 +1639,14 @@ export default function AdminChapters() {
                 )}
               </div>
             )}
-            
+
             {selectedVideoLesson?.description && (
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Description</h4>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">{selectedVideoLesson.description}</p>
               </div>
             )}
-            
+
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-4 text-gray-500">
                 {selectedVideoLesson?.duration && (
@@ -1632,11 +1661,11 @@ export default function AdminChapters() {
                   </span>
                 </span>
               </div>
-              
+
               {selectedVideoLesson?.pdfUrl && (
-                <a 
-                  href={selectedVideoLesson.pdfUrl} 
-                  target="_blank" 
+                <a
+                  href={selectedVideoLesson.pdfUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-blue-500 hover:text-blue-700 hover:underline"
                 >
