@@ -1,5 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,6 +76,32 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/adminService';
 import HLSVideoPlayer from '@/components/HLSVideoPlayer';
+
+// Sortable chapter item wrapper for drag-and-drop
+function SortableChapterItem({ id, children }: { id: number; children: (props: { dragHandleProps: Record<string, any>; isDragging: boolean; style: React.CSSProperties }) => React.ReactNode }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative' as const,
+    zIndex: isDragging ? 50 : 'auto',
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ dragHandleProps: { ...attributes, ...listeners }, isDragging, style })}
+    </div>
+  );
+}
 
 // Interfaces TypeScript
 interface Course {
@@ -355,6 +397,55 @@ export default function AdminChapters() {
         description: 'Impossible de réordonner les chapitres',
         variant: 'destructive',
       });
+    }
+  };
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor)
+  );
+
+  const sortedChapters = useMemo(
+    () => [...chapters].sort((a, b) => a.orderIndex - b.orderIndex),
+    [chapters]
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = sortedChapters.findIndex((c) => c.id === active.id);
+    const newIndex = sortedChapters.findIndex((c) => c.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newOrder = arrayMove(
+      sortedChapters.map((c) => c.id),
+      oldIndex,
+      newIndex
+    );
+
+    // Optimistic update
+    const reorderedChapters = newOrder.map((id, i) => {
+      const ch = chapters.find((c) => c.id === id)!;
+      return { ...ch, orderIndex: i + 1 };
+    });
+    setChapters(reorderedChapters);
+
+    try {
+      await adminService.reorderChapters(Number(selectedCourseId), newOrder);
+      toast({
+        title: 'Succès',
+        description: 'Ordre des chapitres mis à jour',
+      });
+    } catch (error) {
+      console.error('Erreur lors du réordonnancement:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de réordonner les chapitres',
+        variant: 'destructive',
+      });
+      loadCourseAndChapters();
     }
   };
 
@@ -857,30 +948,38 @@ export default function AdminChapters() {
               <p className="text-sm mt-2">Commencez par ajouter un chapitre</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {chapters
-                .sort((a, b) => a.orderIndex - b.orderIndex)
-                .map((chapter, index) => (
-                  <Collapsible
-                    key={chapter.id}
-                    open={expandedChapters.has(chapter.id)}
-                    onOpenChange={() => toggleChapterExpand(chapter.id)}
-                  >
-                    <div className="border rounded-lg">
-                      {/* Chapter Header */}
-                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-t-lg">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 flex-1">
-                            <CollapsibleTrigger asChild>
-                              <Button variant="ghost" size="sm" className="p-1">
-                                {expandedChapters.has(chapter.id) ? (
-                                  <ChevronUp className="h-5 w-5" />
-                                ) : (
-                                  <ChevronDown className="h-5 w-5" />
-                                )}
-                              </Button>
-                            </CollapsibleTrigger>
-                            <div className="flex items-center gap-2">
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={sortedChapters.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-3">
+                  {sortedChapters.map((chapter, index) => (
+                    <SortableChapterItem key={chapter.id} id={chapter.id}>
+                      {({ dragHandleProps, isDragging }) => (
+                        <Collapsible
+                          open={expandedChapters.has(chapter.id)}
+                          onOpenChange={() => toggleChapterExpand(chapter.id)}
+                        >
+                          <div className={`border rounded-lg ${isDragging ? 'ring-2 ring-blue-400 shadow-lg' : ''}`}>
+                            {/* Chapter Header */}
+                            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-t-lg">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3 flex-1">
+                                  <button
+                                    {...dragHandleProps}
+                                    className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 touch-none"
+                                    title="Glisser pour réordonner"
+                                  >
+                                    <GripVertical className="h-5 w-5 text-gray-400" />
+                                  </button>
+                                  <CollapsibleTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="p-1">
+                                      {expandedChapters.has(chapter.id) ? (
+                                        <ChevronUp className="h-5 w-5" />
+                                      ) : (
+                                        <ChevronDown className="h-5 w-5" />
+                                      )}
+                                    </Button>
+                                  </CollapsibleTrigger>
+                                  <div className="flex items-center gap-2">
                               {editingOrderChapterId === chapter.id ? (
                                 <input
                                   type="number"
@@ -968,14 +1067,15 @@ export default function AdminChapters() {
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => { e.stopPropagation(); handleDeleteChapter(chapter.id); }}
-                                title="Supprimer"
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteChapter(chapter.id); }}
+                                  title="Supprimer"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1070,8 +1170,12 @@ export default function AdminChapters() {
                       </CollapsibleContent>
                     </div>
                   </Collapsible>
-                ))}
-            </div>
+                      )}
+                    </SortableChapterItem>
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
         </CardContent>
       </Card>
