@@ -68,6 +68,12 @@ export default function StudentCourseDetail() {
     }
   }, [courseId]);
 
+  useEffect(() => {
+    if (selectedChapter?.id) {
+      setActiveTab('description');
+    }
+  }, [selectedChapter?.id]);
+
   // Loading timeout - show retry button after 15 seconds
   useEffect(() => {
     if (!loading) {
@@ -221,10 +227,22 @@ export default function StudentCourseDetail() {
     const currentIndex = unlockedChapters.findIndex(c => c.id === selectedChapter.id);
 
     if (direction === 'prev' && currentIndex > 0) {
-      setSelectedChapter(unlockedChapters[currentIndex - 1]);
+      const chapter = unlockedChapters[currentIndex - 1];
+      setSelectedChapter(chapter);
+      if (chapter.lessons && chapter.lessons.length > 0) {
+        setSelectedLesson(chapter.lessons[0]);
+      } else {
+        setSelectedLesson(null);
+      }
       setActiveTab('description');
     } else if (direction === 'next' && currentIndex < unlockedChapters.length - 1) {
-      setSelectedChapter(unlockedChapters[currentIndex + 1]);
+      const chapter = unlockedChapters[currentIndex + 1];
+      setSelectedChapter(chapter);
+      if (chapter.lessons && chapter.lessons.length > 0) {
+        setSelectedLesson(chapter.lessons[0]);
+      } else {
+        setSelectedLesson(null);
+      }
       setActiveTab('description');
     }
   };
@@ -808,7 +826,7 @@ export default function StudentCourseDetail() {
 
               {/* Content Tabs */}
               <Card className="border-0 shadow-xl bg-slate-800/50 backdrop-blur-sm overflow-hidden">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <Tabs key={`tabs-${selectedChapter.id}`} value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="w-full justify-start bg-slate-900/50 rounded-none p-0 h-auto border-b border-slate-700/50 flex-wrap">
                     <TabsTrigger
                       value="description"
