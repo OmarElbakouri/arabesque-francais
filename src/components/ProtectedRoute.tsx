@@ -87,6 +87,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     }
 
     // Need to check with backend
+    let cancelled = false;
     const checkWithBackend = async () => {
       isCheckingRef.current = true;
       setStatus('loading');
@@ -101,6 +102,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
           api.get('/orientation-test/status'),
           timeoutPromise
         ]);
+        if (cancelled) return;
         checkedForUserRef.current = user.id;
 
         if (response.data.completed) {
@@ -114,6 +116,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
           setStatus('needs-orientation');
         }
       } catch (error) {
+        if (cancelled) return;
         console.error('Failed to check orientation status:', error);
         // On error or timeout, redirect to orientation test for safety
         // This ensures new users always see the test
@@ -126,7 +129,13 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     };
 
     checkWithBackend();
-  }, [isAuthenticated, user, location.pathname, location.state, needsOrientationCheck]);
+
+    // Cleanup: prevent stuck ref and stale state updates on re-render
+    return () => {
+      cancelled = true;
+      isCheckingRef.current = false;
+    };
+  }, [isAuthenticated, user?.id, location.pathname, location.state, needsOrientationCheck]);
 
   // Not authenticated - redirect to login
   if (!isAuthenticated) {

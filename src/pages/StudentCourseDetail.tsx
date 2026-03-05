@@ -55,6 +55,7 @@ export default function StudentCourseDetail() {
 
   const [course, setCourse] = useState<StudentCourseDTO | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
   const [expandedChapters, setExpandedChapters] = useState<Set<number>>(new Set());
   const [selectedChapter, setSelectedChapter] = useState<StudentChapterDTO | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<StudentLessonDTO | null>(null);
@@ -66,11 +67,24 @@ export default function StudentCourseDetail() {
     }
   }, [courseId]);
 
+  // Loading timeout - show retry button after 15 seconds
+  useEffect(() => {
+    if (!loading) {
+      setLoadingTimedOut(false);
+      return;
+    }
+    const timer = setTimeout(() => setLoadingTimedOut(true), 15000);
+    return () => clearTimeout(timer);
+  }, [loading]);
+
   const loadCourse = async (id: number, preserveSelection = false) => {
     const currentChapterId = selectedChapter?.id;
     const currentLessonId = selectedLesson?.id;
     try {
-      if (!preserveSelection) setLoading(true);
+      if (!preserveSelection) {
+        setLoading(true);
+        setLoadingTimedOut(false);
+      }
       const data = await courseService.getStudentCourse(id);
       setCourse(data);
 
@@ -334,15 +348,33 @@ export default function StudentCourseDetail() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="relative w-24 h-24 mx-auto mb-6">
-            <div className="w-24 h-24 border-4 border-primary/20 rounded-full" />
-            <div className="w-24 h-24 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Play className="w-10 h-10 text-primary animate-pulse" />
-            </div>
-          </div>
-          <p className="text-white/70 font-medium text-lg">Chargement du cours...</p>
-          <p className="text-white/40 text-sm mt-2">Préparation de votre expérience d'apprentissage</p>
+          {loadingTimedOut ? (
+            <>
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-slate-700 flex items-center justify-center">
+                <Play className="w-10 h-10 text-slate-400" />
+              </div>
+              <p className="text-white/70 font-medium text-lg mb-2">Le chargement prend plus de temps que prévu</p>
+              <p className="text-white/40 text-sm mb-6">Le serveur est peut-être en cours de démarrage</p>
+              <Button
+                onClick={() => loadCourse(Number(courseId))}
+                className="rounded-xl"
+              >
+                Réessayer
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="relative w-24 h-24 mx-auto mb-6">
+                <div className="w-24 h-24 border-4 border-primary/20 rounded-full" />
+                <div className="w-24 h-24 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Play className="w-10 h-10 text-primary animate-pulse" />
+                </div>
+              </div>
+              <p className="text-white/70 font-medium text-lg">Chargement du cours...</p>
+              <p className="text-white/40 text-sm mt-2">Préparation de votre expérience d'apprentissage</p>
+            </>
+          )}
         </div>
       </div>
     );
