@@ -60,6 +60,7 @@ export default function StudentCourseDetail() {
   const [selectedChapter, setSelectedChapter] = useState<StudentChapterDTO | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<StudentLessonDTO | null>(null);
   const [markingComplete, setMarkingComplete] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState('description');
 
   useEffect(() => {
     if (courseId) {
@@ -153,6 +154,7 @@ export default function StudentCourseDetail() {
       return;
     }
     setSelectedChapter(chapter);
+    setActiveTab('description');
     // Select first lesson of the chapter if available
     if (chapter.lessons && chapter.lessons.length > 0) {
       setSelectedLesson(chapter.lessons[0]);
@@ -220,8 +222,10 @@ export default function StudentCourseDetail() {
 
     if (direction === 'prev' && currentIndex > 0) {
       setSelectedChapter(unlockedChapters[currentIndex - 1]);
+      setActiveTab('description');
     } else if (direction === 'next' && currentIndex < unlockedChapters.length - 1) {
       setSelectedChapter(unlockedChapters[currentIndex + 1]);
+      setActiveTab('description');
     }
   };
 
@@ -804,7 +808,7 @@ export default function StudentCourseDetail() {
 
               {/* Content Tabs */}
               <Card className="border-0 shadow-xl bg-slate-800/50 backdrop-blur-sm overflow-hidden">
-                <Tabs defaultValue="description" className="w-full">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="w-full justify-start bg-slate-900/50 rounded-none p-0 h-auto border-b border-slate-700/50 flex-wrap">
                     <TabsTrigger
                       value="description"
@@ -972,6 +976,7 @@ export default function StudentCourseDetail() {
                     {isLastLesson() && (
                       <TabsContent value="quiz" className="mt-0">
                         <ChapterQuiz
+                          key={`quiz-${selectedChapter.id}`}
                           chapterId={selectedChapter.id}
                           chapterTitle={selectedChapter.title}
                           thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
@@ -983,6 +988,7 @@ export default function StudentCourseDetail() {
                     {isLastLesson() && (
                       <TabsContent value="vocal-exercise" className="mt-0">
                         <VocalExercise
+                          key={`vocal-${selectedChapter.id}`}
                           chapterId={selectedChapter.id}
                           chapterTitle={selectedChapter.title}
                           thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
@@ -994,6 +1000,7 @@ export default function StudentCourseDetail() {
                     {isLastLesson() && (
                       <TabsContent value="voice-quiz" className="mt-0">
                         <VoiceQuiz
+                          key={`voice-${selectedChapter.id}`}
                           chapterId={selectedChapter.id}
                           chapterTitle={selectedChapter.title}
                           thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
