@@ -584,10 +584,10 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
                     </p>
                   )}
                 </div>
-              ) : (
+              ) : currentQuestion.options && currentQuestion.options.length > 0 ? (
                 // Multiple choice options
                 <div className="grid gap-3">
-                  {currentQuestion.options?.map((option, index) => (
+                  {currentQuestion.options.map((option, index) => (
                     <motion.button
                       key={option}
                       initial={{ opacity: 0, y: 10 }}
@@ -617,6 +617,21 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
                       </div>
                     </motion.button>
                   ))}
+                </div>
+              ) : (
+                // Fallback: options missing — show text input instead
+                <div className="space-y-3">
+                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <p className="text-sm text-yellow-400">
+                      Les choix n'ont pas pu être chargés. Tapez votre réponse :
+                    </p>
+                  </div>
+                  <Input
+                    value={currentAnswer}
+                    onChange={(e) => handleTypedAnswerChange(e.target.value)}
+                    placeholder="Tapez votre réponse..."
+                    className="text-base h-12"
+                  />
                 </div>
               )}
             </motion.div>
