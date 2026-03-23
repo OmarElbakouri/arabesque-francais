@@ -9,7 +9,7 @@ import api from "@/lib/api";
 import {
   GraduationCap, Briefcase, BookOpen, Building, Stethoscope, Scale,
   Check, ArrowRight, ArrowLeft, BookOpenCheck, Users, Globe, Baby,
-  FileText, MessageSquare, Mail, UserCheck, Brain, Target, Loader2
+  FileText, MessageSquare, Mail, UserCheck, Brain, Target, Loader2, Headphones
 } from "lucide-react";
 
 // ==================== INTERFACES ====================
@@ -167,7 +167,7 @@ const professionalQuestions: Question[] = [
     options: [
       {
         value: "COMMERCE",
-        label: "Commerce / Business",
+        label: "Entreprise",
         icon: <Briefcase className="w-8 h-8" />,
         description: "Ventes, marketing, négociation"
       },
@@ -188,6 +188,12 @@ const professionalQuestions: Question[] = [
         label: "Juridique / Administratif",
         icon: <Scale className="w-8 h-8" />,
         description: "Droit, procédures, documents"
+      },
+      {
+        value: "CALL_CENTER",
+        label: "Centre d'appel",
+        icon: <Headphones className="w-8 h-8" />,
+        description: "Accueil téléphonique, service client, télémarketing"
       },
       {
         value: "OTHER",

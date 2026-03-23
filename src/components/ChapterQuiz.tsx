@@ -275,9 +275,6 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
                 <CheckCircle2 className="w-3 h-3" /> Vrai/Faux
               </Badge>
               <Badge variant="secondary" className="flex items-center gap-1">
-                <Type className="w-3 h-3" /> Conjugaison
-              </Badge>
-              <Badge variant="secondary" className="flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> Texte à trous
               </Badge>
             </div>
