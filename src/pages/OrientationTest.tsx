@@ -148,6 +148,12 @@ const studentQuestions: Question[] = [
         description: "Certifications officielles"
       },
       {
+        value: "SCIENTIFIC_VOCAB",
+        label: "Vocabulaire scientifique",
+        icon: <Brain className="w-8 h-8" />,
+        description: "Maths, physique, SVT en français"
+      },
+      {
         value: "GENERAL",
         label: "Améliorer mon niveau général",
         icon: <BookOpen className="w-8 h-8" />,
