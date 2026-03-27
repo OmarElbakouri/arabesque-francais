@@ -11,9 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, CheckCircle, Clock, Users as UsersIcon, Trash2 } from 'lucide-react';
+import { DollarSign, CheckCircle, Clock, Users as UsersIcon, Trash2, Eye, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getPayments, getPaymentStatistics, markPaymentAsPending, getPromoUsers, createPayment, deletePayment } from '@/services/commercialService';
+import { getPayments, getPaymentStatistics, markPaymentAsPending, getPromoUsers, createPayment, deletePayment, getUsersProgression } from '@/services/commercialService';
 import { uploadToCloudinary } from '@/services/cloudinaryService';
 import { Upload, Image as ImageIcon } from 'lucide-react';
 
@@ -57,6 +57,30 @@ interface PromoUser {
   planName: string;
 }
 
+interface CourseProgressInfo {
+  courseId: number;
+  courseName: string;
+  courseLevel: string;
+  completedLessons: number;
+  totalLessons: number;
+  progressPercentage: number;
+}
+
+interface UserProgressionSummary {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  planName: string;
+  status: string;
+  overallProgress: number;
+  completedLessons: number;
+  totalLessons: number;
+  totalXp: number;
+  enrolledCoursesCount: number;
+  courses: CourseProgressInfo[];
+}
+
 interface CreatePaymentForm {
   planName: string;
   amount: number;
@@ -82,6 +106,9 @@ const CommercialDashboard = () => {
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [progressions, setProgressions] = useState<UserProgressionSummary[]>([]);
+  const [progressionModalOpen, setProgressionModalOpen] = useState(false);
+  const [selectedProgressionUser, setSelectedProgressionUser] = useState<UserProgressionSummary | null>(null);
   const [stats, setStats] = useState<PaymentStats>({
     totalUsersCreated: 0,
     confirmedUsers: 0,
@@ -105,6 +132,7 @@ const CommercialDashboard = () => {
     loadPayments();
     loadStatistics();
     loadPromoUsers();
+    loadProgressions();
   }, []);
 
   const loadPayments = async () => {
@@ -146,6 +174,20 @@ const CommercialDashboard = () => {
     } catch (error) {
       console.error('❌ Erreur chargement stats:', error);
     }
+  };
+
+  const loadProgressions = async () => {
+    try {
+      const data = await getUsersProgression();
+      setProgressions(data || []);
+    } catch (error) {
+      console.error('❌ Erreur chargement progression:', error);
+    }
+  };
+
+  const openProgressionModal = (user: UserProgressionSummary) => {
+    setSelectedProgressionUser(user);
+    setProgressionModalOpen(true);
   };
 
   const loadPromoUsers = async () => {
@@ -659,6 +701,135 @@ const CommercialDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* User Progression Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <CardTitle>Progression des Utilisateurs</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom complet</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Plan</TableHead>
+                  <TableHead>Progression</TableHead>
+                  <TableHead>Leçons</TableHead>
+                  <TableHead>XP</TableHead>
+                  <TableHead className="text-right">Détails</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {progressions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      Aucune donnée de progression disponible
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  progressions.map((user) => (
+                    <TableRow key={user.userId}>
+                      <TableCell className="font-medium">
+                        {user.firstName} {user.lastName}
+                      </TableCell>
+                      <TableCell className="text-sm">{user.email}</TableCell>
+                      <TableCell>
+                        <Badge variant={user.planName === 'VIP' ? 'default' : 'secondary'}>
+                          {user.planName}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary rounded-full transition-all"
+                              style={{ width: `${user.overallProgress}%` }}
+                            />
+                          </div>
+                          <span className="text-sm text-muted-foreground">{user.overallProgress}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {user.completedLessons}/{user.totalLessons}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {user.totalXp} XP
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openProgressionModal(user)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Voir
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Progression Detail Modal */}
+      <Dialog open={progressionModalOpen} onOpenChange={setProgressionModalOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Progression de {selectedProgressionUser?.firstName} {selectedProgressionUser?.lastName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-primary">{selectedProgressionUser?.overallProgress}%</p>
+                <p className="text-xs text-muted-foreground">Progression</p>
+              </div>
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold">{selectedProgressionUser?.completedLessons}/{selectedProgressionUser?.totalLessons}</p>
+                <p className="text-xs text-muted-foreground">Leçons</p>
+              </div>
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-warning">{selectedProgressionUser?.totalXp}</p>
+                <p className="text-xs text-muted-foreground">XP Total</p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-3">Cours inscrits ({selectedProgressionUser?.enrolledCoursesCount || 0})</h3>
+              {selectedProgressionUser?.courses && selectedProgressionUser.courses.length > 0 ? (
+                selectedProgressionUser.courses.map((course) => (
+                  <div key={course.courseId} className="border rounded-lg p-3 mb-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-sm">{course.courseName}</span>
+                      <span className="text-sm text-muted-foreground">{course.progressPercentage}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${course.progressPercentage}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {course.completedLessons}/{course.totalLessons} leçons
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">Aucun cours inscrit</p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Payment Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>

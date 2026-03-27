@@ -202,3 +202,14 @@ export const changePassword = async (passwordData: {
     throw error;
   }
 };
+
+// Get progression of all users linked to this commercial
+export const getUsersProgression = async () => {
+  try {
+    const response = await api.get('/commercial/users-progression');
+    return response.data.data || response.data || [];
+  } catch (error: any) {
+    console.error('❌ Erreur chargement progression utilisateurs:', error);
+    throw error;
+  }
+};

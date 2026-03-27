@@ -61,6 +61,16 @@ export const adminService = {
     return response.data.data;
   },
 
+  getUsersProgression: async () => {
+    const response = await api.get('/admin/users/progression');
+    return response.data.data;
+  },
+
+  getUserProgression: async (userId: string) => {
+    const response = await api.get(`/admin/users/${userId}/progression`);
+    return response.data.data;
+  },
+
   // User update methods - backend uses specific endpoints for each field
   updateUser: async (userId: string, data: any) => {
     // This is a wrapper that calls individual endpoints based on what fields are being updated

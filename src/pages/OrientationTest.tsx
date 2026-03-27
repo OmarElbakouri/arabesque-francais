@@ -9,7 +9,8 @@ import api from "@/lib/api";
 import {
   GraduationCap, Briefcase, BookOpen, Building, Stethoscope, Scale,
   Check, ArrowRight, ArrowLeft, BookOpenCheck, Users, Globe, Baby,
-  FileText, MessageSquare, Mail, UserCheck, Brain, Target, Loader2, Headphones
+  FileText, MessageSquare, Mail, UserCheck, Brain, Target, Loader2, Headphones,
+  PhoneOutgoing, PhoneIncoming, PhoneCall
 } from "lucide-react";
 
 // ==================== INTERFACES ====================
@@ -243,6 +244,34 @@ const professionalQuestions: Question[] = [
   }
 ];
 
+// Call Center specific question (replaces usageContext when sectorInterest is CALL_CENTER)
+const callCenterContextQuestion: Question = {
+  id: "usageContext",
+  title: "Quel type de centre d'appel ?",
+  description: "Nous adapterons le vocabulaire à votre spécialité",
+  field: "usageContext",
+  options: [
+    {
+      value: "CALL_CENTER_SALES",
+      label: "Ventes (émission)",
+      icon: <PhoneOutgoing className="w-8 h-8" />,
+      description: "Appels sortants, prospection, vente par téléphone"
+    },
+    {
+      value: "CALL_CENTER_RECEPTION",
+      label: "Réception (accueil)",
+      icon: <PhoneIncoming className="w-8 h-8" />,
+      description: "Appels entrants, assistance, réclamations"
+    },
+    {
+      value: "CALL_CENTER_BOTH",
+      label: "Les deux",
+      icon: <PhoneCall className="w-8 h-8" />,
+      description: "Ventes et réception"
+    }
+  ]
+};
+
 // Professor Path Questions (without level)
 const professorQuestions: Question[] = [
   {
@@ -418,7 +447,14 @@ const OrientationTest = () => {
       PROFESSOR: professorQuestions,
       TCF: [] // TCF goes straight to level test
     };
-    return [profileTypeQuestion, ...(pathQuestions[answers.profileType as keyof typeof pathQuestions] || [])];
+    let questions = [profileTypeQuestion, ...(pathQuestions[answers.profileType as keyof typeof pathQuestions] || [])];
+
+    // For CALL_CENTER, replace the usageContext question with call center-specific options
+    if (answers.sectorInterest === "CALL_CENTER") {
+      questions = questions.map(q => q.id === "usageContext" ? callCenterContextQuestion : q);
+    }
+
+    return questions;
   };
 
   const questions = getQuestionsForPath();

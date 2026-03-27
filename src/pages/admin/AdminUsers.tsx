@@ -28,7 +28,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Search, Trash2, Mail, Phone, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Search, Trash2, Mail, Phone, Download, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { adminService } from '@/services/adminService';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from '@/hooks/use-toast';
@@ -47,6 +48,30 @@ interface User {
   usedPromoCode?: string; // Promo code used during registration
 }
 
+interface CourseProgressInfo {
+  courseId: number;
+  courseName: string;
+  courseLevel: string;
+  completedLessons: number;
+  totalLessons: number;
+  progressPercentage: number;
+}
+
+interface UserProgressionSummary {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  planName: string;
+  status: string;
+  overallProgress: number;
+  completedLessons: number;
+  totalLessons: number;
+  totalXp: number;
+  enrolledCoursesCount: number;
+  courses: CourseProgressInfo[];
+}
+
 export default function AdminUsers() {
   const currentUser = useAuthStore((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,9 +84,13 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [progressionMap, setProgressionMap] = useState<Record<string, UserProgressionSummary>>({});
+  const [progressionModalOpen, setProgressionModalOpen] = useState(false);
+  const [selectedProgressionUser, setSelectedProgressionUser] = useState<UserProgressionSummary | null>(null);
 
   useEffect(() => {
     loadUsers();
+    loadProgressions();
   }, []);
 
   const loadUsers = async () => {
@@ -97,6 +126,29 @@ export default function AdminUsers() {
       setUsers([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadProgressions = async () => {
+    try {
+      const data = await adminService.getUsersProgression();
+      const map: Record<string, UserProgressionSummary> = {};
+      if (Array.isArray(data)) {
+        data.forEach((p: UserProgressionSummary) => {
+          map[String(p.userId)] = p;
+        });
+      }
+      setProgressionMap(map);
+    } catch (error) {
+      console.error('Error loading progressions:', error);
+    }
+  };
+
+  const openProgressionModal = (userId: string) => {
+    const progression = progressionMap[userId];
+    if (progression) {
+      setSelectedProgressionUser(progression);
+      setProgressionModalOpen(true);
     }
   };
 
@@ -421,6 +473,7 @@ export default function AdminUsers() {
                     <TableHead>Type</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead>Plan</TableHead>
+                    <TableHead>Progression</TableHead>
                     <TableHead>Actif</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -428,7 +481,7 @@ export default function AdminUsers() {
                 <TableBody>
                   {paginatedUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                         Aucun utilisateur trouvé
                       </TableCell>
                     </TableRow>
@@ -479,12 +532,39 @@ export default function AdminUsers() {
                           )}
                         </TableCell>
                         <TableCell>
+                          {user.role === 'USER' && progressionMap[user.id] ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary rounded-full transition-all"
+                                  style={{ width: `${progressionMap[user.id].overallProgress}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {progressionMap[user.id].overallProgress}%
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           <Badge variant={user.active ? 'default' : 'secondary'}>
                             {user.active ? 'Oui' : 'Non'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
+                            {user.role === 'USER' && progressionMap[user.id] && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => openProgressionModal(user.id)}
+                                title="Voir progression"
+                              >
+                                <Eye className="w-4 h-4 text-primary" />
+                              </Button>
+                            )}
                             <Button
                               size="icon"
                               variant="ghost"
@@ -557,6 +637,58 @@ export default function AdminUsers() {
           )}
         </CardContent>
       </Card>
+
+      {/* Progression Detail Modal */}
+      <Dialog open={progressionModalOpen} onOpenChange={setProgressionModalOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Progression de {selectedProgressionUser?.firstName} {selectedProgressionUser?.lastName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-primary">{selectedProgressionUser?.overallProgress}%</p>
+                <p className="text-xs text-muted-foreground">Progression</p>
+              </div>
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold">{selectedProgressionUser?.completedLessons}/{selectedProgressionUser?.totalLessons}</p>
+                <p className="text-xs text-muted-foreground">Leçons</p>
+              </div>
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-orange-500">{selectedProgressionUser?.totalXp}</p>
+                <p className="text-xs text-muted-foreground">XP Total</p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-3">Cours inscrits ({selectedProgressionUser?.enrolledCoursesCount || 0})</h3>
+              {selectedProgressionUser?.courses && selectedProgressionUser.courses.length > 0 ? (
+                selectedProgressionUser.courses.map((course) => (
+                  <div key={course.courseId} className="border rounded-lg p-3 mb-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-sm">{course.courseName}</span>
+                      <span className="text-sm text-muted-foreground">{course.progressPercentage}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${course.progressPercentage}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {course.completedLessons}/{course.totalLessons} leçons
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">Aucun cours inscrit</p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
