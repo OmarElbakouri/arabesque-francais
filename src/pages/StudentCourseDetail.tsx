@@ -997,7 +997,7 @@ export default function StudentCourseDetail() {
                           key={`quiz-${selectedChapter.id}`}
                           chapterId={selectedChapter.id}
                           chapterTitle={selectedChapter.title}
-                          thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
+                          thematicGroup={Math.min(Math.max(Math.ceil((selectedChapter.orderIndex || 1) / 5), 1), 6)}
                         />
                       </TabsContent>
                     )}
@@ -1009,7 +1009,7 @@ export default function StudentCourseDetail() {
                           key={`vocal-${selectedChapter.id}`}
                           chapterId={selectedChapter.id}
                           chapterTitle={selectedChapter.title}
-                          thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
+                          thematicGroup={Math.min(Math.max(Math.ceil((selectedChapter.orderIndex || 1) / 5), 1), 6)}
                         />
                       </TabsContent>
                     )}
@@ -1021,7 +1021,7 @@ export default function StudentCourseDetail() {
                           key={`voice-${selectedChapter.id}`}
                           chapterId={selectedChapter.id}
                           chapterTitle={selectedChapter.title}
-                          thematicGroup={course?.id ? Math.min(Math.max(course.id, 1), 6) : 1}
+                          thematicGroup={Math.min(Math.max(Math.ceil((selectedChapter.orderIndex || 1) / 5), 1), 6)}
                         />
                       </TabsContent>
                     )}
