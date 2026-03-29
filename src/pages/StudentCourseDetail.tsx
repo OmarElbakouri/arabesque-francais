@@ -36,6 +36,7 @@ import {
 } from '@/services/courseService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/authStore';
+import { useCourseContextStore } from '@/stores/courseContextStore';
 import logo from '@/assets/logo.jpg';
 import professor from '@/assets/professor.jpg';
 import { StudentLessonDTO } from '@/services/courseService';
@@ -61,18 +62,27 @@ export default function StudentCourseDetail() {
   const [selectedLesson, setSelectedLesson] = useState<StudentLessonDTO | null>(null);
   const [markingComplete, setMarkingComplete] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState('description');
+  const setCourseContext = useCourseContextStore((s) => s.setCourseContext);
+  const clearCourseContext = useCourseContextStore((s) => s.clearCourseContext);
 
   useEffect(() => {
     if (courseId) {
       loadCourse(Number(courseId));
     }
+    return () => clearCourseContext();
   }, [courseId]);
 
   useEffect(() => {
     if (selectedChapter?.id) {
       setActiveTab('description');
+      setCourseContext({
+        courseId: course?.id ?? null,
+        courseName: course?.name ?? null,
+        chapterId: selectedChapter.id,
+        chapterTitle: selectedChapter.title,
+      });
     }
-  }, [selectedChapter?.id]);
+  }, [selectedChapter?.id, course?.id]);
 
   // Loading timeout - show retry button after 15 seconds
   useEffect(() => {

@@ -1220,7 +1220,7 @@ export default function AdminChapters() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="quizPrompt">📝 Prompt Quiz Normal</Label>
+                    <Label htmlFor="quizPrompt">📝 Prompt Quiz & Exercice Vocal</Label>
                     <span className="text-xs text-muted-foreground">(Optionnel)</span>
                   </div>
                   <Textarea
@@ -1232,25 +1232,25 @@ export default function AdminChapters() {
                     maxLength={2000}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Instructions personnalisées pour l'IA. Si vide, l'IA utilisera le titre du chapitre.
+                    Instructions pour le quiz normal ET l'exercice vocal. Si vide, l'IA utilisera le titre du chapitre.
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="voiceQuizPrompt">🎤 Prompt Quiz Vocal</Label>
+                    <Label htmlFor="voiceQuizPrompt">🤖 Prompt Assistant Sophie</Label>
                     <span className="text-xs text-muted-foreground">(Optionnel)</span>
                   </div>
                   <Textarea
                     id="voiceQuizPrompt"
                     value={formData.voiceQuizPrompt}
                     onChange={(e) => setFormData({ ...formData, voiceQuizPrompt: e.target.value })}
-                    placeholder="Ex: Crée des exercices de prononciation pour les formes conjuguées..."
+                    placeholder="Ex: Simule un appel avec un client hésitant pour la vente d'une formation..."
                     rows={3}
                     maxLength={2000}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Instructions pour les exercices de prononciation et d'écoute.
+                    Instructions pour l'assistant IA Sophie (chatbot). Définit le comportement de Sophie pour ce chapitre.
                   </p>
                 </div>
               </div>
@@ -1396,7 +1396,7 @@ export default function AdminChapters() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="edit-quizPrompt">📝 Prompt Quiz Normal</Label>
+                    <Label htmlFor="edit-quizPrompt">📝 Prompt Quiz & Exercice Vocal</Label>
                     <span className="text-xs text-muted-foreground">(Optionnel)</span>
                   </div>
                   <Textarea
@@ -1408,25 +1408,25 @@ export default function AdminChapters() {
                     maxLength={2000}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Instructions personnalisées pour l'IA. Si vide, l'IA utilisera le titre du chapitre.
+                    Instructions pour le quiz normal ET l'exercice vocal. Si vide, l'IA utilisera le titre du chapitre.
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="edit-voiceQuizPrompt">🎤 Prompt Quiz Vocal</Label>
+                    <Label htmlFor="edit-voiceQuizPrompt">🤖 Prompt Assistant Sophie</Label>
                     <span className="text-xs text-muted-foreground">(Optionnel)</span>
                   </div>
                   <Textarea
                     id="edit-voiceQuizPrompt"
                     value={formData.voiceQuizPrompt}
                     onChange={(e) => setFormData({ ...formData, voiceQuizPrompt: e.target.value })}
-                    placeholder="Ex: Crée des exercices de prononciation pour les formes conjuguées..."
+                    placeholder="Ex: Simule un appel avec un client hésitant pour la vente d'une formation..."
                     rows={3}
                     maxLength={2000}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Instructions pour les exercices de prononciation et d'écoute.
+                    Instructions pour l'assistant IA Sophie (chatbot). Définit le comportement de Sophie pour ce chapitre.
                   </p>
                 </div>
               </div>

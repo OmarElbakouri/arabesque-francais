@@ -144,7 +144,8 @@ export async function checkChatbotAccess(): Promise<ChatbotAccessInfo> {
  */
 export async function sendChatMessage(
   message: string,
-  conversationHistory: ChatMessage[]
+  conversationHistory: ChatMessage[],
+  chapterId?: number | null
 ): Promise<ChatResponse> {
   if (MOCK_MODE) {
     // Simulate response delay
@@ -158,14 +159,15 @@ export async function sendChatMessage(
       used: 0
     };
   }
-  
+
   try {
     const response = await api.post('/chatbot/message', {
       message,
       conversationHistory: conversationHistory.map(msg => ({
         role: msg.role,
         content: msg.content
-      }))
+      })),
+      ...(chapterId ? { chapterId } : {})
     });
     
     if (response.data?.success) {

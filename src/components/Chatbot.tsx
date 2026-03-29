@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/authStore';
+import { useCourseContextStore } from '@/stores/courseContextStore';
 import {
   checkChatbotAccess,
   sendChatMessage,
@@ -25,6 +26,7 @@ interface Message extends ChatMessage {
 
 export function Chatbot() {
   const { user, isAuthenticated } = useAuthStore();
+  const chapterId = useCourseContextStore((s) => s.chapterId);
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -108,7 +110,7 @@ export function Chatbot() {
         .filter(m => m.id !== 'welcome')
         .map(m => ({ role: m.role, content: m.content }));
 
-      const response = await sendChatMessage(userMessage.content, history);
+      const response = await sendChatMessage(userMessage.content, history, chapterId);
 
       if (response.accessDenied) {
         const errorMessage: Message = {
