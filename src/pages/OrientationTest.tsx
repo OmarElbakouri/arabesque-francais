@@ -286,16 +286,16 @@ const automotiveRoleQuestion: Question = {
   field: "usageContext",
   options: [
     {
-      value: "AUTOMOTIVE_WORKER",
-      label: "Niveau Opérationnel",
-      icon: <Wrench className="w-8 h-8" />,
-      description: "Français de survie technique : ordres simples, outils, fiches techniques, vie quotidienne à l'usine"
-    },
-    {
       value: "AUTOMOTIVE_MANAGER",
       label: "Niveau Managérial / Administratif",
       icon: <UserCog className="w-8 h-8" />,
       description: "Réunions d'équipe, emails professionnels, KPI, gestion RH, communication inter-services"
+    },
+    {
+      value: "AUTOMOTIVE_WORKER",
+      label: "Niveau Opérationnel",
+      icon: <Wrench className="w-8 h-8" />,
+      description: "Français de survie technique : ordres simples, outils, fiches techniques, vie quotidienne à l'usine"
     }
   ]
 };
