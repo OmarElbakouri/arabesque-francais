@@ -10,7 +10,7 @@ import {
   GraduationCap, Briefcase, BookOpen, Building, Stethoscope, Scale,
   Check, ArrowRight, ArrowLeft, BookOpenCheck, Users, Globe, Baby,
   FileText, MessageSquare, Mail, UserCheck, Brain, Target, Loader2, Headphones,
-  PhoneOutgoing, PhoneIncoming, PhoneCall
+  PhoneOutgoing, PhoneIncoming, PhoneCall, Car, Wrench, UserCog
 } from "lucide-react";
 
 // ==================== INTERFACES ====================
@@ -197,6 +197,12 @@ const professionalQuestions: Question[] = [
         description: "Droit, procédures, documents"
       },
       {
+        value: "AUTOMOTIVE",
+        label: "Construction Automobile",
+        icon: <Car className="w-8 h-8" />,
+        description: "Industrie automobile, production, gestion"
+      },
+      {
         value: "CALL_CENTER",
         label: "Centre d'appel",
         icon: <Headphones className="w-8 h-8" />,
@@ -268,6 +274,28 @@ const callCenterContextQuestion: Question = {
       label: "Les deux",
       icon: <PhoneCall className="w-8 h-8" />,
       description: "Ventes et réception"
+    }
+  ]
+};
+
+// Automotive (Car Manufacturing) specific question (replaces usageContext when sectorInterest is AUTOMOTIVE)
+const automotiveRoleQuestion: Question = {
+  id: "usageContext",
+  title: "Quel est votre niveau dans l'industrie automobile ?",
+  description: "Nous adapterons le vocabulaire et les scénarios à votre fonction",
+  field: "usageContext",
+  options: [
+    {
+      value: "AUTOMOTIVE_WORKER",
+      label: "Niveau Opérationnel",
+      icon: <Wrench className="w-8 h-8" />,
+      description: "Français de survie technique : ordres simples, outils, fiches techniques, vie quotidienne à l'usine"
+    },
+    {
+      value: "AUTOMOTIVE_MANAGER",
+      label: "Niveau Managérial / Administratif",
+      icon: <UserCog className="w-8 h-8" />,
+      description: "Réunions d'équipe, emails professionnels, KPI, gestion RH, communication inter-services"
     }
   ]
 };
@@ -452,6 +480,11 @@ const OrientationTest = () => {
     // For CALL_CENTER, replace the usageContext question with call center-specific options
     if (answers.sectorInterest === "CALL_CENTER") {
       questions = questions.map(q => q.id === "usageContext" ? callCenterContextQuestion : q);
+    }
+
+    // For AUTOMOTIVE, replace the usageContext question with automotive role options
+    if (answers.sectorInterest === "AUTOMOTIVE") {
+      questions = questions.map(q => q.id === "usageContext" ? automotiveRoleQuestion : q);
     }
 
     return questions;
