@@ -41,6 +41,29 @@ export const adminService = {
     return response.data.data;
   },
 
+  /**
+   * Server-side paginated search with filters
+   */
+  searchUsers: async (params: {
+    search?: string;
+    role?: string;
+    plan?: string;
+    promo?: string;
+    page?: number;
+    size?: number;
+  }) => {
+    const response = await api.get('/admin/users/search', { params });
+    return response.data.data; // { users, currentPage, totalPages, totalElements, pageSize }
+  },
+
+  /**
+   * Lightweight user stats (counts by plan, role, promo)
+   */
+  getUserStats: async () => {
+    const response = await api.get('/admin/users/stats');
+    return response.data.data; // { total, free, normal, vip, admin, commercial, withPromo, withoutPromo }
+  },
+
   getUsersByStatus: async (status: string) => {
     const response = await api.get(`/admin/users/status/${status}`);
     return response.data;

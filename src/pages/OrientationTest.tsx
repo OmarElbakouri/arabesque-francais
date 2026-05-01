@@ -10,7 +10,7 @@ import {
   GraduationCap, Briefcase, BookOpen, Building, Stethoscope, Scale,
   Check, ArrowRight, ArrowLeft, BookOpenCheck, Users, Globe, Baby,
   FileText, MessageSquare, Mail, UserCheck, Brain, Target, Loader2, Headphones,
-  PhoneOutgoing, PhoneIncoming, PhoneCall, Car, Wrench, UserCog
+  PhoneOutgoing, PhoneIncoming, PhoneCall, Car, Wrench, UserCog, Compass
 } from "lucide-react";
 
 // ==================== INTERFACES ====================
@@ -98,6 +98,12 @@ const profileTypeQuestion: Question = {
       label: "Préparation TCF",
       icon: <FileText className="w-8 h-8" />,
       description: "Je prépare le Test de Connaissance du Français"
+    },
+    {
+      value: "GENERAL_VOCAB",
+      label: "Général",
+      icon: <Compass className="w-8 h-8" />,
+      description: "Vie quotidienne, voyages, vacances et culture générale"
     }
   ]
 };
@@ -473,7 +479,8 @@ const OrientationTest = () => {
       STUDENT: studentQuestions,
       PROFESSIONAL: professionalQuestions,
       PROFESSOR: professorQuestions,
-      TCF: [] // TCF goes straight to level test
+      TCF: [], // TCF goes straight to level test
+      GENERAL_VOCAB: [] // General goes straight to level test
     };
     let questions = [profileTypeQuestion, ...(pathQuestions[answers.profileType as keyof typeof pathQuestions] || [])];
 

@@ -1,32 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Search, Trash2, Mail, Phone, Download, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
@@ -42,10 +27,10 @@ interface User {
   status: string;
   active: boolean;
   creditBalance: number;
-  currentPlan?: string; // FREE, NORMAL, VIP - from backend
-  plan?: string; // For backward compatibility
-  phone?: string; // User phone number
-  usedPromoCode?: string; // Promo code used during registration
+  currentPlan?: string;
+  plan?: string;
+  phone?: string;
+  usedPromoCode?: string;
 }
 
 interface CourseProgressInfo {
@@ -75,49 +60,73 @@ interface UserProgressionSummary {
 export default function AdminUsers() {
   const currentUser = useAuthStore((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all'); // USER type: ADMIN, COMMERCIAL, USER
-  const [planFilter, setPlanFilter] = useState<string>('all'); // Plan: FREE, NORMAL, VIP
-  const [promoFilter, setPromoFilter] = useState<string>('all'); // Promo: all, with, without
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [planFilter, setPlanFilter] = useState<string>('all');
+  const [promoFilter, setPromoFilter] = useState<string>('all');
   const [users, setUsers] = useState<User[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(0); // 0-indexed for backend
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const usersPerPage = 20;
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [progressionMap, setProgressionMap] = useState<Record<string, UserProgressionSummary>>({});
   const [progressionModalOpen, setProgressionModalOpen] = useState(false);
   const [selectedProgressionUser, setSelectedProgressionUser] = useState<UserProgressionSummary | null>(null);
+  const [stats, setStats] = useState({ total: 0, free: 0, normal: 0, vip: 0, admin: 0, commercial: 0, withPromo: 0, withoutPromo: 0 });
 
+  // Debounce search input
   useEffect(() => {
-    loadUsers();
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset page on filter change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [typeFilter, planFilter, promoFilter]);
+
+  // Load stats once
+  useEffect(() => {
+    loadStats();
     loadProgressions();
   }, []);
+
+  // Load users when page/filters change
+  useEffect(() => {
+    loadUsers();
+  }, [currentPage, debouncedSearch, typeFilter, planFilter, promoFilter]);
+
+  const loadStats = async () => {
+    try {
+      const data = await adminService.getUserStats();
+      setStats(data);
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
 
   const loadUsers = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Chargement des utilisateurs...');
-      const data = await adminService.getAllUsers();
-      console.log('✅ Données reçues de l\'API:', data);
-      console.log('📊 Type de données:', typeof data);
-      console.log('📦 Est un tableau?', Array.isArray(data));
-
-      const usersArray = Array.isArray(data) ? data : [];
-      console.log('👥 Nombre d\'utilisateurs:', usersArray.length);
-
-      // Log first user to see structure
-      if (usersArray.length > 0) {
-        console.log('🔍 Premier utilisateur structure:', usersArray[0]);
-        console.log('🔍 Current Plan field:', usersArray[0].currentPlan);
-        console.log('🔍 Plan field (old):', usersArray[0].plan);
-      }
-
-      setUsers(usersArray);
+      const data = await adminService.searchUsers({
+        search: debouncedSearch || undefined,
+        role: typeFilter !== 'all' ? typeFilter : undefined,
+        plan: planFilter !== 'all' ? planFilter : undefined,
+        promo: promoFilter !== 'all' ? promoFilter : undefined,
+        page: currentPage,
+        size: usersPerPage,
+      });
+      setUsers(Array.isArray(data.users) ? data.users : []);
+      setTotalPages(data.totalPages || 0);
+      setTotalElements(data.totalElements || 0);
     } catch (error: any) {
-      console.error('❌ Erreur lors du chargement des utilisateurs:', error);
-      console.error('❌ Error response:', error.response?.data);
-      console.error('❌ Error status:', error.response?.status);
-      console.error('❌ Error message:', error.response?.data?.message);
+      console.error('Error loading users:', error);
       toast({
         title: 'Erreur',
         description: error.response?.data?.message || 'Impossible de charger les utilisateurs',
@@ -157,26 +166,17 @@ export default function AdminUsers() {
     setDeleteDialogOpen(true);
   };
 
-
-
   const handleConfirmDelete = async () => {
     if (!selectedUser || !currentUser) return;
-
     try {
       await adminService.deleteUser(selectedUser.id, currentUser.id);
-      toast({
-        title: 'Succès',
-        description: 'Utilisateur supprimé avec succès',
-      });
+      toast({ title: 'Succès', description: 'Utilisateur supprimé avec succès' });
       setDeleteDialogOpen(false);
       loadUsers();
+      loadStats();
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de supprimer l\'utilisateur',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: "Impossible de supprimer l'utilisateur", variant: 'destructive' });
     }
   };
 
@@ -193,141 +193,69 @@ export default function AdminUsers() {
     SUSPENDED: 'bg-gray-500/10 text-gray-600 border border-gray-500/20',
   };
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      (user.fullName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-    const matchesType = typeFilter === 'all' || user.role === typeFilter;
-    const userPlan = user.currentPlan || user.plan || 'FREE';
-    const matchesPlan = planFilter === 'all' || userPlan === planFilter;
+  // CSV Export - uses legacy endpoint to get ALL users
+  const exportToCSV = async (filterType: string) => {
+    try {
+      const allUsers: User[] = await adminService.getAllUsers();
+      let usersToExport = allUsers;
+      let exportLabel = filterType;
 
-    // Pour le filtre code promo, on ne considère que les USER (pas ADMIN ni COMMERCIAL)
-    const isRegularUser = user.role === 'USER';
-    const hasPromoCode = user.usedPromoCode && user.usedPromoCode.trim() !== '';
-    const matchesPromo = promoFilter === 'all' ||
-      (promoFilter === 'with' && isRegularUser && hasPromoCode) ||
-      (promoFilter === 'without' && isRegularUser && !hasPromoCode);
+      if (filterType === 'WITHOUT_PROMO') {
+        usersToExport = allUsers.filter((user) => user.role === 'USER' && (!user.usedPromoCode || user.usedPromoCode.trim() === ''));
+        exportLabel = 'sans_code_promo';
+      } else if (filterType === 'WITH_PROMO') {
+        usersToExport = allUsers.filter((user) => user.role === 'USER' && user.usedPromoCode && user.usedPromoCode.trim() !== '');
+        exportLabel = 'avec_code_promo';
+      } else if (filterType !== 'all') {
+        usersToExport = allUsers.filter((user) => (user.currentPlan || user.plan || 'FREE') === filterType);
+        exportLabel = filterType.toLowerCase();
+      }
 
-    return matchesSearch && matchesType && matchesPlan && matchesPromo;
-  });
+      if (usersToExport.length === 0) {
+        toast({ title: 'Information', description: `Aucun utilisateur à exporter`, variant: 'default' });
+        return;
+      }
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-  const startIndex = (currentPage - 1) * usersPerPage;
-  const endIndex = startIndex + usersPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+      const headers = ['Nom', 'Prénom', 'Email', 'Numéro', 'Plan', 'Code Promo Utilisé'];
+      const escapeField = (field: string) => field.includes(',') || field.includes('"') ? `"${field.replace(/"/g, '""')}"` : field;
+      const csvContent = [
+        headers.join(','),
+        ...usersToExport.map((user) => {
+          const parts = (user.fullName || '').split(' ');
+          return [
+            escapeField(parts.slice(1).join(' ') || ''),
+            escapeField(parts[0] || ''),
+            escapeField(user.email || ''),
+            escapeField(user.phone || ''),
+            escapeField(user.currentPlan || user.plan || 'FREE'),
+            escapeField(user.usedPromoCode || '')
+          ].join(',');
+        })
+      ].join('\n');
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, typeFilter, planFilter, promoFilter]);
-
-  // CSV Export function
-  const exportToCSV = (filterType: string) => {
-    let usersToExport = users;
-    let exportLabel = filterType;
-
-    if (filterType === 'WITHOUT_PROMO') {
-      // Filtrer uniquement les USER (pas ADMIN ni COMMERCIAL) sans code promo
-      usersToExport = users.filter((user) =>
-        user.role === 'USER' && (!user.usedPromoCode || user.usedPromoCode.trim() === '')
-      );
-      exportLabel = 'sans_code_promo';
-    } else if (filterType === 'WITH_PROMO') {
-      // Filtrer uniquement les USER (pas ADMIN ni COMMERCIAL) avec code promo
-      usersToExport = users.filter((user) =>
-        user.role === 'USER' && user.usedPromoCode && user.usedPromoCode.trim() !== ''
-      );
-      exportLabel = 'avec_code_promo';
-    } else if (filterType !== 'all') {
-      usersToExport = users.filter((user) => {
-        const userPlan = user.currentPlan || user.plan || 'FREE';
-        return userPlan === filterType;
-      });
-      exportLabel = filterType.toLowerCase();
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.setAttribute('href', URL.createObjectURL(blob));
+      link.setAttribute('download', `utilisateurs_${exportLabel}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: 'Export réussi', description: `${usersToExport.length} utilisateur(s) exporté(s)` });
+    } catch (error) {
+      toast({ title: 'Erreur', description: "Erreur lors de l'export", variant: 'destructive' });
     }
-
-    if (usersToExport.length === 0) {
-      const filterLabels: Record<string, string> = {
-        'all': 'tous',
-        'FREE': 'Free',
-        'NORMAL': 'Normal',
-        'VIP': 'VIP',
-        'WITHOUT_PROMO': 'sans code promo',
-        'WITH_PROMO': 'avec code promo'
-      };
-      toast({
-        title: 'Information',
-        description: `Aucun utilisateur ${filterLabels[filterType] || filterType} à exporter`,
-        variant: 'default',
-      });
-      return;
-    }
-
-    const headers = ['Nom', 'Prénom', 'Email', 'Numéro', 'Plan', 'Code Promo Utilisé'];
-    const csvContent = [
-      headers.join(','),
-      ...usersToExport.map((user) => {
-        const fullNameParts = (user.fullName || '').split(' ');
-        const firstName = fullNameParts[0] || '';
-        const lastName = fullNameParts.slice(1).join(' ') || '';
-        const plan = user.currentPlan || user.plan || 'FREE';
-        // Escape fields that might contain commas
-        const escapeField = (field: string) => {
-          if (field.includes(',') || field.includes('"')) {
-            return `"${field.replace(/"/g, '""')}"`;
-          }
-          return field;
-        };
-        return [
-          escapeField(lastName),
-          escapeField(firstName),
-          escapeField(user.email || ''),
-          escapeField(user.phone || ''),
-          escapeField(plan),
-          escapeField(user.usedPromoCode || '')
-        ].join(',');
-      })
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `utilisateurs_${exportLabel}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    toast({
-      title: 'Export réussi',
-      description: `${usersToExport.length} utilisateur(s) exporté(s)`,
-    });
   };
 
-  // Stats pour les USER uniquement (pas ADMIN ni COMMERCIAL) pour les filtres code promo
-  const usersOnly = users.filter((u) => u.role === 'USER');
-
-  const stats = {
-    total: users.length,
-    free: users.filter((u) => (u.currentPlan || u.plan || 'FREE') === 'FREE').length,
-    normal: users.filter((u) => (u.currentPlan || u.plan) === 'NORMAL').length,
-    vip: users.filter((u) => (u.currentPlan || u.plan) === 'VIP').length,
-    admin: users.filter((u) => u.role === 'ADMIN').length,
-    commercial: users.filter((u) => u.role === 'COMMERCIAL').length,
-    // Compter uniquement les USER pour les filtres code promo
-    withPromo: usersOnly.filter((u) => u.usedPromoCode && u.usedPromoCode.trim() !== '').length,
-    withoutPromo: usersOnly.filter((u) => !u.usedPromoCode || u.usedPromoCode.trim() === '').length,
-  };
-
-  if (loading) {
+  if (loading && users.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Chargement...</p>
       </div>
     );
   }
+
+  const displayPage = currentPage + 1; // 1-indexed for display
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -339,54 +267,12 @@ export default function AdminUsers() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-primary">{stats.total}</p>
-              <p className="text-sm text-muted-foreground">Total</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-gray-600">{stats.free}</p>
-              <p className="text-sm text-muted-foreground">Free</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats.normal}</p>
-              <p className="text-sm text-muted-foreground">Normal</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-purple-600">{stats.vip}</p>
-              <p className="text-sm text-muted-foreground">VIP</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-orange-600">{stats.admin}</p>
-              <p className="text-sm text-muted-foreground">Admin</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-cyan-600">{stats.commercial}</p>
-              <p className="text-sm text-muted-foreground">Commercial</p>
-            </div>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="pt-6"><div className="text-center"><p className="text-2xl font-bold text-primary">{stats.total}</p><p className="text-sm text-muted-foreground">Total</p></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="text-center"><p className="text-2xl font-bold text-gray-600">{stats.free}</p><p className="text-sm text-muted-foreground">Free</p></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="text-center"><p className="text-2xl font-bold text-blue-600">{stats.normal}</p><p className="text-sm text-muted-foreground">Normal</p></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="text-center"><p className="text-2xl font-bold text-purple-600">{stats.vip}</p><p className="text-sm text-muted-foreground">VIP</p></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="text-center"><p className="text-2xl font-bold text-orange-600">{stats.admin}</p><p className="text-sm text-muted-foreground">Admin</p></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="text-center"><p className="text-2xl font-bold text-cyan-600">{stats.commercial}</p><p className="text-sm text-muted-foreground">Commercial</p></div></CardContent></Card>
       </div>
 
       {/* Filters */}
@@ -424,9 +310,7 @@ export default function AdminUsers() {
               />
             </div>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Type d'utilisateur" />
-              </SelectTrigger>
+              <SelectTrigger className="w-full md:w-[180px]"><SelectValue placeholder="Type d'utilisateur" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les types</SelectItem>
                 <SelectItem value="ADMIN">Admin</SelectItem>
@@ -435,9 +319,7 @@ export default function AdminUsers() {
               </SelectContent>
             </Select>
             <Select value={planFilter} onValueChange={setPlanFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Plan" />
-              </SelectTrigger>
+              <SelectTrigger className="w-full md:w-[180px]"><SelectValue placeholder="Plan" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les plans</SelectItem>
                 <SelectItem value="FREE">Free</SelectItem>
@@ -446,9 +328,7 @@ export default function AdminUsers() {
               </SelectContent>
             </Select>
             <Select value={promoFilter} onValueChange={setPromoFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Code promo" />
-              </SelectTrigger>
+              <SelectTrigger className="w-full md:w-[180px]"><SelectValue placeholder="Code promo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous (code promo)</SelectItem>
                 <SelectItem value="with">Avec code promo ({stats.withPromo})</SelectItem>
@@ -479,18 +359,22 @@ export default function AdminUsers() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedUsers.length === 0 ? (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                        Chargement...
+                      </TableCell>
+                    </TableRow>
+                  ) : users.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                         Aucun utilisateur trouvé
                       </TableCell>
                     </TableRow>
                   ) : (
-                    paginatedUsers.map((user) => (
+                    users.map((user) => (
                       <TableRow key={user.id}>
-                        <TableCell>
-                          <p className="font-medium">{user.fullName || 'N/A'}</p>
-                        </TableCell>
+                        <TableCell><p className="font-medium">{user.fullName || 'N/A'}</p></TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2 text-sm">
                             <Mail className="w-3 h-3 text-muted-foreground" />
@@ -504,73 +388,45 @@ export default function AdminUsers() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={roleColors[user.role] || ''}>
-                            {user.role}
-                          </Badge>
+                          <Badge variant="outline" className={roleColors[user.role] || ''}>{user.role}</Badge>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={statusColors[user.status] || ''}>
-                            {user.status === 'CONFIRME' ? 'CONFIRMÉ' : user.status.replace('_', ' ')}
+                            {user.status === 'CONFIRME' ? 'CONFIRMÉ' : user.status?.replace('_', ' ')}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           {user.role === 'USER' ? (
-                            <Badge
-                              variant="outline"
-                              className={
-                                (user.currentPlan || user.plan) === 'VIP'
-                                  ? 'bg-purple-500/10 text-purple-600 border-purple-500/20'
-                                  : (user.currentPlan || user.plan) === 'NORMAL'
-                                    ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
-                                    : 'bg-gray-500/10 text-gray-600 border-gray-500/20'
-                              }
-                            >
+                            <Badge variant="outline" className={
+                              (user.currentPlan || user.plan) === 'VIP' ? 'bg-purple-500/10 text-purple-600 border-purple-500/20'
+                                : (user.currentPlan || user.plan) === 'NORMAL' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                                  : 'bg-gray-500/10 text-gray-600 border-gray-500/20'
+                            }>
                               {user.currentPlan || user.plan || 'FREE'}
                             </Badge>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
+                          ) : <span className="text-muted-foreground text-sm">-</span>}
                         </TableCell>
                         <TableCell>
                           {user.role === 'USER' && progressionMap[user.id] ? (
                             <div className="flex items-center gap-2">
                               <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-primary rounded-full transition-all"
-                                  style={{ width: `${progressionMap[user.id].overallProgress}%` }}
-                                />
+                                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progressionMap[user.id].overallProgress}%` }} />
                               </div>
-                              <span className="text-xs text-muted-foreground">
-                                {progressionMap[user.id].overallProgress}%
-                              </span>
+                              <span className="text-xs text-muted-foreground">{progressionMap[user.id].overallProgress}%</span>
                             </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
+                          ) : <span className="text-muted-foreground text-sm">-</span>}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={user.active ? 'default' : 'secondary'}>
-                            {user.active ? 'Oui' : 'Non'}
-                          </Badge>
+                          <Badge variant={user.active ? 'default' : 'secondary'}>{user.active ? 'Oui' : 'Non'}</Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             {user.role === 'USER' && progressionMap[user.id] && (
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => openProgressionModal(user.id)}
-                                title="Voir progression"
-                              >
+                              <Button size="icon" variant="ghost" onClick={() => openProgressionModal(user.id)} title="Voir progression">
                                 <Eye className="w-4 h-4 text-primary" />
                               </Button>
                             )}
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleDelete(user)}
-                              title="Supprimer"
-                            >
+                            <Button size="icon" variant="ghost" onClick={() => handleDelete(user)} title="Supprimer">
                               <Trash2 className="w-4 h-4 text-destructive" />
                             </Button>
                           </div>
@@ -582,55 +438,32 @@ export default function AdminUsers() {
               </Table>
             </div>
           </div>
-          {/* Pagination */}
-          {filteredUsers.length > usersPerPage && (
+          {/* Server-side Pagination */}
+          {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-4 border-t">
               <div className="text-sm text-muted-foreground">
-                Affichage de {startIndex + 1} à {Math.min(endIndex, filteredUsers.length)} sur {filteredUsers.length} utilisateurs
+                Page {displayPage} sur {totalPages} ({totalElements} utilisateurs)
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Précédent
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))} disabled={currentPage === 0}>
+                  <ChevronLeft className="w-4 h-4" /> Précédent
                 </Button>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
+                    let pageNum: number;
+                    if (totalPages <= 5) pageNum = i;
+                    else if (currentPage <= 2) pageNum = i;
+                    else if (currentPage >= totalPages - 3) pageNum = totalPages - 5 + i;
+                    else pageNum = currentPage - 2 + i;
                     return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setCurrentPage(pageNum)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {pageNum}
+                      <Button key={pageNum} variant={currentPage === pageNum ? 'default' : 'outline'} size="sm" onClick={() => setCurrentPage(pageNum)} className="w-8 h-8 p-0">
+                        {pageNum + 1}
                       </Button>
                     );
                   })}
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                >
-                  Suivant
-                  <ChevronRight className="w-4 h-4" />
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages - 1))} disabled={currentPage >= totalPages - 1}>
+                  Suivant <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -661,7 +494,6 @@ export default function AdminUsers() {
                 <p className="text-xs text-muted-foreground">XP Total</p>
               </div>
             </div>
-
             <div>
               <h3 className="font-semibold mb-3">Cours inscrits ({selectedProgressionUser?.enrolledCoursesCount || 0})</h3>
               {selectedProgressionUser?.courses && selectedProgressionUser.courses.length > 0 ? (
@@ -672,14 +504,9 @@ export default function AdminUsers() {
                       <span className="text-sm text-muted-foreground">{course.progressPercentage}%</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full transition-all"
-                        style={{ width: `${course.progressPercentage}%` }}
-                      />
+                      <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${course.progressPercentage}%` }} />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {course.completedLessons}/{course.totalLessons} leçons
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">{course.completedLessons}/{course.totalLessons} leçons</p>
                   </div>
                 ))
               ) : (
