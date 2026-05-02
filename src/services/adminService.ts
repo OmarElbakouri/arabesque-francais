@@ -89,6 +89,13 @@ export const adminService = {
     return response.data.data;
   },
 
+  getProgressionsForUsers: async (userIds: (string | number)[]) => {
+    const ids = userIds.map((id) => Number(id)).filter((n) => Number.isFinite(n));
+    if (ids.length === 0) return [];
+    const response = await api.post('/admin/users/progression/batch', ids);
+    return response.data.data;
+  },
+
   getUserProgression: async (userId: string) => {
     const response = await api.get(`/admin/users/${userId}/progression`);
     return response.data.data;

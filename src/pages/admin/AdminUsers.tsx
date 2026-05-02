@@ -94,7 +94,6 @@ export default function AdminUsers() {
   // Load stats once
   useEffect(() => {
     loadStats();
-    loadProgressions();
   }, []);
 
   // Load users when page/filters change
@@ -122,9 +121,11 @@ export default function AdminUsers() {
         page: currentPage,
         size: usersPerPage,
       });
-      setUsers(Array.isArray(data.users) ? data.users : []);
+      const pageUsers: User[] = Array.isArray(data.users) ? data.users : [];
+      setUsers(pageUsers);
       setTotalPages(data.totalPages || 0);
       setTotalElements(data.totalElements || 0);
+      loadProgressionsForPage(pageUsers);
     } catch (error: any) {
       console.error('Error loading users:', error);
       toast({
@@ -138,16 +139,19 @@ export default function AdminUsers() {
     }
   };
 
-  const loadProgressions = async () => {
+  const loadProgressionsForPage = async (pageUsers: User[]) => {
+    const ids = pageUsers.filter((u) => u.role === 'USER').map((u) => u.id);
+    if (ids.length === 0) return;
     try {
-      const data = await adminService.getUsersProgression();
-      const map: Record<string, UserProgressionSummary> = {};
-      if (Array.isArray(data)) {
+      const data = await adminService.getProgressionsForUsers(ids);
+      if (!Array.isArray(data)) return;
+      setProgressionMap((prev) => {
+        const next = { ...prev };
         data.forEach((p: UserProgressionSummary) => {
-          map[String(p.userId)] = p;
+          next[String(p.userId)] = p;
         });
-      }
-      setProgressionMap(map);
+        return next;
+      });
     } catch (error) {
       console.error('Error loading progressions:', error);
     }
