@@ -1228,8 +1228,8 @@ export default function AdminChapters() {
                     value={formData.quizPrompt}
                     onChange={(e) => setFormData({ ...formData, quizPrompt: e.target.value })}
                     placeholder="Ex: Génère des questions sur la conjugaison des verbes être et avoir au présent et au passé composé..."
-                    rows={3}
-                    maxLength={2000}
+                    rows={8}
+                    maxLength={10000}
                   />
                   <p className="text-xs text-muted-foreground">
                     Instructions pour le quiz normal ET l'exercice vocal. Si vide, l'IA utilisera le titre du chapitre.
@@ -1246,8 +1246,8 @@ export default function AdminChapters() {
                     value={formData.voiceQuizPrompt}
                     onChange={(e) => setFormData({ ...formData, voiceQuizPrompt: e.target.value })}
                     placeholder="Ex: Simule un appel avec un client hésitant pour la vente d'une formation..."
-                    rows={3}
-                    maxLength={2000}
+                    rows={8}
+                    maxLength={10000}
                   />
                   <p className="text-xs text-muted-foreground">
                     Instructions pour l'assistant IA Sophie (chatbot). Définit le comportement de Sophie pour ce chapitre.
@@ -1404,8 +1404,8 @@ export default function AdminChapters() {
                     value={formData.quizPrompt}
                     onChange={(e) => setFormData({ ...formData, quizPrompt: e.target.value })}
                     placeholder="Ex: Génère des questions sur la conjugaison des verbes être et avoir au présent et au passé composé..."
-                    rows={3}
-                    maxLength={2000}
+                    rows={8}
+                    maxLength={10000}
                   />
                   <p className="text-xs text-muted-foreground">
                     Instructions pour le quiz normal ET l'exercice vocal. Si vide, l'IA utilisera le titre du chapitre.
@@ -1422,8 +1422,8 @@ export default function AdminChapters() {
                     value={formData.voiceQuizPrompt}
                     onChange={(e) => setFormData({ ...formData, voiceQuizPrompt: e.target.value })}
                     placeholder="Ex: Simule un appel avec un client hésitant pour la vente d'une formation..."
-                    rows={3}
-                    maxLength={2000}
+                    rows={8}
+                    maxLength={10000}
                   />
                   <p className="text-xs text-muted-foreground">
                     Instructions pour l'assistant IA Sophie (chatbot). Définit le comportement de Sophie pour ce chapitre.
