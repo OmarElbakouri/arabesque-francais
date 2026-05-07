@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Edit, CheckCircle, XCircle, Clock, DollarSign, Users, Trash2, Eye } from 'lucide-react';
+import { Search, Edit, CheckCircle, XCircle, Clock, DollarSign, Users, Trash2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/adminService';
 import {
@@ -80,9 +80,14 @@ interface PaymentStats {
 export default function AdminPayments() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [planFilter, setPlanFilter] = useState<string>('all');
   const [users, setUsers] = useState<User[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const pageSize = 20;
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<EditPaymentData | null>(null);
@@ -106,104 +111,47 @@ export default function AdminPayments() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      console.log('👥 Chargement des paiements (utilisateurs NORMAL et VIP)...');
+      const data = await adminService.searchPayments({
+        search: debouncedSearch || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        plan: planFilter !== 'all' ? planFilter : undefined,
+        page: currentPage,
+        size: pageSize,
+      });
 
-      const payments = await adminService.getAllPayments();
-      console.log('📦 Paiements reçus:', payments);
-      console.log('📦 Type de payments:', typeof payments);
-      console.log('📦 Est un tableau?', Array.isArray(payments));
-
-      // Check if payments is a valid array
-      if (!payments || !Array.isArray(payments)) {
-        console.warn('⚠️ Réponse invalide - pas un tableau:', payments);
-        setUsers([]);
-        return;
-      }
-
-      console.log('📦 Nombre de paiements:', payments.length);
-
-      if (payments.length > 0) {
-        console.log('📦 Premier paiement COMPLET:', payments[0]);
-        console.log('📦 TOUTES les clés du paiement:', Object.keys(payments[0]));
-        console.log('📦 Structure user:', payments[0].user);
-        console.log('📦 userName direct:', payments[0].userName);
-        console.log('📦 userEmail direct:', payments[0].userEmail);
-        console.log('📦 userId:', payments[0].userId);
-        console.log('📦 paidAt direct:', payments[0].paidAt); // ✨ VÉRIFIER SI LA DATE EXISTE
-      }
-
-      // Map payments to user format with planName from payment
-      const usersWithPayments = payments.map((payment: any) => {
-        // Le backend envoie les données directement dans payment, PAS dans payment.user
-        const user = payment.user || {};
-
-        console.log('🔍 Processing payment:', {
-          paymentId: payment.id,
-          userId: payment.userId,
-          userName: payment.userName,
-          userEmail: payment.userEmail,
-          paymentKeys: Object.keys(payment)
-        });
-
-        // Extract email - DIRECTEMENT depuis payment
-        const email = payment.userEmail || user.email || '';
-
-        // Extract names - DIRECTEMENT depuis payment
-        const fullName = payment.userName ||
-          user.fullName ||
-          `${user.firstName || ''} ${user.lastName || ''}`.trim() ||
-          email?.split('@')[0] ||
-          'Unknown';
-
-        console.log('✅ Extracted names:', { fullName, email });
-
-        // planName comes from the payment object directly
+      const payments = Array.isArray(data?.payments) ? data.payments : [];
+      const mapped = payments.map((payment: any) => {
         const planName = payment.planName || 'NORMAL';
         const plan = (planName.toUpperCase() === 'VIP' ? 'VIP' : 'NORMAL') as 'NORMAL' | 'VIP';
-
-        // Payment status from payment object - MAPPER EN→FR pour l'affichage
         const backendStatus = payment.status || 'PENDING';
         const paymentStatus = PAYMENT_STATUS_DISPLAY[backendStatus] || backendStatus;
-
-        // Payment method - MAPPER EN→FR pour l'affichage
         const backendMethod = payment.paymentMethod;
         const paymentMethod = backendMethod ? (PAYMENT_METHOD_DISPLAY[backendMethod] || backendMethod) : undefined;
 
-        console.log('🔄 Mapping affichage:', {
-          backendStatus,
-          displayStatus: paymentStatus,
-          backendMethod,
-          displayMethod: paymentMethod
-        });
-
         return {
-          id: payment.userId || user.id, // ID utilisateur DEPUIS payment.userId
-          paymentId: payment.id, // ID du paiement (IMPORTANT pour update)
-          email: email,
+          id: payment.userId,
+          paymentId: payment.id,
+          email: payment.userEmail || '',
           firstName: '',
           lastName: '',
-          fullName: fullName,
-          phone: payment.userPhone || user.phone || user.userProfile?.phone || '',
-          role: user.role || 'USER',
+          fullName: payment.userName || (payment.userEmail ? payment.userEmail.split('@')[0] : 'Unknown'),
+          phone: payment.userPhone || '',
+          role: 'USER',
           plan,
           paymentStatus: paymentStatus as 'PENDING' | 'ACCEPTE' | 'REFUSE' | 'CANCELLED',
           paymentMethod: paymentMethod as 'VIREMENT' | 'ESPECES' | 'CHEQUE' | 'MOBILE' | undefined,
           amount: payment.amount,
-          transactionReference: payment.transactionReference,
-          creditBalance: user.creditBalance || 0,
-          createdAt: user.createdAt || payment.createdAt,
+          transactionReference: payment.reference,
+          creditBalance: 0,
+          createdAt: payment.date,
           paidAt: payment.paidAt,
-          receiptUrl: payment.receiptUrl, // URL de la photo de preuve
-        };
+          receiptUrl: payment.receiptUrl,
+        } as User;
       });
 
-      console.log('✅ Utilisateurs avec paiements mappés:', usersWithPayments.length);
-      if (usersWithPayments.length > 0) {
-        console.log('📦 Premier utilisateur mappé:', usersWithPayments[0]);
-        console.log('📅 paidAt dans l\'utilisateur mappé:', usersWithPayments[0].paidAt);
-      }
-
-      setUsers(usersWithPayments);
+      setUsers(mapped);
+      setTotalPages(data?.totalPages || 0);
+      setTotalElements(data?.totalElements || 0);
     } catch (error) {
       console.error('❌ Erreur lors du chargement des paiements:', error);
       toast({
@@ -247,11 +195,31 @@ export default function AdminPayments() {
     }
   };
 
+  // Debounce search input
   useEffect(() => {
-    loadUsers();
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset page on filter change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [statusFilter, planFilter]);
+
+  // Load stats once
+  useEffect(() => {
     loadStatistics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load payments on page/filter change
+  useEffect(() => {
+    loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, debouncedSearch, statusFilter, planFilter]);
 
   const handleEditClick = (user: User) => {
     setEditingUser({
@@ -367,14 +335,8 @@ export default function AdminPayments() {
     }
   };
 
-  // Filter users based on search and filters
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || user.paymentStatus === statusFilter;
-    const matchesPlan = planFilter === 'all' || user.plan === planFilter;
-    return matchesSearch && matchesStatus && matchesPlan;
-  });
+  // Server-side filtering — no client-side narrowing
+  const filteredUsers = users;
 
   const getStatusBadge = (status: string) => {
     const config = {
@@ -584,7 +546,7 @@ export default function AdminPayments() {
               <DollarSign className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-4 text-lg font-medium text-gray-900">Aucun utilisateur trouvé</h3>
               <p className="mt-2 text-sm text-gray-500">
-                {users.length === 0
+                {totalElements === 0
                   ? "Il n'y a pas encore d'utilisateurs NORMAL ou VIP."
                   : "Aucun utilisateur ne correspond à vos critères de recherche."}
               </p>
@@ -684,6 +646,35 @@ export default function AdminPayments() {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage + 1} sur {totalPages} ({totalElements} paiements)
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))} disabled={currentPage === 0}>
+                  <ChevronLeft className="w-4 h-4" /> Précédent
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) pageNum = i;
+                    else if (currentPage <= 2) pageNum = i;
+                    else if (currentPage >= totalPages - 3) pageNum = totalPages - 5 + i;
+                    else pageNum = currentPage - 2 + i;
+                    return (
+                      <Button key={pageNum} variant={currentPage === pageNum ? 'default' : 'outline'} size="sm" onClick={() => setCurrentPage(pageNum)} className="w-8 h-8 p-0">
+                        {pageNum + 1}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages - 1))} disabled={currentPage >= totalPages - 1}>
+                  Suivant <ChevronRight className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           )}

@@ -258,6 +258,20 @@ export const adminService = {
     return response.data;
   },
 
+  /**
+   * Server-side paginated search for the admin Paiements page (NORMAL/VIP only)
+   */
+  searchPayments: async (params: {
+    search?: string;
+    status?: string;
+    plan?: string;
+    page?: number;
+    size?: number;
+  }) => {
+    const response = await api.get('/admin/payments/search', { params });
+    return response.data.data; // { payments, currentPage, totalPages, totalElements, pageSize }
+  },
+
   // Promo Codes
   getAllPromoCodes: async () => {
     const response = await api.get('/admin/promo-codes');
@@ -1058,6 +1072,27 @@ export const adminService = {
   getDirectPayments: async () => {
     const response = await api.get('/admin/direct-payments');
     return response.data.data;
+  },
+
+  // Server-side paginated direct payments
+  searchDirectPayments: async (params: {
+    search?: string;
+    status?: string;
+    page?: number;
+    size?: number;
+  }) => {
+    const response = await api.get('/admin/direct-payments/search', { params });
+    return response.data.data; // { payments, currentPage, totalPages, totalElements, pageSize }
+  },
+
+  // Server-side paginated user search for the create-payment dialog
+  searchDirectPaymentUsers: async (params: {
+    search?: string;
+    page?: number;
+    size?: number;
+  }) => {
+    const response = await api.get('/admin/direct-payments/users/search', { params });
+    return response.data.data; // { users, currentPage, totalPages, totalElements, pageSize }
   },
 
   // Create a new direct payment

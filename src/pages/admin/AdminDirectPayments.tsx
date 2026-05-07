@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Plus, Edit, Trash2, CheckCircle, XCircle, Clock, DollarSign, Users, UserPlus } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, CheckCircle, XCircle, Clock, DollarSign, Users, UserPlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/adminService';
 
@@ -88,8 +88,13 @@ interface DirectPaymentStats {
 export default function AdminDirectPayments() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [payments, setPayments] = useState<DirectPayment[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const pageSize = 20;
   const [usersWithoutPromoCode, setUsersWithoutPromoCode] = useState<DirectUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DirectPaymentStats>({
@@ -115,16 +120,10 @@ export default function AdminDirectPayments() {
   const [activateSubscription, setActivateSubscription] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  // Filtered users based on search (email or phone)
-  const filteredUsers = usersWithoutPromoCode.filter((user) => {
-    if (!userSearchTerm) return true;
-    const search = userSearchTerm.toLowerCase();
-    return (
-      user.email?.toLowerCase().includes(search) ||
-      user.fullName?.toLowerCase().includes(search) ||
-      user.phone?.toLowerCase().includes(search)
-    );
-  });
+  // Server-side filtered users (loaded via debounced search)
+  const filteredUsers = usersWithoutPromoCode;
+  const [debouncedUserSearch, setDebouncedUserSearch] = useState('');
+  const [userSearchLoading, setUserSearchLoading] = useState(false);
 
   // Edit Payment Dialog
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -142,9 +141,15 @@ export default function AdminDirectPayments() {
   const loadPayments = async () => {
     try {
       setLoading(true);
-      const data = await adminService.getDirectPayments();
-      console.log('📦 Direct Payments:', data);
-      setPayments(data || []);
+      const data = await adminService.searchDirectPayments({
+        search: debouncedSearch || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        page: currentPage,
+        size: pageSize,
+      });
+      setPayments(Array.isArray(data?.payments) ? data.payments : []);
+      setTotalPages(data?.totalPages || 0);
+      setTotalElements(data?.totalElements || 0);
     } catch (error) {
       console.error('❌ Error loading direct payments:', error);
       toast({
@@ -158,13 +163,20 @@ export default function AdminDirectPayments() {
     }
   };
 
-  const loadUsersWithoutPromoCode = async () => {
+  const loadUsersForPicker = async (search: string) => {
     try {
-      const data = await adminService.getUsersWithoutPromoCode();
-      console.log('👥 Users without promo code:', data);
-      setUsersWithoutPromoCode(data || []);
+      setUserSearchLoading(true);
+      const data = await adminService.searchDirectPaymentUsers({
+        search: search || undefined,
+        page: 0,
+        size: 20,
+      });
+      setUsersWithoutPromoCode(Array.isArray(data?.users) ? data.users : []);
     } catch (error) {
       console.error('❌ Error loading users:', error);
+      setUsersWithoutPromoCode([]);
+    } finally {
+      setUserSearchLoading(false);
     }
   };
 
@@ -178,12 +190,47 @@ export default function AdminDirectPayments() {
     }
   };
 
+  // Debounce list search
   useEffect(() => {
-    loadPayments();
-    loadUsersWithoutPromoCode();
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset page on status change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [statusFilter]);
+
+  // Initial stats load
+  useEffect(() => {
     loadStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load payments on filter / page change
+  useEffect(() => {
+    loadPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, debouncedSearch, statusFilter]);
+
+  // Debounce user picker search inside the dialog
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedUserSearch(userSearchTerm);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [userSearchTerm]);
+
+  // Load users for the dialog when it opens or the debounced search changes
+  useEffect(() => {
+    if (createDialogOpen) {
+      loadUsersForPicker(debouncedUserSearch);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createDialogOpen, debouncedUserSearch]);
 
   const handleCreatePayment = async () => {
     if (!selectedUserId) {
@@ -327,13 +374,8 @@ export default function AdminDirectPayments() {
     }
   };
 
-  const filteredPayments = payments.filter((payment) => {
-    const matchesSearch =
-      payment.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.userEmail?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Server-side filtering — no client-side narrowing
+  const filteredPayments = payments;
 
   const getStatusBadge = (status: string) => {
     const config = {
@@ -503,11 +545,11 @@ export default function AdminDirectPayments() {
               <UserPlus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium">Aucun paiement trouvé</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm || statusFilter !== 'all'
-                  ? 'Aucun paiement ne correspond à vos critères'
-                  : 'Commencez par créer un paiement pour un utilisateur'}
+                {totalElements === 0 && !searchTerm && statusFilter === 'all'
+                  ? 'Commencez par créer un paiement pour un utilisateur'
+                  : 'Aucun paiement ne correspond à vos critères'}
               </p>
-              {!searchTerm && statusFilter === 'all' && (
+              {totalElements === 0 && !searchTerm && statusFilter === 'all' && (
                 <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
                   <Plus className="h-4 w-4" />
                   Créer un paiement
@@ -571,6 +613,35 @@ export default function AdminDirectPayments() {
               </div>
             </div>
           )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage + 1} sur {totalPages} ({totalElements} paiements)
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))} disabled={currentPage === 0}>
+                  <ChevronLeft className="w-4 h-4" /> Précédent
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) pageNum = i;
+                    else if (currentPage <= 2) pageNum = i;
+                    else if (currentPage >= totalPages - 3) pageNum = totalPages - 5 + i;
+                    else pageNum = currentPage - 2 + i;
+                    return (
+                      <Button key={pageNum} variant={currentPage === pageNum ? 'default' : 'outline'} size="sm" onClick={() => setCurrentPage(pageNum)} className="w-8 h-8 p-0">
+                        {pageNum + 1}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages - 1))} disabled={currentPage >= totalPages - 1}>
+                  Suivant <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -602,7 +673,11 @@ export default function AdminDirectPayments() {
                   <SelectValue placeholder="Sélectionner un utilisateur" />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
-                  {filteredUsers.length === 0 ? (
+                  {userSearchLoading ? (
+                    <div className="p-2 text-sm text-muted-foreground text-center">
+                      Recherche...
+                    </div>
+                  ) : filteredUsers.length === 0 ? (
                     <div className="p-2 text-sm text-muted-foreground text-center">
                       Aucun utilisateur trouvé
                     </div>
@@ -628,7 +703,7 @@ export default function AdminDirectPayments() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                {filteredUsers.length} utilisateur(s) trouvé(s)
+                {filteredUsers.length} utilisateur(s) affichés (max 20). Affinez la recherche pour cibler un utilisateur précis.
               </p>
             </div>
 
