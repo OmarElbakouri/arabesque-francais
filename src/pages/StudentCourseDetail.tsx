@@ -44,6 +44,7 @@ import HLSVideoPlayer from '@/components/HLSVideoPlayer';
 import ChapterQuiz from '@/components/ChapterQuiz';
 import VoiceQuiz from '@/components/VoiceQuiz';
 import VocalExercise from '@/components/VocalExercise';
+import communicationProImage from '@/assets/communication-pro.png';
 
 export default function StudentCourseDetail() {
   const { courseId } = useParams<{ courseId: string }>();
@@ -429,6 +430,13 @@ export default function StudentCourseDetail() {
     );
   }
 
+  // When this course has no chapter/lesson videos at all (e.g. "Communication
+  // Professionnelle"), show a representative illustration instead of the
+  // "Aucune vidéo" placeholder on every chapter.
+  const courseHasNoVideos = (course.chapters || []).every(
+    (c) => !c.videoUrl && (c.lessons || []).every((l) => !l.videoUrl)
+  );
+
   // Calculate progress
   const completedChapters = (course.chapters || []).filter(c => c.completed).length;
   const totalChapters = (course.chapters || []).length;
@@ -769,17 +777,30 @@ export default function StudentCourseDetail() {
                 </div>
               )}
 
-              {/* No video placeholder */}
+              {/* No video: representative illustration for video-less courses,
+                  otherwise the neutral placeholder */}
               {!getCurrentVideoUrl() && (
-                <div className="aspect-video w-full rounded-3xl bg-slate-800/50 mb-6 flex items-center justify-center border border-slate-700/50">
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-slate-700/50 flex items-center justify-center">
-                      <Video className="h-10 w-10 text-slate-500" />
-                    </div>
-                    <p className="text-slate-400 font-medium">Aucune vidéo pour ce contenu</p>
-                    <p className="text-slate-500 text-sm mt-1">Consultez les ressources ci-dessous</p>
+                courseHasNoVideos ? (
+                  <div className="relative rounded-3xl overflow-hidden mb-6 shadow-2xl shadow-black/50 border border-slate-700/50">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/40 to-secondary/40 rounded-3xl blur-xl opacity-30" />
+                    <img
+                      src={communicationProImage}
+                      alt={`Illustration — ${selectedChapter.title}`}
+                      className="relative w-full aspect-video object-cover"
+                      loading="lazy"
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div className="aspect-video w-full rounded-3xl bg-slate-800/50 mb-6 flex items-center justify-center border border-slate-700/50">
+                    <div className="text-center">
+                      <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-slate-700/50 flex items-center justify-center">
+                        <Video className="h-10 w-10 text-slate-500" />
+                      </div>
+                      <p className="text-slate-400 font-medium">Aucune vidéo pour ce contenu</p>
+                      <p className="text-slate-500 text-sm mt-1">Consultez les ressources ci-dessous</p>
+                    </div>
+                  </div>
+                )
               )}
 
               {/* Navigation Buttons */}
