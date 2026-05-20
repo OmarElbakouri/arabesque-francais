@@ -250,6 +250,11 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   // --- Actions ---
 
   const handleStart = async () => {
+    // Unlock audio on mobile: play a silent sound synchronously on the user gesture,
+    // before the async API call breaks the gesture chain.
+    const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+    silentAudio.play().catch(() => {});
+
     setIsLoading(true);
     setError(null);
     try {
@@ -262,19 +267,14 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       const response = await startVoiceQuizSession(request);
       setSession(response);
       setCurrentQuestion(response.question);
-      setState('ai_speaking'); // Start conversation
+      setState('ai_speaking');
 
-      // Display the question text
       setDisplayedText(response.question.question || response.question.sentenceWithBlank || '');
 
-      // Play initial question
       if (response.question.audioBase64) {
-        setTimeout(() => {
-          playAudioSequence([response.question.audioBase64!]);
-        }, 500);
+        playAudioSequence([response.question.audioBase64!]);
       } else {
-        // Fallback if no audio
-        setTimeout(() => setState('user_turn'), 1000);
+        setState('user_turn');
       }
 
     } catch (err) {
