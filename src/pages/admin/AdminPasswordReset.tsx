@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -34,31 +34,73 @@ interface User {
     role: string;
 }
 
+interface Stats {
+    total: number;
+    free: number;
+    normal: number;
+    vip: number;
+    [key: string]: number;
+}
+
 export default function AdminPasswordReset() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchEmail, setSearchEmail] = useState('');
-    const [searchPhone, setSearchPhone] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(0); // 0-indexed for the backend
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalElements, setTotalElements] = useState(0);
     const [resetDialogOpen, setResetDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [resetting, setResetting] = useState(false);
-    const usersPerPage = 10;
+    const [stats, setStats] = useState<Stats>({ total: 0, free: 0, normal: 0, vip: 0 });
+    const pageSize = 10;
+
+    // Debounced search
+    const [debouncedSearch, setDebouncedSearch] = useState('');
 
     useEffect(() => {
-        loadUsers();
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+            setCurrentPage(0); // Reset to first page on new search
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Load stats once
+    useEffect(() => {
+        const loadStats = async () => {
+            try {
+                const data = await adminService.getUserStats();
+                setStats({
+                    total: data.total ?? 0,
+                    free: data.free ?? 0,
+                    normal: data.normal ?? 0,
+                    vip: data.vip ?? 0,
+                });
+            } catch (error: any) {
+                console.error('Erreur lors du chargement des stats:', error);
+            }
+        };
+        loadStats();
     }, []);
 
-    const loadUsers = async () => {
+    // Load users with server-side pagination & search
+    const loadUsers = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await adminService.getAllUsers();
-            // Filtrer uniquement les utilisateurs (pas les admins ou commerciaux)
-            const usersArray = Array.isArray(data) ? data.filter((u: User) => u.role === 'USER') : [];
-            setUsers(usersArray);
+            const data = await adminService.searchUsers({
+                search: debouncedSearch,
+                role: 'USER',
+                page: currentPage,
+                size: pageSize,
+            });
+
+            setUsers(Array.isArray(data.users) ? data.users : []);
+            setTotalPages(data.totalPages ?? 1);
+            setTotalElements(data.totalElements ?? 0);
         } catch (error: any) {
             console.error('Erreur lors du chargement des utilisateurs:', error);
             toast({
@@ -70,27 +112,11 @@ export default function AdminPasswordReset() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [debouncedSearch, currentPage]);
 
-    // Filtrage par email et téléphone
-    const filteredUsers = users.filter((user) => {
-        const matchesEmail = searchEmail === '' ||
-            (user.email?.toLowerCase() || '').includes(searchEmail.toLowerCase());
-        const matchesPhone = searchPhone === '' ||
-            (user.phone || '').includes(searchPhone);
-        return matchesEmail && matchesPhone;
-    });
-
-    // Pagination
-    const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-    const startIndex = (currentPage - 1) * usersPerPage;
-    const endIndex = startIndex + usersPerPage;
-    const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-
-    // Reset to page 1 when filters change
     useEffect(() => {
-        setCurrentPage(1);
-    }, [searchEmail, searchPhone]);
+        loadUsers();
+    }, [loadUsers]);
 
     const handleOpenResetDialog = (user: User) => {
         setSelectedUser(user);
@@ -156,13 +182,9 @@ export default function AdminPasswordReset() {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <p className="text-muted-foreground">Chargement...</p>
-            </div>
-        );
-    }
+    // Pagination helpers (display is 1-indexed for UI)
+    const displayPage = currentPage + 1;
+    const startIndex = currentPage * pageSize;
 
     return (
         <div className="space-y-4 sm:space-y-6">
@@ -182,7 +204,7 @@ export default function AdminPasswordReset() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center">
-                            <p className="text-2xl font-bold text-primary">{users.length}</p>
+                            <p className="text-2xl font-bold text-primary">{stats.total}</p>
                             <p className="text-sm text-muted-foreground">Total Utilisateurs</p>
                         </div>
                     </CardContent>
@@ -190,9 +212,7 @@ export default function AdminPasswordReset() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center">
-                            <p className="text-2xl font-bold text-gray-600">
-                                {users.filter((u) => (u.currentPlan || u.plan || 'FREE') === 'FREE').length}
-                            </p>
+                            <p className="text-2xl font-bold text-gray-600">{stats.free}</p>
                             <p className="text-sm text-muted-foreground">Plan Free</p>
                         </div>
                     </CardContent>
@@ -200,9 +220,7 @@ export default function AdminPasswordReset() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center">
-                            <p className="text-2xl font-bold text-blue-600">
-                                {users.filter((u) => (u.currentPlan || u.plan) === 'NORMAL').length}
-                            </p>
+                            <p className="text-2xl font-bold text-blue-600">{stats.normal}</p>
                             <p className="text-sm text-muted-foreground">Plan Normal</p>
                         </div>
                     </CardContent>
@@ -210,41 +228,27 @@ export default function AdminPasswordReset() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center">
-                            <p className="text-2xl font-bold text-purple-600">
-                                {users.filter((u) => (u.currentPlan || u.plan) === 'VIP').length}
-                            </p>
+                            <p className="text-2xl font-bold text-purple-600">{stats.vip}</p>
                             <p className="text-sm text-muted-foreground">Plan VIP</p>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Filters */}
+            {/* Search */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Filtres de Recherche</CardTitle>
+                    <CardTitle>Recherche</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 relative">
-                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                            <Input
-                                placeholder="Rechercher par email..."
-                                value={searchEmail}
-                                onChange={(e) => setSearchEmail(e.target.value)}
-                                className="pl-10"
-                            />
-                        </div>
-                        <div className="flex-1 relative">
-                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                            <Input
-                                placeholder="Rechercher par numéro de téléphone..."
-                                value={searchPhone}
-                                onChange={(e) => setSearchPhone(e.target.value)}
-                                className="pl-10"
-                                dir="ltr"
-                            />
-                        </div>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Input
+                            placeholder="Rechercher par email, nom ou téléphone..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10"
+                        />
                     </div>
                 </CardContent>
             </Card>
@@ -265,14 +269,20 @@ export default function AdminPasswordReset() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {paginatedUsers.length === 0 ? (
+                                    {loading ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                                Chargement...
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : users.length === 0 ? (
                                         <TableRow>
                                             <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                                                 Aucun utilisateur trouvé
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        paginatedUsers.map((user) => (
+                                        users.map((user) => (
                                             <TableRow key={user.id}>
                                                 <TableCell>
                                                     <p className="font-medium">{user.fullName || 'N/A'}</p>
@@ -317,18 +327,18 @@ export default function AdminPasswordReset() {
                     </div>
 
                     {/* Pagination */}
-                    {filteredUsers.length > usersPerPage && (
+                    {totalPages > 1 && (
                         <div className="flex items-center justify-between px-4 py-4 border-t">
                             <div className="text-sm text-muted-foreground">
-                                Affichage de {startIndex + 1} à {Math.min(endIndex, filteredUsers.length)} sur{' '}
-                                {filteredUsers.length} utilisateurs
+                                Affichage de {startIndex + 1} à {Math.min(startIndex + pageSize, totalElements)} sur{' '}
+                                {totalElements} utilisateurs
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+                                    disabled={currentPage === 0}
                                 >
                                     <ChevronLeft className="w-4 h-4" />
                                     Précédent
@@ -338,19 +348,19 @@ export default function AdminPasswordReset() {
                                         let pageNum;
                                         if (totalPages <= 5) {
                                             pageNum = i + 1;
-                                        } else if (currentPage <= 3) {
+                                        } else if (displayPage <= 3) {
                                             pageNum = i + 1;
-                                        } else if (currentPage >= totalPages - 2) {
+                                        } else if (displayPage >= totalPages - 2) {
                                             pageNum = totalPages - 4 + i;
                                         } else {
-                                            pageNum = currentPage - 2 + i;
+                                            pageNum = displayPage - 2 + i;
                                         }
                                         return (
                                             <Button
                                                 key={pageNum}
-                                                variant={currentPage === pageNum ? 'default' : 'outline'}
+                                                variant={displayPage === pageNum ? 'default' : 'outline'}
                                                 size="sm"
-                                                onClick={() => setCurrentPage(pageNum)}
+                                                onClick={() => setCurrentPage(pageNum - 1)}
                                                 className="w-8 h-8 p-0"
                                             >
                                                 {pageNum}
@@ -361,8 +371,8 @@ export default function AdminPasswordReset() {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages}
+                                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))}
+                                    disabled={currentPage >= totalPages - 1}
                                 >
                                     Suivant
                                     <ChevronRight className="w-4 h-4" />
