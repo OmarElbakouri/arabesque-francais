@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Navbar } from "./components/Navbar";
 import { Chatbot } from "./components/Chatbot";
 import SubjectSelection from "./pages/SubjectSelection";
@@ -49,6 +50,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ErrorBoundary>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -79,28 +81,28 @@ const App = () => (
           <Route path="/premium-plans" element={<ProtectedRoute><PremiumPlans /></ProtectedRoute>} />
 
           {/* Admin routes with separate layout */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="password-reset" element={<AdminPasswordReset />} />
-            <Route path="sales" element={<AdminSales />} />
-            <Route path="courses" element={<AdminCourses />} />
-            <Route path="courses/:courseId/chapters" element={<AdminChapters />} />
-            <Route path="chapters" element={<AdminChapters />} />
-            <Route path="documents" element={<AdminDocuments />} />
-            <Route path="payments" element={<AdminPayments />} />
-            <Route path="direct-payments" element={<AdminDirectPayments />} />
-            <Route path="ai-credits" element={<AdminAICredits />} />
-            <Route path="notifications" element={<AdminNotifications />} />
-            <Route path="settings" element={<AdminSettings />} />
+          <Route path="/admin" element={<ErrorBoundary><AdminLayout /></ErrorBoundary>}>
+            <Route index element={<ErrorBoundary><AdminDashboard /></ErrorBoundary>} />
+            <Route path="users" element={<ErrorBoundary><AdminUsers /></ErrorBoundary>} />
+            <Route path="password-reset" element={<ErrorBoundary><AdminPasswordReset /></ErrorBoundary>} />
+            <Route path="sales" element={<ErrorBoundary><AdminSales /></ErrorBoundary>} />
+            <Route path="courses" element={<ErrorBoundary><AdminCourses /></ErrorBoundary>} />
+            <Route path="courses/:courseId/chapters" element={<ErrorBoundary><AdminChapters /></ErrorBoundary>} />
+            <Route path="chapters" element={<ErrorBoundary><AdminChapters /></ErrorBoundary>} />
+            <Route path="documents" element={<ErrorBoundary><AdminDocuments /></ErrorBoundary>} />
+            <Route path="payments" element={<ErrorBoundary><AdminPayments /></ErrorBoundary>} />
+            <Route path="direct-payments" element={<ErrorBoundary><AdminDirectPayments /></ErrorBoundary>} />
+            <Route path="ai-credits" element={<ErrorBoundary><AdminAICredits /></ErrorBoundary>} />
+            <Route path="notifications" element={<ErrorBoundary><AdminNotifications /></ErrorBoundary>} />
+            <Route path="settings" element={<ErrorBoundary><AdminSettings /></ErrorBoundary>} />
           </Route>
 
           {/* Commercial routes with separate layout */}
-          <Route path="/commercial" element={<CommercialRoute><CommercialLayout /></CommercialRoute>}>
-            <Route index element={<CommercialDashboard />} />
-            <Route path="create-user" element={<CreateUser />} />
-            <Route path="my-users" element={<MyUsers />} />
-            <Route path="settings" element={<CommercialSettings />} />
+          <Route path="/commercial" element={<CommercialRoute><ErrorBoundary><CommercialLayout /></ErrorBoundary></CommercialRoute>}>
+            <Route index element={<ErrorBoundary><CommercialDashboard /></ErrorBoundary>} />
+            <Route path="create-user" element={<ErrorBoundary><CreateUser /></ErrorBoundary>} />
+            <Route path="my-users" element={<ErrorBoundary><MyUsers /></ErrorBoundary>} />
+            <Route path="settings" element={<ErrorBoundary><CommercialSettings /></ErrorBoundary>} />
           </Route>
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
@@ -108,6 +110,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
+    </ErrorBoundary>
   </QueryClientProvider>
 );
 

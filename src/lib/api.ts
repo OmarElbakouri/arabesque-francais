@@ -29,12 +29,21 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Handle network errors (backend unreachable, DNS failure, etc.)
+    if (!error.response) {
+      console.error('[API] Network error — backend may be unreachable:', error.message);
+      // Attach a user-friendly message for components to use
+      error.userMessage = 'Le serveur est temporairement indisponible. Veuillez réessayer.';
+      return Promise.reject(error);
+    }
+
+    if (error.response.status === 401) {
       // Token expired or invalid
       localStorage.removeItem('jwt_token');
       localStorage.removeItem('auth-storage');
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );

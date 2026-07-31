@@ -21,6 +21,7 @@ import {
 import logo from "@/assets/logo.jpg";
 import ribBcp from "@/assets/rib-bcp.png";
 import ribAttijariwafa from "@/assets/rib-attijariwafa.png";
+import api from "@/lib/api";
 
 const DEFAULT_WHATSAPP = "212657507364";
 
@@ -36,23 +37,16 @@ export default function PremiumPlans() {
                 const token = localStorage.getItem("jwt_token");
                 if (!token) return;
 
-                const response = await fetch("/api/profile/commercial-whatsapp", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+                const response = await api.get("/profile/commercial-whatsapp");
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.data?.whatsapp) {
-                        // Format phone number (remove spaces, ensure it starts without +)
-                        let phone = data.data.whatsapp.replace(/[\s+-]/g, "");
-                        if (!phone.startsWith("212")) {
-                            phone = "212" + phone.replace(/^0/, "");
-                        }
-                        setWhatsappNumber(phone);
-                        setCommercialName(data.data.name || null);
+                if (response.data?.data?.whatsapp) {
+                    // Format phone number (remove spaces, ensure it starts without +)
+                    let phone = response.data.data.whatsapp.replace(/[\s+-]/g, "");
+                    if (!phone.startsWith("212")) {
+                        phone = "212" + phone.replace(/^0/, "");
                     }
+                    setWhatsappNumber(phone);
+                    setCommercialName(response.data.data.name || null);
                 }
             } catch (error) {
                 console.error("Failed to fetch commercial WhatsApp:", error);
