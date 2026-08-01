@@ -53,13 +53,14 @@ export const useAuthStore = create<AuthState>()(
           const response = await deviceSessionService.loginWithDevice(email, password);
 
           if (response.success) {
-            // Clear all localStorage data before storing new login data
-            // But preserve device fingerprint
-            const deviceFingerprint = localStorage.getItem('device_fingerprint');
-            localStorage.clear();
-            if (deviceFingerprint) {
-              localStorage.setItem('device_fingerprint', deviceFingerprint);
-            }
+            // Clear previous session data before storing new login data
+            // Do NOT use localStorage.clear() — it destroys zustand's persisted
+            // auth state mid-render and causes white screens
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('role');
+            localStorage.removeItem('plan');
+            localStorage.removeItem('device_id');
+            localStorage.removeItem('session_token');
 
             // Store JWT token, role, plan, and device info
             localStorage.setItem('jwt_token', response.data.token);
@@ -164,7 +165,15 @@ export const useAuthStore = create<AuthState>()(
         // End course session and stop heartbeat
         deviceSessionService.endCourseSession();
 
-        localStorage.clear();
+        // Clear session data individually — do NOT use localStorage.clear()
+        // as it destroys zustand's persisted state mid-render causing white screens
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('plan');
+        localStorage.removeItem('device_id');
+        localStorage.removeItem('device_fingerprint');
+        localStorage.removeItem('session_token');
+        localStorage.removeItem('auth-storage');
         // Clear orientation-related sessionStorage to avoid issues with next user
         sessionStorage.removeItem('orientationCompleted');
         sessionStorage.removeItem('orientationResult');

@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'favicon.jpg', 'icons/*.png'],
       manifest: false, // We use our own manifest.webmanifest
       workbox: {
@@ -54,21 +54,10 @@ export default defineConfig(({ mode }) => ({
                 statuses: [0, 200]
               }
             }
-          },
-          {
-            urlPattern: /\/api\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 // 1 day
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
           }
+          // NOTE: API responses (/api/*) are intentionally NOT cached.
+          // They contain user-specific data (dashboard, courses, auth status)
+          // that must always come fresh from the server.
         ]
       }
     })
