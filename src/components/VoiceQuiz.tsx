@@ -28,6 +28,7 @@ import {
   VolumeX
 } from 'lucide-react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { SophieAudioPlayer } from '@/lib/sophieAudioPlayer';
 import {
   VoiceQuizQuestion,
   VoiceQuizSessionResponse,
@@ -47,7 +48,7 @@ interface VoiceQuizProps {
   thematicGroup?: number;
 }
 
-type ConversationState = 'start' | 'ai_speaking' | 'user_turn' | 'recording' | 'processing' | 'summary';
+type ConversationState = 'start' | 'ai_speaking' | 'audio_blocked' | 'user_turn' | 'recording' | 'processing' | 'summary';
 
 // --- Voice Orb Component ---
 const VoiceOrb = ({ mode }: { mode: 'speaking' | 'listening' | 'processing' | 'idle' }) => {
@@ -136,7 +137,12 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   const [chapterNumber, setChapterNumber] = useState<string>(chapterId?.toString() || '');
 
   // Audio
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playerRef = useRef<SophieAudioPlayer | null>(null);
+  if (!playerRef.current) {
+    playerRef.current = new SophieAudioPlayer((status) => {
+      setState(status === 'finished' ? 'user_turn' : status === 'blocked' ? 'audio_blocked' : 'ai_speaking');
+    });
+  }
 
   // Recording
   const {
@@ -199,61 +205,18 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
 
   // --- Audio Playback Logic ---
   const playAudioSequence = useCallback((base64List: string[]) => {
-    if (base64List.length === 0) {
-      setState('user_turn');
-      return;
-    }
-
-    const [currentAudio, ...remainingAudio] = base64List;
-    if (!currentAudio) {
-      playAudioSequence(remainingAudio);
-      return;
-    }
-
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-
-    const audio = new Audio(`data:audio/mpeg;base64,${currentAudio}`);
-    audioRef.current = audio;
-
-    audio.onended = () => {
-      playAudioSequence(remainingAudio);
-    };
-
-    audio.onerror = (e) => {
-      console.error("Audio playback error", e);
-      playAudioSequence(remainingAudio); // Skip to next
-    };
-
-    const playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(err => {
-        if (err.name !== 'AbortError') {
-          console.error("Playback failed", err);
-          playAudioSequence(remainingAudio); // Skip to next
-        }
-      });
-    }
+    playerRef.current?.play(base64List);
   }, []);
 
-  // Cleanup audio on unmount
   useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    };
+    return () => playerRef.current?.stop();
   }, []);
 
   // --- Actions ---
 
   const handleStart = async () => {
-    // Unlock audio on mobile: play a silent sound synchronously on the user gesture,
-    // before the async API call breaks the gesture chain.
-    const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-    silentAudio.play().catch(() => {});
+    // Prime the same player that will speak every reply, during this tap.
+    playerRef.current?.prime();
 
     setIsLoading(true);
     setError(null);
@@ -299,7 +262,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   };
 
   const handleExit = () => {
-    if (audioRef.current) audioRef.current.pause();
+    playerRef.current?.stop();
     resetRecording();
     setState('start');
     setSession(null);
@@ -309,7 +272,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
 
   // Terminate conversation and show summary
   const handleEndConversation = async () => {
-    if (audioRef.current) audioRef.current.pause();
+    playerRef.current?.stop();
     resetRecording();
 
     if (session) {
@@ -461,6 +424,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   const getStatusText = () => {
     switch (state) {
       case 'ai_speaking': return "L'IA parle...";
+      case 'audio_blocked': return "Appuyez pour écouter Sophie";
       case 'user_turn': return "À vous de parler";
       case 'recording': return "Écoute en cours...";
       case 'processing': return "Réflexion...";
@@ -627,7 +591,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
         <VoiceOrb mode={getOrbMode()} />
 
         {/* Subtitle / Speech Text */}
-        {displayedText && (state === 'ai_speaking' || state === 'user_turn') && (
+        {displayedText && (state === 'ai_speaking' || state === 'audio_blocked' || state === 'user_turn') && (
           <motion.div
             className="text-center"
             initial={{ opacity: 0, y: 20 }}
@@ -645,7 +609,18 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       {/* Controls */}
       <div className="absolute bottom-12 w-full flex justify-center items-center gap-8">
         {/* Placeholder for symmetry */}
-        <div className="w-14 h-14" />
+        {state !== 'audio_blocked' && <div className="w-14 h-14" />}
+
+        {state === 'audio_blocked' && (
+          <Button
+            onClick={() => playerRef.current?.retry()}
+            size="lg"
+            className="h-auto min-h-14 rounded-full whitespace-normal px-6 py-3"
+          >
+            <Volume2 className="mr-2 h-5 w-5 shrink-0" />
+            Appuyez pour écouter Sophie
+          </Button>
+        )}
 
         {/* Mic Button */}
         <AnimatePresence>
@@ -671,7 +646,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
         </AnimatePresence>
 
         {/* Placeholder for symmetry */}
-        <div className="w-14 h-14" />
+        {state !== 'audio_blocked' && <div className="w-14 h-14" />}
       </div>
 
       {/* Error Toast */}
