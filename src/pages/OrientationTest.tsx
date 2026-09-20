@@ -423,16 +423,50 @@ interface Answers {
   currentLevel: string;
 }
 
+// ==================== RESUME AFTER REFRESH ====================
+
+// A refresh used to throw away the whole test. The questions themselves are held by
+// the server (GET level-test/current); only the answers given so far live here.
+const PROFILE_PROGRESS_KEY = 'orientationProfileProgress';
+const LEVEL_ANSWERS_KEY = 'orientationLevelAnswers';
+
+const readStored = <T,>(key: string): T | null => {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null; // private mode / storage disabled: the test simply does not resume
+  }
+};
+
+const writeStored = (key: string, value: unknown) => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* ignore */
+  }
+};
+
+const clearStored = (key: string) => {
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    /* ignore */
+  }
+};
+
 // ==================== COMPONENT ====================
 
 const OrientationTest = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Main state
-  const [currentStep, setCurrentStep] = useState(0);
+  // Main state — restored from this tab's storage so a refresh keeps the answers
+  const [currentStep, setCurrentStep] = useState(
+    () => readStored<{ step: number }>(PROFILE_PROGRESS_KEY)?.step ?? 0
+  );
   const [isLoading, setIsLoading] = useState(true);
-  const [answers, setAnswers] = useState<Answers>({
+  const [answers, setAnswers] = useState<Answers>(() => readStored<{ answers: Answers }>(PROFILE_PROGRESS_KEY)?.answers ?? {
     profileType: "",
     educationLevel: "",
     studentObjective: "",
@@ -501,6 +535,56 @@ const OrientationTest = () => {
     ? ((currentLevelQuestion + 1) / (levelTestQuestions.length || 1)) * 100
     : ((currentStep + 1) / totalQuestions) * 100;
 
+  // Keep the profile answers for this tab: a refresh must not send the user back to question 1
+  useEffect(() => {
+    if (answers.profileType) {
+      writeStored(PROFILE_PROGRESS_KEY, { answers, step: currentStep });
+    }
+  }, [answers, currentStep]);
+
+  /**
+   * Picks up the level test the server still holds for this user, replaying the
+   * answers already given. Returns true when a test was resumed.
+   */
+  const resumeLevelTest = async (savedAnswers: Answers): Promise<boolean> => {
+    // Without the profile answers we could not finish the orientation afterwards.
+    if (!savedAnswers.profileType) {
+      return false;
+    }
+
+    const response = await api.get('/orientation-test/level-test/current');
+    const questions: LevelTestQuestion[] = Array.isArray(response.data) ? response.data : [];
+    if (questions.length === 0) {
+      return false;
+    }
+
+    const stored = readStored<Record<string, string>>(LEVEL_ANSWERS_KEY) ?? {};
+    const restored: LevelTestAnswer[] = [];
+    for (const question of questions) {
+      const answer = stored[question.questionId];
+      if (answer === undefined) {
+        break; // resume at the first unanswered question
+      }
+      restored.push({ questionId: question.questionId, userAnswer: answer });
+    }
+
+    setLevelTestQuestions(questions);
+    setLevelTestAnswers(restored);
+    setCurrentLevelQuestion(Math.min(restored.length, questions.length - 1));
+    setShowLevelTest(true);
+
+    if (restored.length === questions.length) {
+      // Everything was answered: the refresh happened while the result was being computed.
+      submitLevelTest(restored);
+    } else {
+      toast({
+        title: "Reprise du test",
+        description: `Vous reprenez à la question ${restored.length + 1} sur ${questions.length}`
+      });
+    }
+    return true;
+  };
+
   // Check status on mount
   useEffect(() => {
     const safetyTimeout = setTimeout(() => {
@@ -535,9 +619,12 @@ const OrientationTest = () => {
         const response = await api.get('/orientation-test/status');
         if (response.data.completed) {
           sessionStorage.setItem('orientationCompleted', 'true');
+          clearStored(PROFILE_PROGRESS_KEY);
+          clearStored(LEVEL_ANSWERS_KEY);
           navigate('/courses', { state: { fromOrientationTest: true }, replace: true });
           return;
         }
+        await resumeLevelTest(readStored<{ answers: Answers }>(PROFILE_PROGRESS_KEY)?.answers ?? answers);
       } catch (error) {
         console.error('Failed to check orientation status:', error);
       } finally {
@@ -560,6 +647,7 @@ const OrientationTest = () => {
       setLevelTestAnswers([]);
       setCurrentLevelQuestion(0);
       setLevelSubmitFailed(false);
+      clearStored(LEVEL_ANSWERS_KEY); // a new draw invalidates the answers kept for a resume
       setShowLevelTest(true);
       toast({
         title: "Test de niveau",
@@ -587,6 +675,10 @@ const OrientationTest = () => {
     };
 
     setLevelTestAnswers(prev => [...prev, newAnswer]);
+    writeStored(LEVEL_ANSWERS_KEY, {
+      ...(readStored<Record<string, string>>(LEVEL_ANSWERS_KEY) ?? {}),
+      [question.questionId]: answer
+    });
 
     if (currentLevelQuestion < levelTestQuestions.length - 1) {
       setCurrentLevelQuestion(prev => prev + 1);
@@ -642,6 +734,8 @@ const OrientationTest = () => {
 
       sessionStorage.setItem('orientationCompleted', 'true');
       sessionStorage.setItem('orientationResult', JSON.stringify(response.data));
+      clearStored(PROFILE_PROGRESS_KEY);
+      clearStored(LEVEL_ANSWERS_KEY);
 
       setResult(response.data);
       toast({
@@ -718,6 +812,9 @@ const OrientationTest = () => {
       if (currentLevelQuestion > 0 && !levelTestResult) {
         setCurrentLevelQuestion(prev => prev - 1);
         setLevelTestAnswers(prev => prev.slice(0, -1));
+        const stored = readStored<Record<string, string>>(LEVEL_ANSWERS_KEY) ?? {};
+        delete stored[levelTestQuestions[currentLevelQuestion - 1]?.questionId];
+        writeStored(LEVEL_ANSWERS_KEY, stored);
       } else if (currentLevelQuestion === 0) {
         setShowLevelTest(false);
         setLevelTestQuestions([]);

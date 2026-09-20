@@ -177,6 +177,8 @@ export const useAuthStore = create<AuthState>()(
         // Clear orientation-related sessionStorage to avoid issues with next user
         sessionStorage.removeItem('orientationCompleted');
         sessionStorage.removeItem('orientationResult');
+        sessionStorage.removeItem('orientationProfileProgress');
+        sessionStorage.removeItem('orientationLevelAnswers');
         set({ user: null, isAuthenticated: false });
       },
 
