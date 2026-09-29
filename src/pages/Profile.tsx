@@ -247,6 +247,9 @@ export default function Profile() {
                     <Input
                       id="email"
                       type="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
                       value={user?.email || ''}
                       disabled={true}
                       className="bg-muted"

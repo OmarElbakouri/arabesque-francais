@@ -239,6 +239,9 @@ export default function CommercialTeamManagement() {
                   <Input
                     id="email"
                     type="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={newCommercial.email}
                     onChange={(e) =>
                       setNewCommercial({ ...newCommercial, email: e.target.value })
@@ -435,6 +438,9 @@ export default function CommercialTeamManagement() {
                   <Input
                     id="email"
                     type="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={newCommercial.email}
                     onChange={(e) =>
                       setNewCommercial({ ...newCommercial, email: e.target.value })

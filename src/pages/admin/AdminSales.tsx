@@ -443,6 +443,9 @@ export default function AdminSales() {
                 <Input
                   id="email"
                   type="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   value={formData.email}
                   onChange={(e) => handleFormChange('email', e.target.value)}
                   placeholder="ahmed@bclt.com"

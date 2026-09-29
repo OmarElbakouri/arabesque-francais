@@ -78,6 +78,9 @@ export default function Login() {
                 <Input
                   id="email"
                   type="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   placeholder="exemple@email.com"
                   className="pr-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20 border-border hover:border-primary/50"
                   {...register('email', { required: 'البريد الإلكتروني مطلوب' })}
@@ -95,6 +98,9 @@ export default function Login() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   placeholder="••••••••"
                   className="pr-10 pl-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20 border-border hover:border-primary/50"
                   {...register('password', { required: 'كلمة المرور مطلوبة' })}

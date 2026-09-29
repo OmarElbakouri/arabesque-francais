@@ -110,6 +110,9 @@ export default function ForgotPassword() {
                   <Input
                     id="email"
                     type="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     placeholder="example@email.com"
                     className="pr-10"
                     dir="ltr"

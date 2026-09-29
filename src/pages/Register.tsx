@@ -113,6 +113,9 @@ export default function Register() {
                 <Input
                   id="email"
                   type="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   placeholder="exemple@email.com"
                   className="pr-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20 border-border hover:border-primary/50"
                   {...register('email', { required: 'البريد الإلكتروني مطلوب' })}
