@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { getQuizStartErrorMessage } from '@/lib/quizStart';
 import {
     Brain,
     CheckCircle2,
@@ -34,6 +35,7 @@ import {
     submitVocalQuizAnswers,
     QuestionType,
     checkQuizIaAccess,
+    hasPendingQuizStart,
     QuizAccessInfo
 } from '@/services/quizService';
 
@@ -82,6 +84,7 @@ export default function VocalExercise({ chapterId, chapterTitle, thematicGroup =
     const [startTime, setStartTime] = useState<number>(0);
     const [accessInfo, setAccessInfo] = useState<QuizAccessInfo | null>(null);
     const [loadingAccess, setLoadingAccess] = useState(true);
+    const canRecoverQuiz = hasPendingQuizStart(thematicGroup, [chapterId]);
 
     // Voice recognition state
     const [isListening, setIsListening] = useState(false);
@@ -165,7 +168,6 @@ export default function VocalExercise({ chapterId, chapterTitle, thematicGroup =
         setCurrentIndex(0);
         setResults(null);
         setError(null);
-        setStartTime(Date.now());
 
         try {
             const newSession = await startQuizSession(thematicGroup, [chapterId]);
@@ -173,21 +175,16 @@ export default function VocalExercise({ chapterId, chapterTitle, thematicGroup =
 
             if (newSession.questions && newSession.questions.length > 0) {
                 setSession(newSession);
+                setStartTime(Date.now());
                 setState('practice');
+                void checkQuizIaAccess().then(setAccessInfo).catch(e => console.warn('Quiz usage refresh failed:', e));
             } else {
                 setError('Aucune question générée. Veuillez réessayer.');
                 setState('idle');
             }
         } catch (err: unknown) {
             console.error('Failed to start vocal exercise:', err);
-            let errorMessage = 'Impossible de démarrer l\'exercice. Veuillez réessayer.';
-            if (err && typeof err === 'object' && 'response' in err) {
-                const axiosError = err as { response?: { status: number; data: { message?: string } } };
-                if (axiosError.response?.data?.message) {
-                    errorMessage = axiosError.response.data.message;
-                }
-            }
-            setError(errorMessage);
+            setError(getQuizStartErrorMessage(err));
             setState('idle');
         }
     };
@@ -420,14 +417,14 @@ export default function VocalExercise({ chapterId, chapterTitle, thematicGroup =
                         onClick={handleStartQuiz}
                         size="lg"
                         className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                        disabled={loadingAccess || (accessInfo && !accessInfo.canUse) || !isVoiceSupported}
+                        disabled={loadingAccess || (accessInfo && !accessInfo.canUse && !canRecoverQuiz) || !isVoiceSupported}
                     >
                         {loadingAccess ? (
                             <>
                                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                                 Vérification...
                             </>
-                        ) : accessInfo && !accessInfo.canUse ? (
+                        ) : accessInfo && !accessInfo.canUse && !canRecoverQuiz ? (
                             <>
                                 <AlertCircle className="w-5 h-5 mr-2" />
                                 Limite atteinte
@@ -435,7 +432,7 @@ export default function VocalExercise({ chapterId, chapterTitle, thematicGroup =
                         ) : (
                             <>
                                 <Mic className="w-5 h-5 mr-2" />
-                                Commencer l'Exercice Vocal
+                                {canRecoverQuiz ? "Réessayer l'Exercice Vocal" : "Commencer l'Exercice Vocal"}
                             </>
                         )}
                     </Button>
@@ -452,7 +449,7 @@ export default function VocalExercise({ chapterId, chapterTitle, thematicGroup =
                     <Loader2 className="w-12 h-12 text-purple-500 animate-spin mb-4" />
                     <p className="text-lg font-medium">Génération des questions...</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                        L'IA prépare votre exercice personnalisé
+                        L'IA prépare votre exercice personnalisé. Cela peut prendre jusqu'à une minute.
                     </p>
                 </CardContent>
             </Card>

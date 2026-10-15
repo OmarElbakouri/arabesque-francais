@@ -1,4 +1,14 @@
 import api from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
+import { clearQuizStartId, pendingQuizStartId, quizStartRequestId, quizStartScope } from '@/lib/quizStart';
+
+const QUIZ_START_TIMEOUT_MS = 90000;
+const startsInFlight = new Map<string, Promise<QuizSessionDTO>>();
+
+export function hasPendingQuizStart(thematicGroup: number, chapters?: number[]): boolean {
+  const accountId = useAuthStore.getState().user?.id;
+  return Boolean(accountId && pendingQuizStartId(quizStartScope(accountId, thematicGroup, chapters)));
+}
 
 // Enable mock mode for testing without backend
 const MOCK_MODE = false;
@@ -54,6 +64,8 @@ export interface QuizStartRequest {
   thematicGroup: number;           // REQUIRED: 1-6 (corresponding to course groups)
   specificChapters?: number[];     // Optional: specific chapters to focus on
   resumeSessionId?: string | null; // Optional: to resume a session
+  startRequestId?: string;         // Reused after a lost/failed response
+  recoverExisting?: boolean;      // Resume an unfinished quiz for the same chapters on retry
 }
 
 export interface AnswerSubmission {
@@ -353,26 +365,57 @@ export async function startQuizSession(
     };
   }
 
+  const accountId = useAuthStore.getState().user?.id;
+  if (!accountId) throw new Error('Votre session a expiré. Veuillez vous reconnecter.');
+  const scope = quizStartScope(accountId, thematicGroup, specificChapters);
+  const flightKey = resumeSessionId ? `${scope}:resume:${resumeSessionId}` : scope;
+  const existing = startsInFlight.get(flightKey);
+  if (existing) return existing;
+  const recoverExisting = !resumeSessionId && Boolean(pendingQuizStartId(scope));
+  const startRequestId = resumeSessionId ? undefined : quizStartRequestId(scope);
+
   const request: QuizStartRequest = {
     thematicGroup,
     ...(specificChapters && specificChapters.length > 0 && { specificChapters }),
-    ...(resumeSessionId && { resumeSessionId })
+    ...(resumeSessionId && { resumeSessionId }),
+    ...(startRequestId && { startRequestId, recoverExisting })
   };
+
+  const pending = requestQuizSession(request, scope, startRequestId);
+  startsInFlight.set(flightKey, pending);
+  try {
+    return await pending;
+  } catch (error: unknown) {
+    const failure = error as { code?: string; response?: { status?: number } } | null;
+    // A definitive rejection lets the next click start a new attempt.
+    if (failure?.response?.status === 400 && startRequestId) clearQuizStartId(scope, startRequestId);
+    console.error('Quiz start request failed:', { startRequestId, code: failure?.code, status: failure?.response?.status });
+    throw error;
+  } finally {
+    startsInFlight.delete(flightKey);
+  }
+}
+
+async function requestQuizSession(request: QuizStartRequest, scope: string, startRequestId?: string): Promise<QuizSessionDTO> {
 
   console.log('Starting quiz with request:', request);
 
-  const response = await api.post('/quiz/start', request);
+  const response = await api.post('/quiz/start', request, { timeout: QUIZ_START_TIMEOUT_MS });
   const apiResponse = response.data;  // { success, message, data }
 
   console.log('Quiz API response:', apiResponse);
 
   // Check if API call was successful
-  if (!apiResponse.success) {
-    throw new Error(apiResponse.message || 'Failed to start quiz');
+  if (!apiResponse?.success) {
+    throw new Error(apiResponse?.message || 'Le serveur n’a pas pu préparer le quiz. Veuillez réessayer.');
   }
 
   // Extract the actual quiz data from the ApiResponse wrapper
   const quizData = apiResponse.data;  // { sessionId, questions, thematicGroup, ... }
+
+  if (!quizData?.sessionId || !Array.isArray(quizData.questions) || quizData.questions.length === 0) {
+    throw new Error('Aucune question reçue. Veuillez réessayer pour récupérer votre quiz.');
+  }
 
   console.log('Quiz data extracted:', quizData);
 
@@ -406,6 +449,7 @@ export async function startQuizSession(
 
   console.log('Mapped quiz session:', result);
 
+  if (startRequestId) clearQuizStartId(scope, startRequestId);
   return result;
 }
 

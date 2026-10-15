@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { getQuizStartErrorMessage } from '@/lib/quizStart';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Brain,
@@ -34,6 +35,7 @@ import {
   submitQuizAnswers,
   QuestionType,
   checkQuizIaAccess,
+  hasPendingQuizStart,
   QuizAccessInfo
 } from '@/services/quizService';
 
@@ -82,6 +84,7 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
   const [startTime, setStartTime] = useState<number>(0);
   const [accessInfo, setAccessInfo] = useState<QuizAccessInfo | null>(null);
   const [loadingAccess, setLoadingAccess] = useState(true);
+  const canRecoverQuiz = hasPendingQuizStart(thematicGroup, [chapterId]);
 
   const currentQuestion = session?.questions?.[currentIndex];
   const progress = session?.questions?.length ? ((currentIndex + 1) / session.questions.length) * 100 : 0;
@@ -110,7 +113,6 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
     setResults(null);
     setShowHint(false);
     setError(null);
-    setStartTime(Date.now());
 
     try {
       // Pass thematicGroup (required) and optionally the specific chapter
@@ -120,22 +122,16 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
       
       if (newSession.questions && newSession.questions.length > 0) {
         setSession(newSession);
+        setStartTime(Date.now());
         setState('practice');
+        void checkQuizIaAccess().then(setAccessInfo).catch(e => console.warn('Quiz usage refresh failed:', e));
       } else {
         setError('Aucune question générée. Veuillez réessayer.');
         setState('idle');
       }
     } catch (err: unknown) {
       console.error('Failed to start quiz:', err);
-      // Extract error message from backend response
-      let errorMessage = 'Impossible de démarrer le quiz. Veuillez réessayer.';
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { status: number; data: { message?: string } } };
-        if (axiosError.response?.data?.message) {
-          errorMessage = axiosError.response.data.message;
-        }
-      }
-      setError(errorMessage);
+      setError(getQuizStartErrorMessage(err));
       setState('idle');
     }
   };
@@ -295,14 +291,14 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
             onClick={handleStartQuiz} 
             size="lg" 
             className="w-full"
-            disabled={loadingAccess || (accessInfo && !accessInfo.canUse)}
+            disabled={loadingAccess || (accessInfo && !accessInfo.canUse && !canRecoverQuiz)}
           >
             {loadingAccess ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 Vérification...
               </>
-            ) : accessInfo && !accessInfo.canUse ? (
+            ) : accessInfo && !accessInfo.canUse && !canRecoverQuiz ? (
               <>
                 <AlertCircle className="w-5 h-5 mr-2" />
                 Limite atteinte
@@ -310,7 +306,7 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
             ) : (
               <>
                 <Sparkles className="w-5 h-5 mr-2" />
-                Commencer le Quiz
+                {canRecoverQuiz ? 'Réessayer le Quiz' : 'Commencer le Quiz'}
               </>
             )}
           </Button>
@@ -327,7 +323,7 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
           <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
           <p className="text-lg font-medium">Génération des questions...</p>
           <p className="text-sm text-muted-foreground mt-1">
-            L'IA prépare votre quiz personnalisé
+            L'IA prépare votre quiz personnalisé. Cela peut prendre jusqu'à une minute.
           </p>
         </CardContent>
       </Card>
