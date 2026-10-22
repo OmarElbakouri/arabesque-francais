@@ -37,6 +37,8 @@ export interface SubmitAnswerResponse {
   expectedSentence: string;
   isCorrect: boolean;
   isPartiallyCorrect: boolean;
+  evaluationStatus?: 'EVALUATED' | 'NOT_EVALUATED';
+  targetUsed?: boolean | null;
   confidenceScore: number;
   feedbackText: string;
   feedbackAudioBase64?: string | null;
@@ -163,7 +165,7 @@ const mockQuestions: VoiceQuizQuestion[] = [
     difficultyLevel: "DEBUTANT",
     audioBase64: null
   }
-];
+].map(question => ({ ...question, question: question.sentenceWithBlank, difficultyLevel: question.difficultyLevel as DifficultyLevel }));
 
 const mockCorrectAnswers: Record<number, string> = {
   1: "Je suis allé au marché hier.",
@@ -344,7 +346,7 @@ export async function submitVoiceAnswer(
     questionId,
     audioBase64,
     audioFormat
-  });
+  }, { timeout: 90000 });
   
   const apiResponse = response.data;
   
@@ -357,7 +359,8 @@ export async function submitVoiceAnswer(
   
   // Extract from ApiResponse wrapper
   const data = apiResponse.data;
-  
+  if (!data) throw new Error("L’analyse n’a pas été reçue. Réessayez avec le même enregistrement.");
+
   console.log('Voice Quiz submit data:', data);
   console.log('isCorrect:', data.isCorrect, 'correct:', data.correct);
   
@@ -372,6 +375,11 @@ export async function submitVoiceAnswer(
     audioBase64: data.nextQuestion.audioData || data.nextQuestion.audioBase64
   } : null;
   
+  const sessionComplete = data.sessionComplete === true || data.isLastQuestion === true || data.isCompleted === true;
+  if (!data || (!sessionComplete && (!nextQuestion || !nextQuestion.question?.trim()))) {
+    throw new Error("La suite de la conversation n’a pas été reçue. Réessayez l’analyse de votre réponse.");
+  }
+
   // Return mapped response, ensuring isCorrect is properly set
   return {
     sessionId: data.sessionId,
@@ -380,17 +388,19 @@ export async function submitVoiceAnswer(
     expectedSentence: data.expectedSentence,
     isCorrect: data.isCorrect === true || data.correct === true,
     isPartiallyCorrect: data.isPartiallyCorrect === true || data.partiallyCorrect === true,
+    evaluationStatus: data.evaluationStatus || 'EVALUATED',
+    targetUsed: data.targetUsed,
     confidenceScore: data.confidenceScore || 0,
     feedbackText: data.feedbackText || data.feedback || '',
     feedbackAudioBase64: data.feedbackAudioBase64 || data.feedbackAudio || null,
-    explanation: data.explanation || '',
+    explanation: data.grammarExplanation || data.explanation || '',
     grammarPoint: data.grammarPoint || '',
     errors: data.errors || [],
     correctedSentence: data.correctedSentence || null,
     currentQuestionIndex: data.currentQuestionIndex || 0,
     totalQuestions: data.totalQuestions || 10,
     correctSoFar: data.correctSoFar || data.correctCount || 0,
-    isLastQuestion: data.isLastQuestion || data.isCompleted || false,
+    isLastQuestion: sessionComplete,
     nextQuestion
   };
 }
@@ -428,6 +438,7 @@ export async function getSessionSummary(sessionId: number): Promise<SessionSumma
     };
   }
 
+  await api.post(`/voice-quiz/session/${sessionId}/finish`);
   const response = await api.get(`/voice-quiz/session/${sessionId}/summary`);
   const apiResponse = response.data;
   

@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { SophieAudioPlayer } from '@/lib/sophieAudioPlayer';
+import { VoiceTurnSubmission } from '@/lib/voiceTurnSubmission';
 import {
   VoiceQuizQuestion,
   VoiceQuizSessionResponse,
@@ -48,7 +49,7 @@ interface VoiceQuizProps {
   thematicGroup?: number;
 }
 
-type ConversationState = 'start' | 'ai_speaking' | 'audio_blocked' | 'user_turn' | 'recording' | 'processing' | 'summary';
+type ConversationState = 'start' | 'ai_speaking' | 'audio_blocked' | 'user_turn' | 'recording' | 'processing' | 'retry_analysis' | 'finished' | 'summary';
 
 // --- Voice Orb Component ---
 const VoiceOrb = ({ mode }: { mode: 'speaking' | 'listening' | 'processing' | 'idle' }) => {
@@ -136,11 +137,14 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   const [selectedThematicGroup, setSelectedThematicGroup] = useState<string>(propThematicGroup?.toString() || '');
   const [chapterNumber, setChapterNumber] = useState<string>(chapterId?.toString() || '');
 
+  const submission = useRef(new VoiceTurnSubmission<SubmitAnswerResponse>(submitVoiceAnswer));
+  const completed = useRef(false);
+
   // Audio
   const playerRef = useRef<SophieAudioPlayer | null>(null);
   if (!playerRef.current) {
     playerRef.current = new SophieAudioPlayer((status) => {
-      setState(status === 'finished' ? 'user_turn' : status === 'blocked' ? 'audio_blocked' : 'ai_speaking');
+      setState(status === 'finished' ? (completed.current ? 'finished' : 'user_turn') : status === 'blocked' ? 'audio_blocked' : 'ai_speaking');
     });
   }
 
@@ -218,6 +222,8 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
     // Prime the same player that will speak every reply, during this tap.
     playerRef.current?.prime();
 
+    submission.current.clear();
+    completed.current = false;
     setIsLoading(true);
     setError(null);
     try {
@@ -251,6 +257,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   const handleMicClick = async () => {
     console.log('[VoiceQuiz] handleMicClick called, current state:', state);
     if (state === 'user_turn') {
+      setError(null);
       console.log('[VoiceQuiz] Starting recording...');
       await startRecording();
       setState('recording');
@@ -262,6 +269,8 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   };
 
   const handleExit = () => {
+    submission.current.clear();
+    completed.current = false;
     playerRef.current?.stop();
     resetRecording();
     setState('start');
@@ -272,6 +281,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
 
   // Terminate conversation and show summary
   const handleEndConversation = async () => {
+    submission.current.clear();
     playerRef.current?.stop();
     resetRecording();
 
@@ -293,121 +303,49 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
     }
   };
 
-  // Process Answer
+  // Submit once per recording. A failed/lost response retains the recording for an analysis retry.
   useEffect(() => {
-    let isCancelled = false;
-    let apiTimeout: NodeJS.Timeout;
+    let cancelled = false;
+    if (state !== 'processing' || !session || !currentQuestion) return;
+    const pending = submission.current.pending;
+    if (!pending && !audioBlob) return;
+    const recording = pending || {
+      sessionId: session.sessionId,
+      questionId: currentQuestion.id,
+      audioBlob: audioBlob!,
+      audioFormat: audioBlob!.type.includes('mp4') ? 'm4a'
+        : audioBlob!.type.includes('ogg') ? 'ogg'
+          : audioBlob!.type.includes('wav') ? 'wav' : 'webm',
+    };
 
-    const processAnswer = async () => {
-      console.log('[VoiceQuiz] processAnswer check - state:', state, 'audioBlob:', audioBlob?.size, 'session:', session?.sessionId, 'question:', currentQuestion?.id);
-
-      if (state === 'processing' && audioBlob && session && currentQuestion) {
-        console.log('[VoiceQuiz] All conditions met, starting API call...');
-
-        // Set API timeout (30 seconds for transcription + AI response)
-        apiTimeout = setTimeout(() => {
-          if (!isCancelled) {
-            console.error("[VoiceQuiz] API timeout - no response after 30 seconds");
-            setError("La réponse prend trop de temps. Veuillez réessayer.");
-            resetRecording();
-            setState('user_turn');
-          }
-        }, 30000);
-
-        try {
-          // Determine format
-          const audioFormat = audioBlob.type.includes('webm') ? 'webm'
-            : audioBlob.type.includes('mp4') ? 'm4a'
-              : audioBlob.type.includes('ogg') ? 'ogg'
-                : audioBlob.type.includes('wav') ? 'wav'
-                  : 'webm';
-
-          console.log('[VoiceQuiz] Submitting audio answer...', { sessionId: session.sessionId, questionId: currentQuestion.id, audioFormat, blobSize: audioBlob.size });
-
-          const response = await submitVoiceAnswer(
-            session.sessionId,
-            currentQuestion.id,
-            audioBlob,
-            audioFormat
-          );
-
-          if (isCancelled) return;
-          clearTimeout(apiTimeout);
-
-          console.log('[VoiceQuiz] Got response from API:', response);
-
-          // Prepare audio sequence: Feedback -> Next Question
-          const audioSequence: string[] = [];
-          if (response.feedbackAudioBase64) {
-            audioSequence.push(response.feedbackAudioBase64);
-          }
-
-          if (response.nextQuestion) {
-            console.log('[VoiceQuiz] Moving to next turn in conversation');
-            // Seamless transition - conversation continues
-            setCurrentQuestion(response.nextQuestion);
-
-            // Display feedback + corrections + next question text
-            let feedbackDisplay = '';
-
-            // Show what the user said
-            if (response.transcribedText) {
-              feedbackDisplay += `Vous avez dit: "${response.transcribedText}"\n\n`;
-            }
-
-            // Show corrections if any (from explanation field)
-            if (response.explanation && response.explanation.trim()) {
-              feedbackDisplay += `${response.explanation}\n\n`;
-            }
-
-            // Show general feedback
-            if (response.feedbackText) {
-              feedbackDisplay += response.feedbackText;
-            }
-
-            setDisplayedText(feedbackDisplay.trim());
-
-            if (response.nextQuestion.audioBase64) {
-              audioSequence.push(response.nextQuestion.audioBase64);
-            }
-            resetRecording();
-            setState('ai_speaking'); // Loop back
-
-            // After feedback, show next question
-            setTimeout(() => {
-              setDisplayedText(response.nextQuestion?.question || response.nextQuestion?.sentenceWithBlank || '');
-            }, 3000);
-
-            // Play the sequence
-            playAudioSequence(audioSequence);
-          } else {
-            console.log('[VoiceQuiz] No next question, playing feedback or returning to user turn');
-            // If we have feedback, play it and let user continue
-            if (audioSequence.length > 0) {
-              setState('ai_speaking');
-              playAudioSequence(audioSequence);
-            } else {
-              setState('user_turn');
-            }
-            resetRecording();
-          }
-        } catch (err) {
-          if (isCancelled) return;
-          clearTimeout(apiTimeout);
-          console.error("Submission failed", err);
-          setError("Erreur de connexion. Veuillez réessayer.");
-          resetRecording();
-          setState('user_turn'); // Let user try again
-        }
+    submission.current.run(recording).then(response => {
+      if (cancelled) return;
+      setError(null);
+      completed.current = response.isLastQuestion;
+      resetRecording();
+      const audio = [];
+      if (response.feedbackAudioBase64) audio.push(response.feedbackAudioBase64);
+      if (response.isLastQuestion) {
+        setDisplayedText(response.feedbackText || 'Merci pour cette conversation !');
+      } else if (response.nextQuestion) {
+        setCurrentQuestion(response.nextQuestion);
+        setDisplayedText(response.nextQuestion.question || response.nextQuestion.sentenceWithBlank || '');
+        if (response.nextQuestion.audioBase64) audio.push(response.nextQuestion.audioBase64);
       }
-    };
-
-    processAnswer();
-
-    return () => {
-      isCancelled = true;
-      if (apiTimeout) clearTimeout(apiTimeout);
-    };
+      if (audio.length) {
+        setState('ai_speaking');
+        playAudioSequence(audio);
+      } else {
+        setState(response.isLastQuestion ? 'finished' : 'user_turn');
+      }
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      const failure = error as { response?: { data?: { message?: string } }; message?: string };
+      setError(failure.response?.data?.message || failure.message
+        || 'L’analyse est indisponible. Votre enregistrement est conservé.');
+      setState('retry_analysis');
+    });
+    return () => { cancelled = true; };
   }, [state, audioBlob, session, currentQuestion, resetRecording, playAudioSequence]);
 
   // --- Render Helpers ---
@@ -427,7 +365,9 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       case 'audio_blocked': return "Appuyez pour écouter Sophie";
       case 'user_turn': return "À vous de parler";
       case 'recording': return "Écoute en cours...";
-      case 'processing': return "Réflexion...";
+      case 'processing': return "Analyse de votre réponse...";
+      case 'retry_analysis': return "Votre enregistrement est conservé";
+      case 'finished': return "Conversation terminée";
       default: return "";
     }
   };
@@ -566,10 +506,15 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   // Conversation UI
   return createPortal(
     <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
+      <Button variant="outline" className="absolute top-4 left-4" onClick={handleEndConversation}
+        disabled={state === 'processing' || state === 'recording'}>
+        {state === 'finished' ? 'Voir le bilan' : 'Terminer la conversation'}
+      </Button>
       {/* Exit Button */}
       <Button
         variant="ghost"
         size="icon"
+        aria-label="Quitter la conversation"
         className="absolute top-4 right-4 rounded-full hover:bg-destructive/10 hover:text-destructive"
         onClick={handleExit}
       >
@@ -591,7 +536,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
         <VoiceOrb mode={getOrbMode()} />
 
         {/* Subtitle / Speech Text */}
-        {displayedText && (state === 'ai_speaking' || state === 'audio_blocked' || state === 'user_turn') && (
+        {displayedText && (state === 'ai_speaking' || state === 'audio_blocked' || state === 'user_turn' || state === 'finished') && (
           <motion.div
             className="text-center"
             initial={{ opacity: 0, y: 20 }}
@@ -622,6 +567,22 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
           </Button>
         )}
 
+        {state === 'retry_analysis' && (
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button onClick={() => { setError(null); setState('processing'); }}>
+              Réessayer l’analyse
+            </Button>
+            <Button variant="outline" onClick={() => {
+              submission.current.clear();
+              resetRecording();
+              setError(null);
+              setState('user_turn');
+            }}>
+              Enregistrer à nouveau
+            </Button>
+          </div>
+        )}
+
         {/* Mic Button */}
         <AnimatePresence>
           {(state === 'user_turn' || state === 'recording') && (
@@ -631,6 +592,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
               exit={{ scale: 0, opacity: 0 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleMicClick}
+              aria-label={state === 'recording' ? 'Arrêter l’enregistrement' : 'Enregistrer ma réponse'}
               className={`w-20 h-20 rounded-full flex items-center justify-center shadow-lg transition-colors ${state === 'recording'
                 ? 'bg-destructive text-destructive-foreground'
                 : 'bg-primary text-primary-foreground hover:bg-primary/90'
