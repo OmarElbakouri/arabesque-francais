@@ -1,3 +1,5 @@
+import { clearPendingAi } from '@/lib/aiRequest';
+import { AllowanceStatus } from '@/components/AllowanceStatus';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,6 +38,7 @@ import {
   SubmitAnswerResponse,
   SessionSummary,
   startVoiceQuizSession,
+  getCurrentVoiceSession,
   submitVoiceAnswer,
   getSessionSummary,
   formatTime,
@@ -129,6 +132,8 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
 
   // Data
   const [session, setSession] = useState<VoiceQuizSessionResponse | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  const [recoverable, setRecoverable] = useState<VoiceQuizSessionResponse | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<VoiceQuizQuestion | null>(null);
   const [displayedText, setDisplayedText] = useState<string>(''); // Text being spoken by AI
   const [summary, setSummary] = useState<SessionSummary | null>(null);
@@ -167,6 +172,9 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       try {
         const info = await checkVoiceQuizAccess();
         setAccessInfo(info);
+        const current = await getCurrentVoiceSession();
+        setRecoverable(current);
+        if (current) clearPendingAi('sophie');
       } catch (e) {
         console.error('Error checking voice quiz access:', e);
       } finally {
@@ -175,6 +183,23 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
     };
     checkAccess();
   }, []);
+
+  useEffect(() => {
+    if (!session?.expiresAt) { setSecondsLeft(null); return; }
+    const deadline = Date.now() + (session.remainingSeconds ?? 0) * 1000;
+    const tick = () => setSecondsLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)));
+    tick(); const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [session]);
+
+  useEffect(() => {
+    if (secondsLeft !== 0 || !session || ['processing', 'ai_speaking', 'summary', 'finished'].includes(state)) return;
+    playerRef.current?.stop();
+    if (isRecording) stopRecording();
+    completed.current = true;
+    setError('Les 15 minutes sont écoulées. Vous pouvez consulter le bilan puis démarrer une nouvelle session.');
+    setState('finished');
+  }, [secondsLeft, session, state, isRecording, stopRecording]);
 
   // Monitor recorder error
   useEffect(() => {
@@ -233,7 +258,9 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       };
       if (chapterNumber) request.chapterNumber = parseInt(chapterNumber);
 
-      const response = await startVoiceQuizSession(request);
+      const current = recoverable ? await getCurrentVoiceSession() : null;
+      const response = current || await startVoiceQuizSession(request);
+      setRecoverable(null);
       setSession(response);
       setCurrentQuestion(response.question);
       setState('ai_speaking');
@@ -247,7 +274,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       }
 
     } catch (err) {
-      setError("Impossible de démarrer la conversation.");
+      setError((err as any)?.response?.data?.message || (err as Error)?.message || "Impossible de démarrer la conversation.");
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -277,6 +304,10 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
     setSession(null);
     setCurrentQuestion(null);
     setSummary(null);
+    Promise.all([checkVoiceQuizAccess(), getCurrentVoiceSession()]).then(([access, current]) => {
+      setAccessInfo(access); setRecoverable(current);
+      if (current) clearPendingAi('sophie');
+    }).catch(() => setError('Impossible de vérifier la reprise. Réessayez.'));
   };
 
   // Terminate conversation and show summary
@@ -340,10 +371,10 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       }
     }).catch((error: unknown) => {
       if (cancelled) return;
-      const failure = error as { response?: { data?: { message?: string } }; message?: string };
+      const failure = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
       setError(failure.response?.data?.message || failure.message
         || 'L’analyse est indisponible. Votre enregistrement est conservé.');
-      setState('retry_analysis');
+      setState(failure.response?.status === 410 ? 'finished' : 'retry_analysis');
     });
     return () => { cancelled = true; };
   }, [state, audioBlob, session, currentQuestion, resetRecording, playAudioSequence]);
@@ -381,7 +412,8 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
           <div className="mx-auto mb-6">
             <VoiceOrb mode="idle" />
           </div>
-          <CardTitle className="text-3xl font-light">Assistant Vocal</CardTitle>
+          <CardTitle className="text-3xl font-light">Sophie</CardTitle>
+          {recoverable && <p className="text-primary">Votre conversation en cours sera reprise sans nouveau débit.</p>}
           <p className="text-muted-foreground">Conversation interactive avec l'IA</p>
         </CardHeader>
         <CardContent className="space-y-6 pb-10">
@@ -392,7 +424,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm font-medium">
-                    {accessInfo.limit === -1 ? 'Accès illimité' : `Utilisation ce mois`}
+                    {accessInfo.limit === -1 ? 'Accès illimité' : `Allocation sans expiration`}
                   </span>
                 </div>
                 <Badge variant={accessInfo.canUse ? "default" : "secondary"} className="text-xs">
@@ -405,7 +437,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
               </div>
               {accessInfo.limit !== -1 && accessInfo.remaining > 0 && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  Il vous reste {accessInfo.remaining} session{accessInfo.remaining > 1 ? 's' : ''} ce mois-ci
+                  Il vous reste {accessInfo.remaining} session{accessInfo.remaining > 1 ? 's' : ''} sans expiration
                   {accessInfo.maxMinutes > 0 && ` (max ${accessInfo.maxMinutes} min/session)`}
                 </p>
               )}
@@ -443,14 +475,14 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             onClick={handleStart}
             size="lg"
             className="w-full h-14 text-lg rounded-full"
-            disabled={isLoading || !isSupported || (!propThematicGroup && !selectedThematicGroup) || loadingAccess || (accessInfo && !accessInfo.canUse)}
+            disabled={isLoading || !isSupported || (!propThematicGroup && !selectedThematicGroup) || loadingAccess || (accessInfo && !accessInfo.canUse && !recoverable)}
           >
             {loadingAccess ? (
               <>
                 <Loader2 className="animate-spin mr-2" />
                 Vérification...
               </>
-            ) : accessInfo && !accessInfo.canUse ? (
+            ) : accessInfo && !accessInfo.canUse && !recoverable ? (
               <>
                 <AlertCircle className="mr-2" />
                 Limite atteinte
@@ -463,7 +495,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             ) : (
               <>
                 <Mic className="mr-2" />
-                Commencer la conversation
+                {recoverable ? 'Reprendre la conversation' : 'Commencer la conversation'}
               </>
             )}
           </Button>
@@ -545,7 +577,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             key={displayedText.substring(0, 30)}
           >
             <p className="text-lg md:text-xl text-foreground font-medium leading-relaxed">
-              {displayedText}
+              {secondsLeft !== null && <span className="block text-sm font-medium mb-2" role="timer">Temps restant : {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}{secondsLeft <= 120 && secondsLeft > 0 ? ' · Votre session se termine bientôt' : ''}</span>}{displayedText}
             </p>
           </motion.div>
         )}

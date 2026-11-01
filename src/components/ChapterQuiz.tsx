@@ -1,3 +1,4 @@
+import { AllowanceStatus } from '@/components/AllowanceStatus';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -233,7 +234,7 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm font-medium">
-                    {accessInfo.limit === -1 ? 'Accès illimité' : `Utilisation ce mois`}
+                    {accessInfo.limit === -1 ? 'Accès illimité' : `Allocation sans expiration`}
                   </span>
                 </div>
                 <Badge variant={accessInfo.canUse ? "default" : "secondary"} className="text-xs">
@@ -246,7 +247,7 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
               </div>
               {accessInfo.limit !== -1 && accessInfo.remaining > 0 && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  Il vous reste {accessInfo.remaining} quiz ce mois-ci
+                  Il vous reste {accessInfo.remaining} quiz sans expiration
                 </p>
               )}
               {!accessInfo.canUse && accessInfo.message && (
@@ -291,7 +292,7 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
             onClick={handleStartQuiz} 
             size="lg" 
             className="w-full"
-            disabled={loadingAccess || (accessInfo && !accessInfo.canUse && !canRecoverQuiz)}
+            disabled={loadingAccess}
           >
             {loadingAccess ? (
               <>
@@ -301,7 +302,7 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
             ) : accessInfo && !accessInfo.canUse && !canRecoverQuiz ? (
               <>
                 <AlertCircle className="w-5 h-5 mr-2" />
-                Limite atteinte
+                Vérifier ou reprendre un exercice
               </>
             ) : (
               <>

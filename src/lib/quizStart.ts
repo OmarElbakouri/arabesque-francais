@@ -46,7 +46,7 @@ export function getQuizStartErrorMessage(error: unknown): string {
   }
   if (status === 401) return 'Votre session a expiré. Veuillez vous reconnecter.';
   if (status === 403) return backendMessage || 'Votre accès au quiz a été refusé. Reconnectez-vous puis réessayez.';
-  if (status === 429) return 'Trop de demandes en même temps. Patientez un instant puis réessayez.';
+  if (status === 429) return backendMessage || 'Limite quotidienne atteinte. Réessayez demain.';
   if (status === 502 || status === 503) {
     return backendMessage || 'Le service des quiz est temporairement indisponible. Veuillez réessayer.';
   }

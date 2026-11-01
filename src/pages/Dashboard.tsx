@@ -1,3 +1,4 @@
+import { AllowanceStatus } from '@/components/AllowanceStatus';
 import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, Award, Target, TrendingUp, Coins, Crown, Briefcase, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -314,23 +315,12 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Crédits actuels</span>
-                  <span className="text-2xl font-bold text-primary">{credits.currentCredits}</span>
-                </div>
-                {credits.monthlyLimit && (
-                  <>
-                    <Progress 
-                      value={(credits.currentCredits / credits.monthlyLimit) * 100} 
-                      className="h-2"
-                    />
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Utilisés: {credits.usedCredits}</span>
-                      <span className="text-gray-500">Limite mensuelle: {credits.monthlyLimit}</span>
-                    </div>
-                  </>
-                )}
+              <div className="grid gap-4 md:grid-cols-3">
+                {Object.entries(credits.allowances || {}).map(([feature, info]) => <div key={feature} className="rounded-lg border p-4">
+                  <p className="font-semibold mb-2">{{ voice_quiz: 'Sophie · 15 minutes', quiz_ia: 'Exercices écrits et vocaux', chatbot: 'Messages du chatbot' }[feature] || feature}</p>
+                  <AllowanceStatus info={info} />
+                </div>)}
+                {!credits.allowances && <p>Ouvrez votre activité pour consulter son allocation.</p>}
               </div>
             </CardContent>
           </Card>

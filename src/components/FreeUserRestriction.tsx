@@ -34,7 +34,7 @@ export const FreeUserRestriction = ({ featureName }: FreeUserRestrictionProps) =
               </li>
               <li className="flex items-center gap-2">
                 <ArrowRight className="h-4 w-4 text-primary" />
-                30 نقطة ذكاء اصطناعي شهرياً
+                أرصدة ذكاء اصطناعي بدون انتهاء
               </li>
               <li className="flex items-center gap-2">
                 <ArrowRight className="h-4 w-4 text-primary" />
@@ -60,7 +60,7 @@ export const FreeUserRestriction = ({ featureName }: FreeUserRestrictionProps) =
               </li>
               <li className="flex items-center gap-2">
                 <ArrowRight className="h-4 w-4 text-secondary" />
-                نقاط ذكاء اصطناعي غير محدودة
+                أرصدة إضافية بدون انتهاء
               </li>
               <li className="flex items-center gap-2">
                 <ArrowRight className="h-4 w-4 text-secondary" />

@@ -1,3 +1,4 @@
+import { AllowanceStatus } from '@/components/AllowanceStatus';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -352,7 +353,7 @@ export default function VocalExercise({ chapterId, chapterTitle, thematicGroup =
                                 <div className="flex items-center gap-2">
                                     <Target className="w-4 h-4 text-muted-foreground" />
                                     <span className="text-sm font-medium">
-                                        {accessInfo.limit === -1 ? 'Accès illimité' : `Utilisation ce mois`}
+                                        {accessInfo.limit === -1 ? 'Accès illimité' : `Allocation sans expiration`}
                                     </span>
                                 </div>
                                 <Badge variant={accessInfo.canUse ? "default" : "secondary"} className="text-xs">
@@ -365,7 +366,7 @@ export default function VocalExercise({ chapterId, chapterTitle, thematicGroup =
                             </div>
                             {accessInfo.limit !== -1 && accessInfo.remaining > 0 && (
                                 <p className="text-xs text-muted-foreground mt-2">
-                                    Il vous reste {accessInfo.remaining} exercice(s) ce mois-ci
+                                    Il vous reste {accessInfo.remaining} exercice(s) sans expiration
                                 </p>
                             )}
                             {!accessInfo.canUse && accessInfo.message && (
@@ -417,7 +418,7 @@ export default function VocalExercise({ chapterId, chapterTitle, thematicGroup =
                         onClick={handleStartQuiz}
                         size="lg"
                         className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                        disabled={loadingAccess || (accessInfo && !accessInfo.canUse && !canRecoverQuiz) || !isVoiceSupported}
+                        disabled={loadingAccess || !isVoiceSupported}
                     >
                         {loadingAccess ? (
                             <>
@@ -427,7 +428,7 @@ export default function VocalExercise({ chapterId, chapterTitle, thematicGroup =
                         ) : accessInfo && !accessInfo.canUse && !canRecoverQuiz ? (
                             <>
                                 <AlertCircle className="w-5 h-5 mr-2" />
-                                Limite atteinte
+                                Vérifier ou reprendre un exercice
                             </>
                         ) : (
                             <>

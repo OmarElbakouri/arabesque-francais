@@ -555,6 +555,14 @@ const OrientationTest = () => {
     const response = await api.get('/orientation-test/level-test/current');
     const questions: LevelTestQuestion[] = Array.isArray(response.data) ? response.data : [];
     if (questions.length === 0) {
+      // The correction may have committed before a refresh interrupted its response.
+      if (readStored<Record<string, string>>(LEVEL_ANSWERS_KEY)) {
+        const saved = await api.get('/orientation-test/level-test/result');
+        if (saved.data?.determinedLevel) {
+          setLevelTestResult(saved.data);
+          return true;
+        }
+      }
       return false;
     }
 
@@ -653,11 +661,21 @@ const OrientationTest = () => {
         title: "Test de niveau",
         description: `${response.data.length} questions pour évaluer votre niveau de français`
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to start level test:', error);
+      if (error.response?.status === 400) {
+        try {
+          const saved = await api.get('/orientation-test/level-test/result');
+          if (saved.data?.determinedLevel) {
+            setLevelTestResult(saved.data);
+            toast({ title: 'Votre résultat', description: error.response?.data?.message });
+            return;
+          }
+        } catch { /* retain the original start error */ }
+      }
       toast({
         title: "Erreur",
-        description: "Impossible de charger le test. Veuillez réessayer.",
+        description: error.response?.data?.message || "Impossible de charger le test. Veuillez réessayer.",
         variant: "destructive"
       });
     } finally {

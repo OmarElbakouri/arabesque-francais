@@ -371,7 +371,7 @@ export async function startQuizSession(
   const flightKey = resumeSessionId ? `${scope}:resume:${resumeSessionId}` : scope;
   const existing = startsInFlight.get(flightKey);
   if (existing) return existing;
-  const recoverExisting = !resumeSessionId && Boolean(pendingQuizStartId(scope));
+  const recoverExisting = !resumeSessionId;
   const startRequestId = resumeSessionId ? undefined : quizStartRequestId(scope);
 
   const request: QuizStartRequest = {
@@ -682,6 +682,8 @@ export async function getQuizStatistics(): Promise<{
 // ============================================
 
 export interface QuizAccessInfo {
+  dailyRemaining?: number;
+  dailyLimit?: number;
   canUse: boolean;
   remaining: number;  // -1 = unlimited
   limit: number;      // -1 = unlimited

@@ -485,16 +485,16 @@ const Index = () => {
                     <li className="pt-4 border-t border-white/10">
                       <div className="flex items-center gap-3 text-gray-400">
                         <Brain className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                        <span>المساعد الذكي (Chatbot) - <span className="text-orange-400 font-bold">محدود</span></span>
+                        <span>Chatbot - <span className="text-orange-400 font-bold">2000 رسالة · 50 يومياً · بدون انتهاء</span></span>
                       </div>
                     </li>
                     <li className="flex items-center gap-3 text-gray-400">
                       <Sparkles className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                      <span>Exercice - <span className="text-orange-400 font-bold">محدود</span></span>
+                      <span>Exercice - <span className="text-orange-400 font-bold">600 مجموعة · 10 يومياً · بدون انتهاء</span></span>
                     </li>
                     <li className="flex items-center gap-3 text-gray-400">
                       <Mic className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                      <span>Communication - <span className="text-orange-400 font-bold">محدود</span></span>
+                      <span>Sophie - <span className="text-orange-400 font-bold">400 جلسة · 7 يومياً · 15 دقيقة · بدون انتهاء</span></span>
                     </li>
                   </ul>
                 </div>
@@ -555,20 +555,20 @@ const Index = () => {
                         <div className="w-5 h-5 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center flex-shrink-0">
                           <Brain className="h-3 w-3 text-white" />
                         </div>
-                        <span className="text-white">المساعد الذكي (Chatbot) - <span className="text-green-400 font-bold">غير محدود ♾️</span></span>
+                        <span className="text-white">Chatbot - <span className="text-green-400 font-bold">5000 رسالة · 100 يومياً · بدون انتهاء</span></span>
                       </div>
                     </li>
                     <li className="flex items-center gap-3">
                       <div className="w-5 h-5 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center flex-shrink-0">
                         <Sparkles className="h-3 w-3 text-white" />
                       </div>
-                      <span className="text-white">Exercice - <span className="text-green-400 font-bold">غير محدود ♾️</span></span>
+                      <span className="text-white">Exercice - <span className="text-green-400 font-bold">1000 مجموعة · 15 يومياً · بدون انتهاء</span></span>
                     </li>
                     <li className="flex items-center gap-3">
                       <div className="w-5 h-5 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center flex-shrink-0">
                         <Mic className="h-3 w-3 text-white" />
                       </div>
-                      <span className="text-white">Communication - <span className="text-green-400 font-bold">غير محدود ♾️</span></span>
+                      <span className="text-white">Sophie - <span className="text-green-400 font-bold">600 جلسة · 10 يومياً · 15 دقيقة · بدون انتهاء</span></span>
                     </li>
                   </ul>
                 </div>
@@ -911,7 +911,7 @@ const Index = () => {
               },
               {
                 question: "ما الفرق بين الاشتراك البريميوم والـ VIP؟",
-                answer: "البريميوم يمنحك الوصول الكامل للدروس و400 رصيد AI شهرياً. أما VIP فيضيف 1000 رصيد AI، 600 تدريب صوتي، جلسات فردية، ومجموعة خاصة."
+                answer: "NORMAL يشمل 400 جلسة Sophie و600 مجموعة تمارين و2000 رسالة. VIP يشمل 600 جلسة و1000 مجموعة و5000 رسالة. الأرصدة لا تنتهي. جلسة Sophie حتى 15 دقيقة، بحد 7 يومياً لـ NORMAL و10 لـ VIP."
               },
 
               {

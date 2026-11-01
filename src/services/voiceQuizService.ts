@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { postAiOnce } from '@/lib/aiRequest';
 
 // ============================================
 // TYPES
@@ -19,6 +20,8 @@ export interface VoiceQuizQuestion {
 }
 
 export interface VoiceQuizSessionResponse {
+  expiresAt?: string;
+  remainingSeconds?: number;
   sessionId: number;
   totalQuestions: number;
   currentQuestionIndex: number;
@@ -220,7 +223,7 @@ export async function startVoiceQuizSession(
     };
   }
 
-  const response = await api.post('/voice-quiz/start', request);
+  const response = await postAiOnce('sophie', '/voice-quiz/start', { ...request });
   const apiResponse = response.data;
   
   console.log('Voice Quiz API response:', apiResponse);
@@ -231,7 +234,15 @@ export async function startVoiceQuizSession(
   }
   
   // Extract from ApiResponse wrapper
-  const data = apiResponse.data;
+  return mapVoiceSession(apiResponse.data);
+}
+
+export async function getCurrentVoiceSession(): Promise<VoiceQuizSessionResponse | null> {
+  const response = await api.get('/voice-quiz/current');
+  return response.data?.data ? mapVoiceSession(response.data.data) : null;
+}
+
+function mapVoiceSession(data: any): VoiceQuizSessionResponse {
   
   console.log('Voice Quiz data:', data);
   console.log('Voice Quiz currentQuestion:', data.currentQuestion);
@@ -240,6 +251,8 @@ export async function startVoiceQuizSession(
   // Backend returns: currentQuestion, allQuestions, totalQuestions, etc.
   const mappedResponse: VoiceQuizSessionResponse = {
     sessionId: data.sessionId,
+    expiresAt: data.expiresAt,
+    remainingSeconds: data.remainingSeconds,
     totalQuestions: data.totalQuestions || data.allQuestions?.length || 10,
     currentQuestionIndex: data.currentQuestionIndex || 0,
     question: data.currentQuestion ? {
@@ -257,6 +270,7 @@ export async function startVoiceQuizSession(
   
   return mappedResponse;
 }
+
 
 // Convert Blob to Base64
 async function blobToBase64(blob: Blob): Promise<string> {
@@ -458,6 +472,8 @@ export async function getSessionSummary(sessionId: number): Promise<SessionSumma
 // ============================================
 
 export interface VoiceQuizAccessInfo {
+  dailyRemaining?: number;
+  dailyLimit?: number;
   canUse: boolean;
   remaining: number;  // -1 = unlimited
   limit: number;      // -1 = unlimited

@@ -10,7 +10,7 @@ const { VoiceTurnSubmission } = await import(compile(await readFile(
   new URL('../src/lib/voiceTurnSubmission.ts', import.meta.url), 'utf8')));
 const source = (await readFile(new URL('../src/services/voiceQuizService.ts', import.meta.url), 'utf8'))
   .replace("import api from '@/lib/api';", 'const api = { post: (...args) => globalThis.voiceTestApi.post(...args) };');
-const service = await import(compile(source));
+const service = await import(compile(source.replace("import { postAiOnce } from '@/lib/aiRequest';", "const postAiOnce = (_feature, ...args) => api.post(...args);")));
 const recording = () => ({ sessionId: 41, questionId: 0, audioBlob: new Blob(['synthetic audio']), audioFormat: 'webm' });
 const success = (extra = {}) => ({ data: { success: true, data: {
   sessionId: 41, questionId: 0, correct: true, partiallyCorrect: false,

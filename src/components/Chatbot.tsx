@@ -1,3 +1,5 @@
+import { AllowanceStatus } from '@/components/AllowanceStatus';
+import { pendingAiRequest, retryPendingAi } from '@/lib/aiRequest';
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Loader2, Sparkles, AlertCircle, Target, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,6 +34,7 @@ export function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasPending, setHasPending] = useState(false);
   const [accessInfo, setAccessInfo] = useState<ChatbotAccessInfo | null>(null);
   const [loadingAccess, setLoadingAccess] = useState(false);
   const [activeQuiz, setActiveQuiz] = useState<{ quiz: MiniQuiz; currentQuestion: number; score: number } | null>(null);
@@ -43,6 +46,7 @@ export function Chatbot() {
     try {
       const info = await checkChatbotAccess();
       setAccessInfo(info);
+      setHasPending(Boolean(pendingAiRequest('chatbot')));
 
       // Add welcome message if no messages
       if (messages.length === 0) {
@@ -81,13 +85,34 @@ export function Chatbot() {
     }
   }, [isOpen]);
 
+  const handleRetry = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      const pending = pendingAiRequest('chatbot');
+      const response = await retryPendingAi('chatbot');
+      const data = response?.data?.data;
+      if (data?.quiz) {
+        setActiveQuiz({ quiz: data.quiz, currentQuestion: 0, score: 0 });
+        setMessages(prev => [...prev, { id: `quiz-${Date.now()}`, role: 'assistant',
+          content: data.quiz.title, isQuiz: true, quiz: data.quiz }]);
+      } else if (data?.reply) {
+        setMessages(prev => [...prev, { id: `recovered-${Date.now()}`, role: 'assistant',
+          content: data.reply }]);
+      }
+      setAccessInfo(await checkChatbotAccess());
+    } catch (error: any) {
+      toast({ title: 'Reprise en attente', description: error.response?.data?.message || error.message });
+    } finally { setIsLoading(false); setHasPending(Boolean(pendingAiRequest('chatbot'))); }
+  };
+
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading || hasPending) return;
 
     if (!accessInfo?.canUse) {
       toast({
         title: "Accès limité",
-        description: accessInfo?.message || "Vous avez atteint votre limite mensuelle",
+        description: accessInfo?.message || "Votre allocation ou votre limite quotidienne est atteinte",
         variant: "destructive"
       });
       return;
@@ -148,11 +173,12 @@ export function Chatbot() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setHasPending(Boolean(pendingAiRequest('chatbot')));
     }
   };
 
   const handleGenerateQuiz = async () => {
-    if (!accessInfo?.canUse || isLoading) return;
+    if (!accessInfo?.canUse || isLoading || hasPending) return;
 
     setIsLoading(true);
 
@@ -199,6 +225,7 @@ export function Chatbot() {
       });
     } finally {
       setIsLoading(false);
+      setHasPending(Boolean(pendingAiRequest('chatbot')));
     }
   };
 
@@ -327,6 +354,8 @@ export function Chatbot() {
               </Button>
             </div>
 
+            {accessInfo && <AllowanceStatus info={accessInfo} />}
+            {hasPending && <Button variant="outline" onClick={handleRetry} disabled={isLoading}>Reprendre la réponse en attente · sans nouveau débit</Button>}
             {/* Usage indicator */}
             {!loadingAccess && accessInfo && (
               <div className={`mt-2 flex items-center gap-2 text-xs ${accessInfo.canUse ? 'text-green-600' : 'text-orange-600'}`}>

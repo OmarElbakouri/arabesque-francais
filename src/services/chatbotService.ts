@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { postAiOnce } from '@/lib/aiRequest';
 
 // Enable mock mode for testing without backend
 const MOCK_MODE = false;
@@ -14,6 +15,8 @@ export interface ChatMessage {
 }
 
 export interface ChatbotAccessInfo {
+  dailyRemaining?: number;
+  dailyLimit?: number;
   canUse: boolean;
   remaining: number;
   limit: number;
@@ -161,9 +164,9 @@ export async function sendChatMessage(
   }
 
   try {
-    const response = await api.post('/chatbot/message', {
+    const response = await postAiOnce('chatbot', '/chatbot/message', {
       message,
-      conversationHistory: conversationHistory.map(msg => ({
+      conversationHistory: conversationHistory.slice(-10).map(msg => ({
         role: msg.role,
         content: msg.content
       })),
@@ -213,7 +216,7 @@ export async function generateMiniQuiz(
   }
   
   try {
-    const response = await api.post('/chatbot/mini-quiz', {
+    const response = await postAiOnce('chatbot', '/chatbot/mini-quiz', {
       topic,
       difficulty
     });

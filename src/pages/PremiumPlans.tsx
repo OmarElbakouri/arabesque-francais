@@ -78,10 +78,11 @@ export default function PremiumPlans() {
         "التمرن على التحدث بالفرنسية",
     ];
 
+    // All package balances are non-expiring; daily caps do not roll over.
     const aiFeatures = [
-        { name: "المساعد الذكي (Chatbot)", icon: Brain, normalLimit: 30, vipLimit: "غير محدود ♾️" },
-        { name: "Exercice", icon: Sparkles, normalLimit: 50, vipLimit: 100 },
-        { name: "Communication", icon: Mic, normalLimit: 15, vipLimit: 100 },
+        { name: "Chatbot · بدون انتهاء", icon: Brain, normalLimit: "2000 رسالة · 50 يومياً", vipLimit: "5000 رسالة · 100 يومياً" },
+        { name: "تمارين كتابية وصوتية · بدون انتهاء", icon: Sparkles, normalLimit: "600 مجموعة · 10 يومياً", vipLimit: "1000 مجموعة · 15 يومياً" },
+        { name: "Sophie · 15 دقيقة · بدون انتهاء", icon: Mic, normalLimit: "400 جلسة · 7 يومياً", vipLimit: "600 جلسة · 10 يومياً" },
     ];
 
 

@@ -48,13 +48,13 @@ test('a lost response retries with the same ID and a 90-second startup timeout',
   assert.equal(recovered.sessionId, '17');
   assert.equal(recovered.resumedFromSaved, true);
   assert.equal(calls[0][1].startRequestId, calls[1][1].startRequestId);
-  assert.equal(calls[0][1].recoverExisting, false);
+  assert.equal(calls[0][1].recoverExisting, true);
   assert.equal(calls[1][1].recoverExisting, true);
   assert.equal(calls[0][2].timeout, 90000);
   assert.equal(service.hasPendingQuizStart(1, [5]), false);
   await service.startQuizSession(1, [5]);
   assert.notEqual(calls[2][1].startRequestId, calls[1][1].startRequestId);
-  assert.equal(calls[2][1].recoverExisting, false);
+  assert.equal(calls[2][1].recoverExisting, true);
 });
 
 test('the pending ID survives a fresh module load and stays scoped to account and chapters', async () => {

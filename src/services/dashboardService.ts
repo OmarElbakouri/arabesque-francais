@@ -19,6 +19,7 @@ export interface DashboardResponse {
     enrolledCoursesCount: number;
   };
   credits: {
+    allowances?: Record<string, import("@/components/AllowanceStatus").AllowanceInfo>;
     currentCredits: number;
     usedCredits: number;
     monthlyLimit: number | null;

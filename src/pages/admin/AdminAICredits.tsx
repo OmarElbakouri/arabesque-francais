@@ -1,3 +1,4 @@
+import { AllowanceStatus } from '@/components/AllowanceStatus';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ interface UserCredits {
   utilizationPercent: number;
   lastUpdated: string | null;
   yearMonth: string;
+  allowances?: Record<string, import("@/components/AllowanceStatus").AllowanceInfo>;
   status: 'ACTIF' | 'LIMITE_ATTEINTE';
 }
 
@@ -53,6 +55,11 @@ export default function AdminAICredits() {
   const [stats, setStats] = useState<CreditsStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isResetting, setIsResetting] = useState(false);
+  const [adjustingUser, setAdjustingUser] = useState<UserCredits | null>(null);
+  const [adjustFeature, setAdjustFeature] = useState<'quiz_ia' | 'voice_quiz' | 'chatbot'>('voice_quiz');
+  const [adjustAmount, setAdjustAmount] = useState('');
+  const [adjustReason, setAdjustReason] = useState('');
+  const [adjustRequestId, setAdjustRequestId] = useState('');
 
   // Load data on mount
   useEffect(() => {
@@ -88,11 +95,14 @@ export default function AdminAICredits() {
   const handleResetCredits = async (user: UserCredits) => {
     setIsResetting(true);
     try {
-      await adminService.resetAICredits(user.userId);
+      const amount = Number(adjustAmount);
+      if (!Number.isInteger(amount) || !amount || !adjustReason.trim()) throw new Error('Montant entier et motif requis.');
+      await adminService.adjustAICredits(user.userId, adjustFeature, -amount, adjustReason.trim(), adjustRequestId);
+      setAdjustingUser(null);
       
       toast({
-        title: 'Crédits Réinitialisés',
-        description: `Les crédits de ${user.userName} ont été remis à zéro`,
+        title: 'Allocation ajustée',
+        description: `Les crédits de ${user.userName} ont été ajustés avec historique`,
       });
       
       // Reload data
@@ -101,7 +111,7 @@ export default function AdminAICredits() {
       console.error('Error resetting credits:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de réinitialiser les crédits',
+        description: 'Impossible d’ajuster les crédits',
         variant: 'destructive',
       });
     } finally {
@@ -146,7 +156,7 @@ export default function AdminAICredits() {
         <div>
           <h1 className="text-3xl font-bold">Gestion des Crédits IA</h1>
           <p className="text-muted-foreground mt-1">
-            Suivre et gérer l'utilisation des crédits IA (Quiz IA & Voice Quiz) - {stats?.currentMonth}
+            Suivre et gérer les allocations IA : exercices, Sophie et chatbot — {stats?.currentMonth}
           </p>
         </div>
         <Button onClick={loadData} variant="outline" className="gap-2">
@@ -180,7 +190,7 @@ export default function AdminAICredits() {
             <CardContent className="pt-6">
               <div className="text-center">
                 <p className="text-3xl font-bold">{stats.normalUsers}</p>
-                <p className="text-sm text-muted-foreground">NORMAL (50/15)</p>
+                <p className="text-sm text-muted-foreground">NORMAL (600/400)</p>
               </div>
             </CardContent>
           </Card>
@@ -189,7 +199,7 @@ export default function AdminAICredits() {
             <CardContent className="pt-6">
               <div className="text-center">
                 <p className="text-3xl font-bold text-secondary">{stats.vipUsers}</p>
-                <p className="text-sm text-muted-foreground">VIP (Illimité)</p>
+                <p className="text-sm text-muted-foreground">VIP (1000/600)</p>
               </div>
             </CardContent>
           </Card>
@@ -245,23 +255,23 @@ export default function AdminAICredits() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Badge className="bg-primary text-primary-foreground">NORMAL</Badge>
-              <span className="text-lg">750 DH/mois</span>
+              <span className="text-lg">Sans expiration</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-primary" />
-                <span className="text-sm">Quiz IA par mois</span>
+                <span className="text-sm">Exercices sans expiration</span>
               </div>
-              <span className="font-bold">50 quiz</span>
+              <span className="font-bold">600 séries · 10/jour</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mic className="w-4 h-4 text-primary" />
-                <span className="text-sm">Voice Quiz par mois</span>
+                <span className="text-sm">Sophie sans expiration</span>
               </div>
-              <span className="font-bold">15 sessions</span>
+              <span className="font-bold">400 sessions · 7/jour</span>
             </div>
           </CardContent>
         </Card>
@@ -270,27 +280,38 @@ export default function AdminAICredits() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Badge className="bg-secondary text-secondary-foreground">VIP</Badge>
-              <span className="text-lg">1000 DH/mois</span>
+              <span className="text-lg">Sans expiration</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-secondary" />
-                <span className="text-sm">Quiz IA par mois</span>
+                <span className="text-sm">Exercices sans expiration</span>
               </div>
-              <span className="font-bold">Illimité ∞</span>
+              <span className="font-bold">1000 séries · 15/jour</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mic className="w-4 h-4 text-secondary" />
-                <span className="text-sm">Voice Quiz par mois</span>
+                <span className="text-sm">Sophie sans expiration</span>
               </div>
-              <span className="font-bold">Illimité ∞</span>
+              <span className="font-bold">600 sessions · 10/jour</span>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {adjustingUser && <Card><CardHeader><CardTitle>Ajuster l’allocation de {adjustingUser.userName}</CardTitle></CardHeader><CardContent className="space-y-3">
+        <select aria-label="Service IA" className="border rounded p-2" value={adjustFeature} onChange={e => setAdjustFeature(e.target.value as typeof adjustFeature)} disabled={isResetting}>
+          <option value="voice_quiz">Sophie</option><option value="quiz_ia">Exercices</option><option value="chatbot">Chatbot</option>
+        </select>
+        {adjustingUser.allowances?.[adjustFeature] && <AllowanceStatus info={adjustingUser.allowances[adjustFeature]} />}
+        <Input type="number" placeholder="Nombre à ajouter (négatif pour retirer)" value={adjustAmount} onChange={e => { setAdjustAmount(e.target.value); setAdjustRequestId(crypto.randomUUID()); }} disabled={isResetting} />
+        <Input maxLength={255} placeholder="Motif obligatoire" value={adjustReason} onChange={e => { setAdjustReason(e.target.value); setAdjustRequestId(crypto.randomUUID()); }} disabled={isResetting} />
+        <Button onClick={() => handleResetCredits(adjustingUser)} disabled={isResetting || !adjustReason.trim() || !adjustAmount}>Enregistrer l’ajustement</Button>
+        <Button variant="ghost" onClick={() => setAdjustingUser(null)} disabled={isResetting}>Annuler</Button>
+      </CardContent></Card>}
 
       {/* Search */}
       <Card>
@@ -317,9 +338,10 @@ export default function AdminAICredits() {
                   <TableHead>Utilisateur</TableHead>
                   <TableHead>Plan</TableHead>
                   <TableHead>Quiz IA</TableHead>
-                  <TableHead>Voice Quiz</TableHead>
+                  <TableHead>Sophie</TableHead>
+                  <TableHead>Chatbot</TableHead>
                   <TableHead>Utilisation</TableHead>
-                  <TableHead>Mois</TableHead>
+                  <TableHead>Validité</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -327,7 +349,7 @@ export default function AdminAICredits() {
               <TableBody>
                 {filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       {searchTerm ? 'Aucun utilisateur trouvé' : 'Aucun utilisateur avec des crédits IA'}
                     </TableCell>
                   </TableRow>
@@ -374,6 +396,9 @@ export default function AdminAICredits() {
                         </div>
                       </TableCell>
                       <TableCell>
+                        {user.allowances?.chatbot && <AllowanceStatus info={user.allowances.chatbot} />}
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium">{user.utilizationPercent}%</span>
                           <TrendingUp
@@ -403,10 +428,10 @@ export default function AdminAICredits() {
                           variant="ghost"
                           className="gap-1 text-destructive"
                           disabled={isResetting}
-                          onClick={() => handleResetCredits(user)}
+                          onClick={() => { setAdjustingUser(user); setAdjustAmount(''); setAdjustReason(''); setAdjustRequestId(crypto.randomUUID()); }}
                         >
                           <RotateCcw className="w-3 h-3" />
-                          Reset
+                          Ajuster
                         </Button>
                       </TableCell>
                     </TableRow>

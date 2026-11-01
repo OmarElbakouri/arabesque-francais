@@ -1035,10 +1035,10 @@ export const adminService = {
   },
 
   // Adjust user's AI credits
-  adjustAICredits: async (userId: number, creditType: 'quiz_ia' | 'voice_quiz', adjustment: number) => {
+  adjustAICredits: async (userId: number, creditType: 'quiz_ia' | 'voice_quiz' | 'chatbot', adjustment: number, reason: string, requestId: string) => {
     const response = await api.put(`/admin/credits/${userId}/adjust`, {
       creditType,
-      adjustment
+      adjustment, reason, requestId
     });
     return response.data.data;
   },
