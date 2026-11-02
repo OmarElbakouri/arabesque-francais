@@ -190,7 +190,7 @@ export default function AdminAICredits() {
             <CardContent className="pt-6">
               <div className="text-center">
                 <p className="text-3xl font-bold">{stats.normalUsers}</p>
-                <p className="text-sm text-muted-foreground">NORMAL (600/400)</p>
+                <p className="text-sm text-muted-foreground">NORMAL (600/80)</p>
               </div>
             </CardContent>
           </Card>
@@ -271,7 +271,7 @@ export default function AdminAICredits() {
                 <Mic className="w-4 h-4 text-primary" />
                 <span className="text-sm">Sophie sans expiration</span>
               </div>
-              <span className="font-bold">400 sessions · 7/jour</span>
+              <span className="font-bold">80 sessions · 2/jour</span>
             </div>
           </CardContent>
         </Card>

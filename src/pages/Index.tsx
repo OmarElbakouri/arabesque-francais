@@ -494,7 +494,7 @@ const Index = () => {
                     </li>
                     <li className="flex items-center gap-3 text-gray-400">
                       <Mic className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                      <span>Sophie - <span className="text-orange-400 font-bold">400 جلسة · 7 يومياً · 15 دقيقة · بدون انتهاء</span></span>
+                      <span>Sophie - <span className="text-orange-400 font-bold">80 جلسة · 2 يومياً · 15 دقيقة · بدون انتهاء</span></span>
                     </li>
                   </ul>
                 </div>
@@ -911,7 +911,7 @@ const Index = () => {
               },
               {
                 question: "ما الفرق بين الاشتراك البريميوم والـ VIP؟",
-                answer: "NORMAL يشمل 400 جلسة Sophie و600 مجموعة تمارين و2000 رسالة. VIP يشمل 600 جلسة و1000 مجموعة و5000 رسالة. الأرصدة لا تنتهي. جلسة Sophie حتى 15 دقيقة، بحد 7 يومياً لـ NORMAL و10 لـ VIP."
+                answer: "NORMAL يشمل 80 جلسة Sophie و600 مجموعة تمارين و2000 رسالة. VIP يشمل 600 جلسة و1000 مجموعة و5000 رسالة. الأرصدة لا تنتهي. جلسة Sophie حتى 15 دقيقة، بحد 2 يومياً لـ NORMAL و10 لـ VIP."
               },
 
               {
