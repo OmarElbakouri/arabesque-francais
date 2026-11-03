@@ -260,6 +260,14 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
 
   // --- Actions ---
 
+  // A conversation left open resumes only in its own chapter. Starting in another chapter or course ends it
+  // (the backend closes it once the new opening exists, and counts it only if the learner had answered).
+  const thematicGroupValue = propThematicGroup || (selectedThematicGroup ? parseInt(selectedThematicGroup) : 1);
+  const requestedChapter = chapterNumber ? parseInt(chapterNumber) : undefined;
+  const isThisChapter = (s: VoiceQuizSessionResponse | null) => !!s
+    && Number(s.thematicGroup) === thematicGroupValue && (s.chapterNumber ?? undefined) === requestedChapter;
+  const resumable = isThisChapter(recoverable) ? recoverable : null;
+
   const handleStart = async () => {
     // Prime the same player that will speak every reply, during this tap.
     playerRef.current?.prime();
@@ -269,14 +277,13 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
     setIsLoading(true);
     setError(null);
     try {
-      const thematicGroupValue = propThematicGroup || (selectedThematicGroup ? parseInt(selectedThematicGroup) : 1);
       const request: { thematicGroup: number; chapterNumber?: number } = {
         thematicGroup: thematicGroupValue
       };
-      if (chapterNumber) request.chapterNumber = parseInt(chapterNumber);
+      if (requestedChapter) request.chapterNumber = requestedChapter;
 
-      const current = recoverable ? await getCurrentVoiceSession() : null;
-      const response = current || await startVoiceQuizSession(request);
+      const current = resumable ? await getCurrentVoiceSession() : null;
+      const response = (isThisChapter(current) ? current : null) || await startVoiceQuizSession(request);
       setRecoverable(null);
       setSession(response);
       setCurrentQuestion(response.question);
@@ -443,7 +450,10 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             ) : <VoiceOrb mode="idle" />}
           </div>
           <CardTitle className="text-3xl font-light">{TUTOR_NAME}</CardTitle>
-          {recoverable && <p className="text-primary">Votre conversation en cours sera reprise sans nouveau débit.</p>}
+          {resumable && <p className="text-primary">Votre conversation en cours sera reprise sans nouveau débit.</p>}
+          {recoverable && !resumable && (
+            <p className="text-muted-foreground">Une conversation est encore ouverte dans un autre chapitre. En commencer une ici la terminera.</p>
+          )}
           <p className="text-muted-foreground">Conversation interactive avec l'IA</p>
         </CardHeader>
         <CardContent className="space-y-6 pb-10">
@@ -505,14 +515,14 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             onClick={handleStart}
             size="lg"
             className="w-full h-14 text-lg rounded-full"
-            disabled={isLoading || !isSupported || (!propThematicGroup && !selectedThematicGroup) || loadingAccess || (accessInfo && !accessInfo.canUse && !recoverable)}
+            disabled={isLoading || !isSupported || (!propThematicGroup && !selectedThematicGroup) || loadingAccess || (accessInfo && !accessInfo.canUse && !resumable)}
           >
             {loadingAccess ? (
               <>
                 <Loader2 className="animate-spin mr-2" />
                 Vérification...
               </>
-            ) : accessInfo && !accessInfo.canUse && !recoverable ? (
+            ) : accessInfo && !accessInfo.canUse && !resumable ? (
               <>
                 <AlertCircle className="mr-2" />
                 Limite atteinte
@@ -525,7 +535,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             ) : (
               <>
                 <Mic className="mr-2" />
-                {recoverable ? 'Reprendre la conversation' : 'Commencer la conversation'}
+                {resumable ? 'Reprendre la conversation' : 'Commencer la conversation'}
               </>
             )}
           </Button>
