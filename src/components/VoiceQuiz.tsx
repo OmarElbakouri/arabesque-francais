@@ -157,6 +157,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   // Audio
   const [speech, setSpeech] = useState<SophieSpeech>(null);
   const [cheer, setCheer] = useState(false);
+  const [ending, setEnding] = useState(false);
   const playerRef = useRef<SophieAudioPlayer | null>(null);
   if (!playerRef.current) {
     playerRef.current = new SophieAudioPlayer((status) => {
@@ -336,11 +337,13 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
 
   // Terminate conversation and show summary
   const handleEndConversation = async () => {
+    if (ending) return;
     submission.current.clear();
     playerRef.current?.stop();
     resetRecording();
 
     if (session) {
+      setEnding(true);
       try {
         const summaryData = await getSessionSummary(session.sessionId);
         setSummary(summaryData);
@@ -352,6 +355,8 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
         console.error("Failed to get summary", err);
         // Fallback to start screen
         handleExit();
+      } finally {
+        setEnding(false);
       }
     } else {
       handleExit();
@@ -599,8 +604,9 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
         </>
       )}
       <Button variant="outline" className="absolute top-4 left-4" onClick={handleEndConversation}
-        disabled={state === 'processing' || state === 'recording'}>
-        {state === 'finished' ? 'Voir le bilan' : 'Terminer la conversation'}
+        disabled={ending || state === 'processing' || state === 'recording'} aria-busy={ending}>
+        {ending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {ending ? 'Préparation du bilan…' : state === 'finished' ? 'Voir le bilan' : 'Terminer la conversation'}
       </Button>
       {/* Exit Button */}
       <Button
