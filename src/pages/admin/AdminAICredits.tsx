@@ -18,6 +18,7 @@ import { Search, MessageSquare, Mic, TrendingUp, RefreshCw, RotateCcw, Loader2 }
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/adminService';
 
+import { TUTOR_NAME } from '@/lib/sophieStage';
 interface UserCredits {
   userId: number;
   userName: string;
@@ -156,7 +157,7 @@ export default function AdminAICredits() {
         <div>
           <h1 className="text-3xl font-bold">Gestion des Crédits IA</h1>
           <p className="text-muted-foreground mt-1">
-            Suivre et gérer les allocations IA : exercices, Sophie et chatbot — {stats?.currentMonth}
+            Suivre et gérer les allocations IA : exercices, {TUTOR_NAME} et chatbot — {stats?.currentMonth}
           </p>
         </div>
         <Button onClick={loadData} variant="outline" className="gap-2">
@@ -269,7 +270,7 @@ export default function AdminAICredits() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mic className="w-4 h-4 text-primary" />
-                <span className="text-sm">Sophie sans expiration</span>
+                <span className="text-sm">{TUTOR_NAME} sans expiration</span>
               </div>
               <span className="font-bold">80 sessions · 2/jour</span>
             </div>
@@ -294,7 +295,7 @@ export default function AdminAICredits() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mic className="w-4 h-4 text-secondary" />
-                <span className="text-sm">Sophie sans expiration</span>
+                <span className="text-sm">{TUTOR_NAME} sans expiration</span>
               </div>
               <span className="font-bold">600 sessions · 10/jour</span>
             </div>
@@ -304,7 +305,7 @@ export default function AdminAICredits() {
 
       {adjustingUser && <Card><CardHeader><CardTitle>Ajuster l’allocation de {adjustingUser.userName}</CardTitle></CardHeader><CardContent className="space-y-3">
         <select aria-label="Service IA" className="border rounded p-2" value={adjustFeature} onChange={e => setAdjustFeature(e.target.value as typeof adjustFeature)} disabled={isResetting}>
-          <option value="voice_quiz">Sophie</option><option value="quiz_ia">Exercices</option><option value="chatbot">Chatbot</option>
+          <option value="voice_quiz">{TUTOR_NAME}</option><option value="quiz_ia">Exercices</option><option value="chatbot">Chatbot</option>
         </select>
         {adjustingUser.allowances?.[adjustFeature] && <AllowanceStatus info={adjustingUser.allowances[adjustFeature]} />}
         <Input type="number" placeholder="Nombre à ajouter (négatif pour retirer)" value={adjustAmount} onChange={e => { setAdjustAmount(e.target.value); setAdjustRequestId(crypto.randomUUID()); }} disabled={isResetting} />
@@ -338,7 +339,7 @@ export default function AdminAICredits() {
                   <TableHead>Utilisateur</TableHead>
                   <TableHead>Plan</TableHead>
                   <TableHead>Quiz IA</TableHead>
-                  <TableHead>Sophie</TableHead>
+                  <TableHead>{TUTOR_NAME}</TableHead>
                   <TableHead>Chatbot</TableHead>
                   <TableHead>Utilisation</TableHead>
                   <TableHead>Validité</TableHead>

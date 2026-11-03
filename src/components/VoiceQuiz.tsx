@@ -30,7 +30,11 @@ import {
   VolumeX
 } from 'lucide-react';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
-import { SophieAudioPlayer } from '@/lib/sophieAudioPlayer';
+import { SophieAudioPlayer, type SophieSpeech } from '@/lib/sophieAudioPlayer';
+import type { MouthCue } from '@/lib/sophieLipSync';
+import { ProfessorVideo, type TutorMode } from '@/components/ProfessorVideo';
+import professorPoster from '@/assets/professor-video/poster.jpg';
+import { AVATAR_CAPTION, AVATAR_ENABLED, TUTOR_NAME } from '@/lib/sophieStage';
 import { VoiceTurnSubmission } from '@/lib/voiceTurnSubmission';
 import {
   VoiceQuizQuestion,
@@ -51,6 +55,11 @@ interface VoiceQuizProps {
   chapterTitle?: string;
   thematicGroup?: number;
 }
+
+// The professor's video clips include the classroom, so the avatar always brings its own scene.
+const CLASSROOM = AVATAR_ENABLED;
+// Over the classroom picture, text sits on frosted pills to stay readable.
+const PILL = CLASSROOM ? 'rounded-2xl bg-background/85 px-5 py-3 shadow-sm backdrop-blur-sm' : '';
 
 type ConversationState = 'start' | 'ai_speaking' | 'audio_blocked' | 'user_turn' | 'recording' | 'processing' | 'retry_analysis' | 'finished' | 'summary';
 
@@ -146,12 +155,20 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   const completed = useRef(false);
 
   // Audio
+  const [speech, setSpeech] = useState<SophieSpeech>(null);
+  const [cheer, setCheer] = useState(false);
   const playerRef = useRef<SophieAudioPlayer | null>(null);
   if (!playerRef.current) {
     playerRef.current = new SophieAudioPlayer((status) => {
       setState(status === 'finished' ? (completed.current ? 'finished' : 'user_turn') : status === 'blocked' ? 'audio_blocked' : 'ai_speaking');
-    });
+    }, setSpeech);
   }
+
+  useEffect(() => {
+    if (!cheer) return;
+    const timer = window.setTimeout(() => setCheer(false), 1800);
+    return () => window.clearTimeout(timer);
+  }, [cheer]);
 
   // Recording
   const {
@@ -233,8 +250,8 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
   }, [audioBlob]);
 
   // --- Audio Playback Logic ---
-  const playAudioSequence = useCallback((base64List: string[]) => {
-    playerRef.current?.play(base64List);
+  const playAudioSequence = useCallback((base64List: string[], cues: (MouthCue[] | null | undefined)[] = []) => {
+    playerRef.current?.play(base64List, cues.map(c => c ?? undefined));
   }, []);
 
   useEffect(() => {
@@ -268,7 +285,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       setDisplayedText(response.question.question || response.question.sentenceWithBlank || '');
 
       if (response.question.audioBase64) {
-        playAudioSequence([response.question.audioBase64!]);
+        playAudioSequence([response.question.audioBase64!], [response.question.audioMouthCues]);
       } else {
         setState('user_turn');
       }
@@ -353,19 +370,21 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       if (cancelled) return;
       setError(null);
       completed.current = response.isLastQuestion;
+      setCheer(response.isCorrect && response.evaluationStatus !== 'NOT_EVALUATED');
       resetRecording();
-      const audio = [];
-      if (response.feedbackAudioBase64) audio.push(response.feedbackAudioBase64);
+      const audio: string[] = [];
+      const cues: (MouthCue[] | null | undefined)[] = [];
+      if (response.feedbackAudioBase64) { audio.push(response.feedbackAudioBase64); cues.push(response.feedbackMouthCues); }
       if (response.isLastQuestion) {
         setDisplayedText(response.feedbackText || 'Merci pour cette conversation !');
       } else if (response.nextQuestion) {
         setCurrentQuestion(response.nextQuestion);
         setDisplayedText(response.nextQuestion.question || response.nextQuestion.sentenceWithBlank || '');
-        if (response.nextQuestion.audioBase64) audio.push(response.nextQuestion.audioBase64);
+        if (response.nextQuestion.audioBase64) { audio.push(response.nextQuestion.audioBase64); cues.push(response.nextQuestion.audioMouthCues); }
       }
       if (audio.length) {
         setState('ai_speaking');
-        playAudioSequence(audio);
+        playAudioSequence(audio, cues);
       } else {
         setState(response.isLastQuestion ? 'finished' : 'user_turn');
       }
@@ -390,10 +409,16 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
     }
   };
 
+  const getAvatarMode = (): TutorMode => {
+    if (state === 'recording') return 'listening';
+    if (state === 'processing') return 'thinking';
+    return cheer ? 'encouraging' : 'idle';
+  };
+
   const getStatusText = () => {
     switch (state) {
       case 'ai_speaking': return "L'IA parle...";
-      case 'audio_blocked': return "Appuyez pour écouter Sophie";
+      case 'audio_blocked': return `Appuyez pour écouter ${TUTOR_NAME}`;
       case 'user_turn': return "À vous de parler";
       case 'recording': return "Écoute en cours...";
       case 'processing': return "Analyse de votre réponse...";
@@ -410,9 +435,14 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
       <Card className="max-w-md mx-auto border-none shadow-xl bg-gradient-to-b from-background to-secondary/10">
         <CardHeader className="text-center pt-10">
           <div className="mx-auto mb-6">
-            <VoiceOrb mode="idle" />
+            {AVATAR_ENABLED ? (
+              <div className="h-64 w-56 overflow-hidden rounded-[2rem] shadow-xl ring-1 ring-black/5"
+                style={{ background: 'radial-gradient(circle at 50% 35%, #fff8ee 0%, #fde9d2 35%, #c9d6ee 75%, #8fa3c9 100%)' }}>
+                <ProfessorVideo mode="idle" speech={null} focus="face" />
+              </div>
+            ) : <VoiceOrb mode="idle" />}
           </div>
-          <CardTitle className="text-3xl font-light">Sophie</CardTitle>
+          <CardTitle className="text-3xl font-light">{TUTOR_NAME}</CardTitle>
           {recoverable && <p className="text-primary">Votre conversation en cours sera reprise sans nouveau débit.</p>}
           <p className="text-muted-foreground">Conversation interactive avec l'IA</p>
         </CardHeader>
@@ -522,11 +552,19 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             <p className="text-muted-foreground">échanges dans cette conversation</p>
           </div>
 
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           <div className="flex gap-4">
-            <Button onClick={handleStart} variant="default" className="flex-1">
-              <RotateCcw className="mr-2 w-4 h-4" /> Nouvelle conversation
+            <Button onClick={handleStart} variant="default" className="flex-1" disabled={isLoading} aria-busy={isLoading}>
+              {isLoading
+                ? <><Loader2 className="mr-2 w-4 h-4 animate-spin" /> Démarrage…</>
+                : <><RotateCcw className="mr-2 w-4 h-4" /> Nouvelle conversation</>}
             </Button>
-            <Button onClick={handleExit} variant="outline" className="flex-1">
+            <Button onClick={handleExit} variant="outline" className="flex-1" disabled={isLoading}>
               <LogOut className="mr-2 w-4 h-4" /> Quitter
             </Button>
           </div>
@@ -537,7 +575,19 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
 
   // Conversation UI
   return createPortal(
-    <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
+    <div className={`fixed inset-0 z-[100] isolate flex flex-col items-center justify-center ${CLASSROOM ? 'bg-background' : 'bg-background/95 backdrop-blur-sm'}`}>
+      {CLASSROOM && (
+        <>
+          {/* Wide screens: the portrait video stands in the middle over a blurred copy of the classroom. */}
+          <img src={professorPoster} alt="" aria-hidden className="absolute inset-0 -z-10 h-full w-full scale-110 object-cover blur-2xl brightness-90" />
+          <div className="pointer-events-none absolute inset-y-0 left-1/2 w-full max-w-[calc(100dvh*9/16)] -translate-x-1/2">
+            <ProfessorVideo mode={getAvatarMode()} speech={speech} greet />
+          </div>
+          <span className="absolute bottom-3 left-3 rounded-full bg-background/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm">
+            {AVATAR_CAPTION}
+          </span>
+        </>
+      )}
       <Button variant="outline" className="absolute top-4 left-4" onClick={handleEndConversation}
         disabled={state === 'processing' || state === 'recording'}>
         {state === 'finished' ? 'Voir le bilan' : 'Terminer la conversation'}
@@ -553,30 +603,35 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
         <X className="w-6 h-6" />
       </Button>
 
-      {/* Status Text */}
-      <motion.div
-        className="absolute top-20 text-xl font-light tracking-wide text-muted-foreground"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        key={state}
-      >
-        {getStatusText()}
-      </motion.div>
+      {/* Status Text: at the top over the orb; over the video it joins the captions so the face stays clear. */}
+      {!CLASSROOM && (
+        <motion.div dir="ltr" lang="fr" className="absolute top-20 text-xl font-light tracking-wide text-muted-foreground"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={state}>
+          {getStatusText()}
+        </motion.div>
+      )}
 
-      {/* Central Orb + Displayed Text */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-8 px-8 max-w-2xl mx-auto">
-        <VoiceOrb mode={getOrbMode()} />
+      {/* Central Orb + Displayed Text. Over the video, captions sit in the lower part, above the controls.
+          w-full keeps long subtitles wrapping inside the screen instead of widening the column past it. */}
+      <div className={`flex flex-col items-center w-full px-4 sm:px-8 max-w-2xl mx-auto break-words ${CLASSROOM
+        ? 'absolute inset-x-0 bottom-36 justify-end gap-2' : 'flex-1 justify-center gap-8'}`}>
+        {CLASSROOM ? (
+          <motion.div dir="ltr" lang="fr" className="rounded-full bg-background/85 px-4 py-1 text-base font-light tracking-wide text-muted-foreground backdrop-blur-sm"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} key={state}>
+            {getStatusText()}
+          </motion.div>
+        ) : <VoiceOrb mode={getOrbMode()} />}
 
         {/* Subtitle / Speech Text */}
         {displayedText && (state === 'ai_speaking' || state === 'audio_blocked' || state === 'user_turn' || state === 'finished') && (
           <motion.div
-            className="text-center"
+            className={`text-center ${PILL} ${CLASSROOM ? 'max-h-[30dvh] overflow-y-auto' : ''}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             key={displayedText.substring(0, 30)}
           >
-            <p className="text-lg md:text-xl text-foreground font-medium leading-relaxed">
+            <p dir="ltr" lang="fr" className="text-lg md:text-xl text-foreground font-medium leading-relaxed">
               {secondsLeft !== null && <span className="block text-sm font-medium mb-2" role="timer">Temps restant : {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}{secondsLeft <= 120 && secondsLeft > 0 ? ' · Votre session se termine bientôt' : ''}</span>}{displayedText}
             </p>
           </motion.div>
@@ -595,7 +650,7 @@ export default function VoiceQuiz({ chapterId, chapterTitle, thematicGroup: prop
             className="h-auto min-h-14 rounded-full whitespace-normal px-6 py-3"
           >
             <Volume2 className="mr-2 h-5 w-5 shrink-0" />
-            Appuyez pour écouter Sophie
+            Appuyez pour écouter {TUTOR_NAME}
           </Button>
         )}
 

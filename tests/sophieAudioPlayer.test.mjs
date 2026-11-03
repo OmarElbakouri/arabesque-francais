@@ -27,7 +27,9 @@ function setup() {
     load() {}
     removeAttribute() { this.src = ''; }
   };
-  return { player: new SophieAudioPlayer(s => statuses.push(s)), statuses, instances };
+  const speech = [];
+  const player = new SophieAudioPlayer(s => statuses.push(s), s => speech.push(s && s.clip));
+  return { player, statuses, instances, speech };
 }
 
 test('priming and successive replies reuse one audio element', () => {
@@ -101,4 +103,56 @@ test('media errors retain the clip and missing audio finishes without a recovery
   assert.equal(instances[0].played.at(-1), 'data:audio/mpeg;base64,reply');
   player.play([]);
   assert.equal(statuses.at(-1), 'finished');
+});
+
+test('speech is reported only while audio is audibly playing', async () => {
+  const { player, instances, speech } = setup();
+  player.play(['feedback', 'question']);
+  assert.equal(speech.filter(Boolean).length, 0, 'attempting to play is not speaking');
+  instances[0].onplaying();
+  assert.equal(speech.at(-1), 'feedback');
+  instances[0].onwaiting();
+  assert.equal(speech.at(-1), null);
+  instances[0].onplaying();
+  instances[0].onended();
+  assert.equal(speech.at(-1), null);
+  instances[0].onplaying();
+  assert.equal(speech.at(-1), 'question');
+  instances[0].onpause();
+  assert.equal(speech.at(-1), null);
+});
+
+test('speech stops on blocked playback, media errors and exit', async () => {
+  const { player, instances, speech } = setup();
+  player.prime();
+  instances[0].nextPlay = Promise.reject(new DOMException('Blocked', 'NotAllowedError'));
+  player.play(['reply']);
+  await Promise.resolve();
+  assert.equal(speech.at(-1), null);
+  player.retry();
+  instances[0].onplaying();
+  assert.equal(speech.at(-1), 'reply');
+  instances[0].onerror();
+  assert.equal(speech.at(-1), null);
+  player.retry();
+  instances[0].onplaying();
+  const late = instances[0].onplaying;
+  player.stop();
+  assert.equal(speech.at(-1), null);
+  late();
+  assert.equal(speech.at(-1), null, 'late events after exit are ignored');
+});
+
+test('each clip reports its own mouth cues while it plays', () => {
+  const instances = [];
+  globalThis.Audio = class { src = ''; played = []; constructor() { instances.push(this); } play() { this.played.push(this.src); return Promise.resolve(); } pause() {} load() {} removeAttribute() { this.src = ''; } };
+  const reported = [];
+  const player = new SophieAudioPlayer(() => {}, s => reported.push(s && s.cues));
+  const feedbackCues = [{ start: 0, end: 0.3, value: 'B' }];
+  player.play(['', 'feedback', 'question'], [undefined, feedbackCues, undefined]);
+  instances[0].onplaying();
+  assert.equal(reported.at(-1), feedbackCues);
+  instances[0].onended();
+  instances[0].onplaying();
+  assert.equal(reported.at(-1), undefined);
 });

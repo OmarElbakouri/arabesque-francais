@@ -1,12 +1,20 @@
+import type { MouthCue } from './sophieLipSync';
+
 type PlaybackStatus = 'playing' | 'blocked' | 'finished';
+/** Reported only while a clip is audibly playing; null as soon as sound stops. Cues time the mouth shapes. */
+export type SophieSpeech = { audio: HTMLAudioElement; clip: string; cues?: readonly MouthCue[] } | null;
 
 /** Keeps the same media element and preserves unplayed clips when playback fails. */
 export class SophieAudioPlayer {
   private audio: HTMLAudioElement | null = null;
   private queue: string[] = [];
+  private cues: (readonly MouthCue[] | undefined)[] = [];
   private attempt = 0;
 
-  constructor(private readonly onStatus: (status: PlaybackStatus) => void) {}
+  constructor(
+    private readonly onStatus: (status: PlaybackStatus) => void,
+    private readonly onSpeech: (speech: SophieSpeech) => void = () => {},
+  ) {}
 
   private getAudio() {
     this.audio ??= new Audio();
@@ -33,9 +41,12 @@ export class SophieAudioPlayer {
     try { void audio.play().catch(() => {}); } catch { /* Retry with the reply. */ }
   }
 
-  play(clips: string[]) {
+  /** Plays clips in order; cues[i], when given, are the mouth shapes for clips[i]. */
+  play(clips: string[], cues: (readonly MouthCue[] | undefined)[] = []) {
     this.stop();
-    this.queue = clips.filter(Boolean);
+    const kept = clips.map((clip, i) => [clip, cues[i]] as const).filter(([clip]) => Boolean(clip));
+    this.queue = kept.map(([clip]) => clip);
+    this.cues = kept.map(([, cue]) => cue);
     this.playCurrent();
   }
 
@@ -52,19 +63,32 @@ export class SophieAudioPlayer {
     const audio = this.getAudio();
     const attempt = ++this.attempt;
     const active = () => attempt === this.attempt;
-    const blocked = () => {
-      if (active()) this.onStatus('blocked');
+    const clip = this.queue[0];
+    const cues = this.cues[0];
+    const silent = () => {
+      if (active()) this.onSpeech(null);
     };
+    const blocked = () => {
+      if (!active()) return;
+      this.onSpeech(null);
+      this.onStatus('blocked');
+    };
+    audio.onpause = silent;
+    audio.onwaiting = silent;
     audio.onended = () => {
       if (!active()) return;
+      this.onSpeech(null);
       this.queue.shift();
+      this.cues.shift();
       this.playCurrent();
     };
     audio.onerror = blocked;
     audio.onplaying = () => {
-      if (active()) this.onStatus('playing');
+      if (!active()) return;
+      this.onStatus('playing');
+      this.onSpeech({ audio, clip, cues });
     };
-    audio.src = `data:audio/mpeg;base64,${this.queue[0]}`;
+    audio.src = `data:audio/mpeg;base64,${clip}`;
     this.onStatus('playing');
     try {
       void audio.play().catch(blocked);
@@ -76,13 +100,17 @@ export class SophieAudioPlayer {
   stop() {
     ++this.attempt;
     this.queue = [];
+    this.cues = [];
     if (this.audio) {
       this.audio.onended = null;
       this.audio.onerror = null;
       this.audio.onplaying = null;
+      this.audio.onpause = null;
+      this.audio.onwaiting = null;
       this.audio.pause();
       this.audio.removeAttribute('src');
       this.audio.load();
     }
+    this.onSpeech(null);
   }
 }

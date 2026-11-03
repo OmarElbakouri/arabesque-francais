@@ -1,5 +1,6 @@
 import api from '@/lib/api';
 import { postAiOnce } from '@/lib/aiRequest';
+import type { MouthCue } from '@/lib/sophieLipSync';
 
 // ============================================
 // TYPES
@@ -17,6 +18,7 @@ export interface VoiceQuizQuestion {
   difficultyLevel: DifficultyLevel;
   audioBase64?: string | null;
   audioData?: string | null; // Backend uses this name
+  audioMouthCues?: MouthCue[] | null; // lip-sync timing for the audio
 }
 
 export interface VoiceQuizSessionResponse {
@@ -45,6 +47,7 @@ export interface SubmitAnswerResponse {
   confidenceScore: number;
   feedbackText: string;
   feedbackAudioBase64?: string | null;
+  feedbackMouthCues?: MouthCue[] | null;
   explanation: string;
   grammarPoint: string;
   errors: string[];
@@ -262,7 +265,8 @@ function mapVoiceSession(data: any): VoiceQuizSessionResponse {
       hint: data.currentQuestion.hint || '',
       grammarPoint: data.currentQuestion.grammarPoint || '',
       difficultyLevel: data.currentQuestion.difficultyLevel || 'DEBUTANT',
-      audioBase64: data.currentQuestion.audioData || data.currentQuestion.audioBase64
+      audioBase64: data.currentQuestion.audioData || data.currentQuestion.audioBase64,
+      audioMouthCues: data.currentQuestion.audioMouthCues ?? null,
     } : data.allQuestions?.[0]
   };
   
@@ -386,7 +390,8 @@ export async function submitVoiceAnswer(
     hint: data.nextQuestion.hint,
     grammarPoint: data.nextQuestion.grammarPoint,
     difficultyLevel: data.nextQuestion.difficultyLevel || 'DEBUTANT',
-    audioBase64: data.nextQuestion.audioData || data.nextQuestion.audioBase64
+    audioBase64: data.nextQuestion.audioData || data.nextQuestion.audioBase64,
+    audioMouthCues: data.nextQuestion.audioMouthCues ?? null,
   } : null;
   
   const sessionComplete = data.sessionComplete === true || data.isLastQuestion === true || data.isCompleted === true;
@@ -407,6 +412,7 @@ export async function submitVoiceAnswer(
     confidenceScore: data.confidenceScore || 0,
     feedbackText: data.feedbackText || data.feedback || '',
     feedbackAudioBase64: data.feedbackAudioBase64 || data.feedbackAudio || null,
+    feedbackMouthCues: data.feedbackMouthCues ?? null,
     explanation: data.grammarExplanation || data.explanation || '',
     grammarPoint: data.grammarPoint || '',
     errors: data.errors || [],

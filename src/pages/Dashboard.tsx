@@ -14,6 +14,7 @@ import { FreeUserRestriction } from '@/components/FreeUserRestriction';
 import { SecureImage } from '@/components/SecureImage';
 import api from '@/lib/api';
 
+import { TUTOR_NAME } from '@/lib/sophieStage';
 export default function Dashboard() {
   const { user } = useAuthStore();
   const { toast } = useToast();
@@ -317,7 +318,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-3">
                 {Object.entries(credits.allowances || {}).map(([feature, info]) => <div key={feature} className="rounded-lg border p-4">
-                  <p className="font-semibold mb-2">{{ voice_quiz: 'Sophie · 15 minutes', quiz_ia: 'Exercices écrits et vocaux', chatbot: 'Messages du chatbot' }[feature] || feature}</p>
+                  <p className="font-semibold mb-2">{{ voice_quiz: `${TUTOR_NAME} · 15 minutes`, quiz_ia: 'Exercices écrits et vocaux', chatbot: 'Messages du chatbot' }[feature] || feature}</p>
                   <AllowanceStatus info={info} />
                 </div>)}
                 {!credits.allowances && <p>Ouvrez votre activité pour consulter son allocation.</p>}

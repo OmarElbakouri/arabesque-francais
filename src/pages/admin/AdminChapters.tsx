@@ -77,6 +77,7 @@ import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/adminService';
 import HLSVideoPlayer from '@/components/HLSVideoPlayer';
 
+import { TUTOR_NAME } from '@/lib/sophieStage';
 // Sortable chapter item wrapper for drag-and-drop
 function SortableChapterItem({ id, children }: { id: number; children: (props: { dragHandleProps: Record<string, any>; isDragging: boolean; style: React.CSSProperties }) => React.ReactNode }) {
   const {
@@ -1238,7 +1239,7 @@ export default function AdminChapters() {
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="voiceQuizPrompt">🤖 Prompt Assistant Sophie</Label>
+                    <Label htmlFor="voiceQuizPrompt">🤖 Prompt Assistant {TUTOR_NAME}</Label>
                     <span className="text-xs text-muted-foreground">(Optionnel)</span>
                   </div>
                   <Textarea
@@ -1250,7 +1251,7 @@ export default function AdminChapters() {
                     maxLength={10000}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Instructions pour l'assistant IA Sophie (chatbot). Définit le comportement de Sophie pour ce chapitre.
+                    Instructions pour l'assistant IA {TUTOR_NAME} (chatbot). Définit son comportement pour ce chapitre.
                   </p>
                 </div>
               </div>
@@ -1414,7 +1415,7 @@ export default function AdminChapters() {
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="edit-voiceQuizPrompt">🤖 Prompt Assistant Sophie</Label>
+                    <Label htmlFor="edit-voiceQuizPrompt">🤖 Prompt Assistant {TUTOR_NAME}</Label>
                     <span className="text-xs text-muted-foreground">(Optionnel)</span>
                   </div>
                   <Textarea
@@ -1426,7 +1427,7 @@ export default function AdminChapters() {
                     maxLength={10000}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Instructions pour l'assistant IA Sophie (chatbot). Définit le comportement de Sophie pour ce chapitre.
+                    Instructions pour l'assistant IA {TUTOR_NAME} (chatbot). Définit son comportement pour ce chapitre.
                   </p>
                 </div>
               </div>

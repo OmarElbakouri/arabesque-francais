@@ -8,6 +8,7 @@ import professorImg from "@/assets/professor.jpg";
 import logoImg from "@/assets/logo.jpg";
 import api from "@/lib/api";
 
+import { TUTOR_NAME } from '@/lib/sophieStage';
 const Index = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [landingVideoUrl, setLandingVideoUrl] = useState<string | null>(null);
@@ -494,7 +495,7 @@ const Index = () => {
                     </li>
                     <li className="flex items-center gap-3 text-gray-400">
                       <Mic className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                      <span>Sophie - <span className="text-orange-400 font-bold">80 جلسة · 2 يومياً · 15 دقيقة · بدون انتهاء</span></span>
+                      <span>{TUTOR_NAME} - <span className="text-orange-400 font-bold">80 جلسة · 2 يومياً · 15 دقيقة · بدون انتهاء</span></span>
                     </li>
                   </ul>
                 </div>
@@ -568,7 +569,7 @@ const Index = () => {
                       <div className="w-5 h-5 rounded-full bg-gradient-to-r from-primary to-purple-500 flex items-center justify-center flex-shrink-0">
                         <Mic className="h-3 w-3 text-white" />
                       </div>
-                      <span className="text-white">Sophie - <span className="text-green-400 font-bold">600 جلسة · 10 يومياً · 15 دقيقة · بدون انتهاء</span></span>
+                      <span className="text-white">{TUTOR_NAME} - <span className="text-green-400 font-bold">600 جلسة · 10 يومياً · 15 دقيقة · بدون انتهاء</span></span>
                     </li>
                   </ul>
                 </div>
@@ -911,7 +912,7 @@ const Index = () => {
               },
               {
                 question: "ما الفرق بين الاشتراك البريميوم والـ VIP؟",
-                answer: "NORMAL يشمل 80 جلسة Sophie و600 مجموعة تمارين و2000 رسالة. VIP يشمل 600 جلسة و1000 مجموعة و5000 رسالة. الأرصدة لا تنتهي. جلسة Sophie حتى 15 دقيقة، بحد 2 يومياً لـ NORMAL و10 لـ VIP."
+                answer: `NORMAL يشمل 80 جلسة ${TUTOR_NAME} و600 مجموعة تمارين و2000 رسالة. VIP يشمل 600 جلسة و1000 مجموعة و5000 رسالة. الأرصدة لا تنتهي. جلسة ${TUTOR_NAME} حتى 15 دقيقة، بحد 2 يومياً لـ NORMAL و10 لـ VIP.`
               },
 
               {

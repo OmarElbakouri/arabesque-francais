@@ -23,6 +23,7 @@ import ribBcp from "@/assets/rib-bcp.png";
 import ribAttijariwafa from "@/assets/rib-attijariwafa.png";
 import api from "@/lib/api";
 
+import { TUTOR_NAME } from '@/lib/sophieStage';
 const DEFAULT_WHATSAPP = "212657507364";
 
 export default function PremiumPlans() {
@@ -82,7 +83,7 @@ export default function PremiumPlans() {
     const aiFeatures = [
         { name: "Chatbot · بدون انتهاء", icon: Brain, normalLimit: "2000 رسالة · 50 يومياً", vipLimit: "5000 رسالة · 100 يومياً" },
         { name: "تمارين كتابية وصوتية · بدون انتهاء", icon: Sparkles, normalLimit: "600 مجموعة · 10 يومياً", vipLimit: "1000 مجموعة · 15 يومياً" },
-        { name: "Sophie · 15 دقيقة · بدون انتهاء", icon: Mic, normalLimit: "80 جلسة · 2 يومياً", vipLimit: "600 جلسة · 10 يومياً" },
+        { name: `${TUTOR_NAME} · 15 دقيقة · بدون انتهاء`, icon: Mic, normalLimit: "80 جلسة · 2 يومياً", vipLimit: "600 جلسة · 10 يومياً" },
     ];
 
 
