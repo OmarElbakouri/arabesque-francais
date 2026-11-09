@@ -348,9 +348,14 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
 
   // Render results state
   if (state === 'results' && results) {
-    const scoreColor = results.score >= 80 ? 'text-green-500' : 
+    const scoreColor = results.score >= 80 ? 'text-green-500' :
                        results.score >= 60 ? 'text-yellow-500' : 'text-red-500';
-    
+    const correctionsByIndex = new Map<number, CorrectionDTO>();
+    results.corrections.forEach((c, i) => {
+      const idx = c.questionIndex ?? i;
+      if (!correctionsByIndex.has(idx)) correctionsByIndex.set(idx, c);
+    });
+
     return (
       <Card>
         <CardHeader className="text-center pb-2">
@@ -383,15 +388,17 @@ export default function ChapterQuiz({ chapterId, chapterTitle, thematicGroup = 1
               <Lightbulb className="w-5 h-5 text-yellow-500" />
               Corrections détaillées
             </h3>
-            {results.corrections.map((correction, index) => {
-              // Get question by index since questionIndex matches the answers Map keys
-              const question = session?.questions[index];
-              // Use index to get user answer since answers Map uses numeric indices (0, 1, 2...)
+            {(session?.questions ?? []).map((question, index) => {
+              // Pair by questionIndex, never by array position: a missing or duplicated
+              // correction would otherwise shift every verdict onto the next question
+              const correction = correctionsByIndex.get(index);
+              if (!correction) return null;
+              // answers Map uses the same numeric indices (0, 1, 2...)
               const userAnswer = answers.get(index) || correction.userAnswer || '(Pas de réponse)';
-              
+
               return (
                 <motion.div
-                  key={correction.questionId}
+                  key={index}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
